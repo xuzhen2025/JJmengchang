@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import { recordDownload } from "../lib/operationHistory";
 import FinishedVideoDetailModal from "./FinishedVideoDetailModal";
 import { PublicTagFilter, PersonalTagFilter } from "./PublicTagFilter";
-import { ResourceCategoryFilters, ResourceStatusFilter, ResourceStatusBadge } from "./ResourceConfigControls";
+import {
+  RESOURCE_FILTER_LABEL_CLASS,
+  RESOURCE_FILTER_PANEL_CLASS,
+  RESOURCE_FILTER_PRESET_ROW_CLASS,
+  RESOURCE_FILTER_TAG_ROW_CLASS,
+  ResourceCategoryFilters,
+  ResourceStatusFilter,
+  ResourceStatusBadge,
+} from "./ResourceConfigControls";
 import { Pagination } from "./Pagination";
 import { Asset, ResourceSearchIntent } from "../types";
 import { FinishedVideo } from "../data/finishedVideos";
@@ -740,10 +748,10 @@ export default function FinishedVideosView({ uploadedVideos = [], onTriggerTask,
       {activeTab === "all" && (
         <>
           {/* ===== FILTER CARD (EXACT REPLICA OF ATTACHED SCREENSHOT) ===== */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3.5 text-xs text-slate-700">
+          <div className={RESOURCE_FILTER_PANEL_CLASS}>
         
         {/* ROW 1: 常用筛选预设 */}
-        <div className="flex items-center justify-end gap-2">
+        <div className={RESOURCE_FILTER_PRESET_ROW_CLASS}>
           <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
             <ResourceFilterPresets scope="finished" defaults={VIDEO_PRESET_DEFAULTS} value={presetFilters}
               selectedName={selectedPreset} onSelectName={setSelectedPreset} onApply={applyPresetFilters}
@@ -765,8 +773,8 @@ export default function FinishedVideosView({ uploadedVideos = [], onTriggerTask,
         <ResourceStatusFilter scope="finished" value={statusVal} onChange={setStatusVal} />
 
         {/* ROW 5: 公共标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">公共标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>公共标签：</span>
           <PublicTagFilter
             searchKeyword={publicTagKeyword}
             onSearchKeywordChange={setPublicTagKeyword}
@@ -776,8 +784,8 @@ export default function FinishedVideosView({ uploadedVideos = [], onTriggerTask,
         </div>
 
         {/* ROW 6: 个人标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">个人标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>个人标签：</span>
           <PersonalTagFilter
             searchKeyword={personalTagSearch}
             onSearchKeywordChange={setPersonalTagSearch}

@@ -5,7 +5,15 @@ import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
 import { useUploadedResources, uploadedScript } from "../lib/resourceUploads";
 import { PublicTagFilter, PersonalTagFilter } from "./PublicTagFilter";
-import { ResourceCategoryFilters, ResourceStatusFilter, ResourceStatusBadge } from "./ResourceConfigControls";
+import {
+  RESOURCE_FILTER_LABEL_CLASS,
+  RESOURCE_FILTER_PANEL_CLASS,
+  RESOURCE_FILTER_PRESET_ROW_CLASS,
+  RESOURCE_FILTER_TAG_ROW_CLASS,
+  ResourceCategoryFilters,
+  ResourceStatusFilter,
+  ResourceStatusBadge,
+} from "./ResourceConfigControls";
 import ScriptDetailPage from "./ScriptDetailPage";
 import { TaskItem, addTaskRecord, getTaskRecords, useTaskRecords } from "./TaskCollaborationView";
 import TaskCustomFields from "./TaskCustomFields";
@@ -622,9 +630,9 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
       )}
 
       {/* Filter Card 1: Top Filter Panel (Matches FinishedVideosView UI) */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3.5 text-xs text-slate-700">
+      <div className={RESOURCE_FILTER_PANEL_CLASS}>
         {/* Row 1: 常用筛选预设 */}
-        <div className="flex items-center justify-end gap-2">
+        <div className={RESOURCE_FILTER_PRESET_ROW_CLASS}>
           {/* Right: 选择常用筛选预设 + 保存 */}
           <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
             <ResourceFilterPresets scope="scripts" defaults={SCRIPT_PRESET_DEFAULTS} value={presetFilters}
@@ -647,8 +655,8 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
         <ResourceStatusFilter scope="scripts" value={selectedStatus} onChange={setSelectedStatus} />
 
         {/* Row 5: 公共标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">公共标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>公共标签：</span>
           <PublicTagFilter
             searchKeyword={publicTagKeyword}
             onSearchKeywordChange={setPublicTagKeyword}
@@ -658,8 +666,8 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
         </div>
 
         {/* Row 6: 个人标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">个人标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>个人标签：</span>
           <PersonalTagFilter
             searchKeyword={personalTagSearch}
             onSearchKeywordChange={setPersonalTagSearch}

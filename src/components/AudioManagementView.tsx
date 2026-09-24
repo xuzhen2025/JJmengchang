@@ -5,7 +5,15 @@ import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
 import { useUploadedResources, uploadedAudio } from "../lib/resourceUploads";
 import { PublicTagFilter, PersonalTagFilter } from "./PublicTagFilter";
-import { ResourceCategoryFilters, ResourceStatusFilter, ResourceStatusBadge } from "./ResourceConfigControls";
+import {
+  RESOURCE_FILTER_LABEL_CLASS,
+  RESOURCE_FILTER_PANEL_CLASS,
+  RESOURCE_FILTER_PRESET_ROW_CLASS,
+  RESOURCE_FILTER_TAG_ROW_CLASS,
+  ResourceCategoryFilters,
+  ResourceStatusFilter,
+  ResourceStatusBadge,
+} from "./ResourceConfigControls";
 import AudioDetailView from "./AudioDetailView";
 import { Pagination } from "./Pagination";
 import { ResourceSearchIntent } from "../types";
@@ -523,10 +531,10 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
       )}
 
       {/* Top Cascading Filter Section */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs space-y-3.5 text-xs text-slate-700">
+      <div className={RESOURCE_FILTER_PANEL_CLASS}>
         
         {/* Row 1: 常用筛选预设 */}
-        <div className="flex items-center justify-end gap-2 pb-2 border-b border-slate-100">
+        <div className={RESOURCE_FILTER_PRESET_ROW_CLASS}>
           <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
             <ResourceFilterPresets scope="audio" defaults={AUDIO_PRESET_DEFAULTS} value={presetFilters}
               selectedName={selectedPreset} onSelectName={setSelectedPreset} onApply={applyPresetFilters}
@@ -538,14 +546,12 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
         </div>
 
         {/* Row 2-3: 一级分类、二级分类 */}
-        <div className="pb-2 border-b border-slate-100">
-          <ResourceCategoryFilters scope="audio" primary={selectedPrimaryCategory} secondary={selectedSecondaryCategory} search={searchCategoryKeyword}
-            onPrimary={setSelectedPrimaryCategory} onSecondary={setSelectedSecondaryCategory} onSearch={setSearchCategoryKeyword} />
-        </div>
+        <ResourceCategoryFilters scope="audio" primary={selectedPrimaryCategory} secondary={selectedSecondaryCategory} search={searchCategoryKeyword}
+          onPrimary={setSelectedPrimaryCategory} onSecondary={setSelectedSecondaryCategory} onSearch={setSearchCategoryKeyword} />
 
         {/* Row 4: 公共标签 */}
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 flex-wrap">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">公共标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>公共标签：</span>
           <PublicTagFilter
             searchKeyword={searchPublicTagKeyword}
             onSearchKeywordChange={setSearchPublicTagKeyword}
@@ -555,8 +561,8 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
         </div>
 
         {/* Row 5: 个人标签 */}
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 flex-wrap">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">个人标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>个人标签：</span>
           <PersonalTagFilter
             searchKeyword={searchPersonalTagKeyword}
             onSearchKeywordChange={setSearchPersonalTagKeyword}

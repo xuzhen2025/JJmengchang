@@ -6,7 +6,15 @@ import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
 import { useUploadedResources } from "../lib/resourceUploads";
 import { PublicTagFilter, PersonalTagFilter } from "./PublicTagFilter";
-import { ResourceCategoryFilters, ResourceStatusFilter, ResourceStatusBadge } from "./ResourceConfigControls";
+import {
+  RESOURCE_FILTER_LABEL_CLASS,
+  RESOURCE_FILTER_PANEL_CLASS,
+  RESOURCE_FILTER_PRESET_ROW_CLASS,
+  RESOURCE_FILTER_TAG_ROW_CLASS,
+  ResourceCategoryFilters,
+  ResourceStatusFilter,
+  ResourceStatusBadge,
+} from "./ResourceConfigControls";
 import FinishedVideoDetailModal from "./FinishedVideoDetailModal";
 import { Pagination } from "./Pagination";
 import { Asset, ResourceSearchIntent } from "../types";
@@ -1259,10 +1267,10 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
       {activeTab === "all" && (
         <>
           {/* ===== FILTER CARD (EXACT REPLICA OF ATTACHED SCREENSHOT) ===== */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3.5 text-xs text-slate-700">
+          <div className={RESOURCE_FILTER_PANEL_CLASS}>
         
         {/* ROW 1: 常用筛选预设 */}
-        <div className="flex justify-end items-center gap-2 pb-1 border-b border-slate-100/60">
+        <div className={RESOURCE_FILTER_PRESET_ROW_CLASS}>
           <ResourceFilterPresets scope={resourceScope} defaults={VIDEO_PRESET_DEFAULTS} value={presetFilters}
             selectedName={selectedPreset} onSelectName={setSelectedPreset} onApply={applyPresetFilters}
             seeds={[
@@ -1282,8 +1290,8 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
         <ResourceStatusFilter scope={resourceScope} value={statusVal} onChange={setStatusVal} />
 
         {/* ROW 5: 公共标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">公共标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>公共标签：</span>
           <PublicTagFilter
             searchKeyword={publicTagKeyword}
             onSearchKeywordChange={setPublicTagKeyword}
@@ -1293,8 +1301,8 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
         </div>
 
         {/* ROW 6: 个人标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">个人标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>个人标签：</span>
           <PersonalTagFilter
             searchKeyword={personalTagSearch}
             onSearchKeywordChange={setPersonalTagSearch}

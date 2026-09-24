@@ -5,7 +5,15 @@ import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
 import { useUploadedResources, uploadedImage } from "../lib/resourceUploads";
 import { PublicTagFilter, PersonalTagFilter } from "./PublicTagFilter";
-import { ResourceCategoryFilters, ResourceStatusFilter, ResourceStatusBadge } from "./ResourceConfigControls";
+import {
+  RESOURCE_FILTER_LABEL_CLASS,
+  RESOURCE_FILTER_PANEL_CLASS,
+  RESOURCE_FILTER_PRESET_ROW_CLASS,
+  RESOURCE_FILTER_TAG_ROW_CLASS,
+  ResourceCategoryFilters,
+  ResourceStatusFilter,
+  ResourceStatusBadge,
+} from "./ResourceConfigControls";
 import ImageDetailView from "./ImageDetailView";
 import { Pagination } from "./Pagination";
 import { ResourceSearchIntent } from "../types";
@@ -411,9 +419,9 @@ export default function ImageManagementView({ onTriggerTask, onDetailStateChange
       )}
 
       {/* Filter Card 1: Top Filter Panel (Matches Screenshot Exact Layout) */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3.5 text-xs text-slate-700">
+      <div className={RESOURCE_FILTER_PANEL_CLASS}>
         {/* Row 1: 常用筛选预设 (Top Right Corner inside card or aligned) */}
-        <div className="flex justify-end items-center gap-2 pb-1 border-b border-slate-100/60">
+        <div className={RESOURCE_FILTER_PRESET_ROW_CLASS}>
           <ResourceFilterPresets scope="images" defaults={IMAGE_PRESET_DEFAULTS} value={presetFilters}
             selectedName={selectedPreset} onSelectName={setSelectedPreset} onApply={applyPresetFilters}
             seeds={[
@@ -430,8 +438,8 @@ export default function ImageManagementView({ onTriggerTask, onDetailStateChange
 
 
         {/* Row 4: 公共标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">公共标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>公共标签：</span>
           <PublicTagFilter
             searchKeyword={publicTagKeyword}
             onSearchKeywordChange={setPublicTagKeyword}
@@ -441,8 +449,8 @@ export default function ImageManagementView({ onTriggerTask, onDetailStateChange
         </div>
 
         {/* Row 5: 个人标签 */}
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-slate-900 font-bold shrink-0 w-20 text-right pr-2">个人标签：</span>
+        <div className={RESOURCE_FILTER_TAG_ROW_CLASS}>
+          <span className={RESOURCE_FILTER_LABEL_CLASS}>个人标签：</span>
           <PersonalTagFilter
             searchKeyword={personalTagSearch}
             onSearchKeywordChange={setPersonalTagSearch}

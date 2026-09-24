@@ -4,6 +4,11 @@ import { useConfigFilter, useResourceConfig } from "../lib/useResourceConfig";
 
 const COLLAPSED_ROW_HEIGHT = 36;
 
+export const RESOURCE_FILTER_PANEL_CLASS = "bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-3.5 text-xs text-slate-700";
+export const RESOURCE_FILTER_PRESET_ROW_CLASS = "flex items-center justify-end gap-2";
+export const RESOURCE_FILTER_TAG_ROW_CLASS = "flex items-center gap-2 border-t border-slate-100 pt-3";
+export const RESOURCE_FILTER_LABEL_CLASS = "text-slate-900 font-bold shrink-0 w-20 text-right pr-2";
+
 export function ResourceCategoryFilters({ scope, primary, secondary, search, onPrimary, onSecondary, onSearch }: {
   scope: string; primary: string; secondary: string; search: string;
   onPrimary: (value: string) => void; onSecondary: (value: string) => void; onSearch: (value: string) => void;
