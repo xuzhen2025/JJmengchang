@@ -1,0 +1,24 @@
+.reference-cards-section {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.reference-video-card,
+.reference-video-add {
+  width: clamp(136px, calc((100cqw + 42px) / 9), 240px);
+  flex-shrink: 0;
+}
+
+.reference-video-card {
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.reference-video-card .reference-video-cover {
+  aspect-ratio: 3 / 4;
+}
+
+.reference-video-add {
+  align-self: stretch;
+  min-height: 240px;
+}

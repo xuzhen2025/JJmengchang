@@ -1,0 +1,8 @@
+{
+  "name": "梦畅AIGC电商平台",
+  "description": "梦畅AIGC电商平台提供丰富的AIGC视频生成、商品套图、画质增强、水印/字幕擦除等功能，致力于为电商商家提供高效的一站式智能内容创作服务。",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
