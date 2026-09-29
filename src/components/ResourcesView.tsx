@@ -241,8 +241,8 @@ export default function ResourcesView({
       {/* 页面顶部一级分类切换栏 + 右上角“上传文件”按钮 (仅在非上传页面且非详情页模式下显示) */}
       {!uploadPageView && !isSubViewDetailOpen && (
         <div className="pt-4 px-5 pb-1 bg-slate-50 shrink-0 z-30 relative">
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs relative">
-            <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-xl">
+          <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs relative">
+            <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-[inherit]">
               {/* Left side: Category Tabs */}
               <div className="flex items-center gap-2 overflow-x-auto">
                 {tabs.map((tab) => {

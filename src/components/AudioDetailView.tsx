@@ -137,7 +137,7 @@ export default function AudioDetailView({
       <div className="max-w-5xl mx-auto px-6 space-y-4">
         
         {/* Card 1: Top Main Info Card */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-5">
+        <div className="bg-white rounded-module border border-slate-200/80 p-6 shadow-2xs space-y-5">
           {/* Row 1: Author Info & Action Buttons */}
           <div className="flex items-start justify-between gap-4 flex-wrap">
             {/* Left: Avatar & Author */}
@@ -305,7 +305,7 @@ export default function AudioDetailView({
         </div>
 
         {/* Card 2: Interactive Audio Player Control Card */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6">
+        <div className="bg-white rounded-module border border-slate-200/80 p-6 shadow-2xs space-y-6">
           <h3 className="font-bold text-slate-900 text-base">
             {audioTitleText}
           </h3>

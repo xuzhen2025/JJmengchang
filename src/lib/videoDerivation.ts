@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { readAdPushSettings } from "./adPushConfig";
 import { getAdActor, type AdPushRecord, type AdVideo } from "./adPush";
 import { requireDerivationPermission } from "./derivationPermissions";
+import { OPERATION_EXAMPLE_VIDEOS, operationExampleTime } from "../data/operationExamples";
 
 export interface DerivationOptions {
   allocation: "shared" | "per_account";
@@ -122,7 +123,7 @@ export function changeDerivations(ids: string[], ownerId: string, action: "cance
 export function syncPushDerivations(pushes: AdPushRecord[], now = Date.now()) {
   let changed = false;
   const groups = new Map<string, AdPushRecord[]>();
-  for (const push of pushes) if (push.derivativeId && push.snapshot.derivation) {
+  for (const push of pushes) if (!push.examplePaused && push.derivativeId && push.snapshot.derivation) {
     const key = `${push.operatorId}:${push.derivativeId}`;
     groups.set(key, [...(groups.get(key) || []), push]);
   }
@@ -165,16 +166,21 @@ export function seedVideoDerivationExamples(source: AdVideo, owners: { id: strin
   emit();
 }
 
-export function seedDerivationExamples(ownerId: string) {
+export function seedDerivationExamples(ownerId: string, ownerName?: string) {
   if (!ownerId || seeded.has(ownerId)) return;
   seeded.add(ownerId);
-  const now = Date.now(), titles = ["焕肤精华_成分介绍", "轻氧跑鞋_上脚展示", "通勤连衣裙_试穿", "蓝牙耳机_降噪体验", "焕肤精华_质地特写", "腕表_细节展示"];
-  const assets = ["serum", "shoes", "dress", "headphones", "skincare-set", "watch"];
-  records = [...records, ...DERIVATION_STATUSES.map((status, i): DerivationRecord => ({ id: `DER-DEMO-${ownerId}-${i + 1}`, taskId: `DER-TASK-DEMO-${i + 1}`, ownerId,
-    source: { id: `FV-260918-${String(i + 1).padStart(3, "0")}`, title: `${titles[i]}.mp4`, videoUrl: `./assets/viral-gallery/${assets[i]}.mp4`, coverUrl: `./assets/viral-gallery/${assets[i]}.jpg` },
-    name: `${titles[i]}_衍生01.mp4`, url: status === "成功" ? `./assets/viral-gallery/${assets[i]}.mp4` : "", status, createdAt: now - (i + 1) * 3600000, updatedAt: now - (i + 1) * 3600000 + 6000, startedAt: now,
+  const now = Date.now();
+  const examples = DERIVATION_STATUSES.map((status, i): DerivationRecord => ({ id: `DER-DEMO-${ownerId}-${i + 1}`, taskId: `DER-TASK-DEMO-${ownerId}-${i + 1}`, ownerId, ownerName,
+    source: OPERATION_EXAMPLE_VIDEOS[i],
+    name: `${OPERATION_EXAMPLE_VIDEOS[i].title.replace(/\.mp4$/i, "")}_衍生01.mp4`, url: status === "成功" ? OPERATION_EXAMPLE_VIDEOS[i].videoUrl! : "", status, createdAt: operationExampleTime(i, now), updatedAt: Math.min(now, operationExampleTime(i, now) + 6000), startedAt: now,
     note: i === 0 ? "秋季护肤投放素材" : "", message: status === "失败" ? "视频解码异常，请重试" : status === "已删除" ? "衍生文件已删除，原视频保留" : status,
-    reviewBlocked: i === 0 ? false : null, driver: "standalone", attempt: 0, example: true }))];
+    reviewBlocked: i === 0 ? false : null, driver: "standalone", attempt: 0, example: true }));
+  records = [...records, ...examples, ...[2, 3].map((index): DerivationRecord => ({
+    ...examples[0], id: `DER-DEMO-${ownerId}-${index + 5}`,
+    name: `${examples[0].source.title.replace(/\.mp4$/i, "")}_衍生0${index}.mp4`,
+    note: index === 2 ? "产品特写版本" : "", reviewBlocked: index === 2 ? true : null,
+    message: "衍生完成",
+  }))];
   emit();
 }
 

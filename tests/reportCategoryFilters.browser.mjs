@@ -31,7 +31,7 @@ try {
     const { resourceTagStore } = await import("/src/lib/resourceTags.ts");
     const { readAdStore, updateAdStore } = await import("/src/lib/adPush.ts");
     const { readReportOrganization } = await import("/src/lib/analyticsOrganization.ts");
-    const { createReportFacts, stableNumber, selectReportFacts, reportTotals, tagReportRow, REPORT_TODAY, financialReportRows } = await import("/src/lib/reportDemoData.ts");
+    const { createReportFacts, stableNumber, selectReportFacts, reportTotals, tagReportRow } = await import("/src/lib/reportDemoData.ts");
     resourceConfigStore.setCategories(previous => ({ ...previous, 成片: [...previous.成片,
       { id: "report-test-a", name: "测试分类A", children: [{ id: "report-test-a-child", name: "同名二级" }] },
       { id: "report-test-b", name: "测试分类B", children: [{ id: "report-test-b-child", name: "同名二级" }] },
@@ -58,14 +58,11 @@ try {
     const facts = createReportFacts(readAdStore().accounts, readReportOrganization(), [], categories);
     const path = "测试分类A / 同名二级";
     const qc = selectReportFacts(facts, "巨量千川", { category: path });
-    const financial = financialReportRows(facts, "巨量千川", REPORT_TODAY).filter(row => `${row.cat1} / ${row.cat2}` === path);
     return {
       categories,
       accountCount: reportTotals(qc).accounts,
       tag: tagReportRow(qc, "总计"),
       accountSpend: reportTotals(selectReportFacts(facts, "巨量千川", { category: path, promotion: "标准推广" })).spend.toFixed(2),
-      financialCount: financial.length,
-      financialSpend: financial.reduce((sum, row) => sum + row.totalSpend, 0).toFixed(2),
       testCategoryATagGroup: testCategoryATagGroup.name,
       testCategoryBTagGroup: testCategoryBTagGroup.name,
     };
@@ -77,7 +74,6 @@ try {
     ["视频数据分析", "广告平台标签", "tags", true, true],
     ["视频数据分析", "标签分析", "tag-analysis", true, true],
     ["广告账户分析", "广告账户数据", "accounts", true, true],
-    ["广告账户分析", "广告账户财务报表", "finance", false, true],
   ];
 
   for (const [section, name, key, requiresQuery, hasReset] of pages) {
@@ -126,21 +122,11 @@ try {
       await expect(total.nth(1)).toHaveText(String(expected.tag.videoCount));
       await expect(total.nth(2)).toHaveText(expected.tag.spend);
     } else if (key === "accounts") await expect(total.nth(6)).toHaveText(expected.accountSpend);
-    else {
-      await expect(total.nth(6)).toHaveText(expected.financialSpend);
-      await expect(table.locator("tbody tr")).toHaveCount(expected.financialCount + 1);
-    }
-    if (["tags", "accounts", "finance"].includes(key)) {
+    if (["tags", "accounts"].includes(key)) {
       const firstCategoryIndex = key === "tags" ? 5 : 4;
       for (const row of (await table.locator("tbody tr").all()).slice(1)) {
         await expect(row.locator("td").nth(firstCategoryIndex)).toHaveText("测试分类A");
         await expect(row.locator("td").nth(firstCategoryIndex + 1)).toHaveText("同名二级");
-      }
-    }
-    if (key === "finance") {
-      const firstDataRow = table.locator("tbody tr").nth(1);
-      for (const columnIndex of [1, 2, 3, 4, 5]) {
-        await expect(firstDataRow.locator("td").nth(columnIndex)).toHaveClass(/\btext-slate-900\b/);
       }
     }
     const filtered = await table.locator("tbody").textContent();

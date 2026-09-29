@@ -13,14 +13,17 @@ try {
   await page.locator("#sidebar-item-ad_delivery").click();
   const sections = [
     ["视频数据分析", ["广告平台分析", "广告平台标签", "标签分析"]],
-    ["广告账户分析", ["广告账户数据", "广告账户财务报表", "投放状态报表"]],
-    ["部门分析", ["数据洞察", "创作分析", "任务分析"]],
+    ["广告账户分析", ["广告账户数据", "投放状态报表"]],
   ];
+  for (const removed of ["部门分析", "数据洞察", "创作分析", "任务分析", "领导力洞察"]) {
+    await expect(page.getByRole("button", { name: removed, exact: true })).toHaveCount(0);
+  }
   await expect(page.getByRole("button", { name: "腾讯投放报表", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "投放报表", exact: true })).toHaveCount(0);
   for (const [section, menus] of sections) {
     await page.getByRole("button", { name: section, exact: true }).click();
     if (section === "广告账户分析") {
+      await expect(page.getByRole("button", { name: "广告账户财务报表", exact: true })).toHaveCount(0);
       const accountTab = page.getByRole("button", { name: "广告账户数据", exact: true });
       await expect(accountTab.locator("..").getByRole("button")).toHaveText(menus);
       await expect(page.getByRole("button", { name: "TikTok店铺", exact: true })).toHaveCount(0);
@@ -31,6 +34,19 @@ try {
     }
     for (const menu of menus) {
       await page.getByRole("button", { name: menu, exact: true }).click();
+      if (menu === "广告账户数据") {
+        for (const platform of ["巨量千川", "巨量广告"]) {
+          await page.getByRole("button", { name: platform, exact: true }).click();
+          for (const dimension of ["人员数据", "分类数据", "广告主明细"]) {
+            await page.getByRole("button", { name: dimension, exact: true }).click();
+            await expect(page.getByText("未绑定数据", { exact: true })).toHaveCount(0);
+            await expect(page.getByRole("button", { name: "点击前往", exact: true })).toHaveCount(0);
+            await expect(page.getByRole("dialog", { name: "未绑定数据", exact: true })).toHaveCount(0);
+          }
+        }
+        await page.getByRole("button", { name: "巨量千川", exact: true }).click();
+        await page.getByRole("button", { name: "人员数据", exact: true }).click();
+      }
       if (menu === "投放状态报表") {
         await expect(page.getByRole("button", { name: "直播间数据", exact: true })).toHaveCount(0);
         const deliveryTable = page.getByTestId("delivery-status-table");
@@ -47,9 +63,31 @@ try {
         await expect(deliveryTable).toContainText("暂无数据");
         await page.getByRole("button", { name: "广告主明细数据", exact: true }).click();
         await expect(page.getByLabel("广告账户 ID", { exact: true })).toBeVisible();
-        await expect(page.getByRole("combobox", { name: "分类", exact: true })).toBeVisible();
-        await page.getByRole("button", { name: "查看未投放状态说明", exact: true }).hover();
-        await expect(page.getByText("未投放-包含状态：", { exact: true })).toBeVisible();
+        await expect(page.getByRole("button", { name: "分类筛选", exact: true })).toBeVisible();
+        for (const platform of ["巨量广告", "巨量千川"]) {
+          await page.getByRole("button", { name: platform, exact: true }).click();
+          for (const dimension of ["部门数据", "分组数据", "个人数据", "广告主明细数据"]) {
+            await page.getByRole("button", { name: dimension, exact: true }).click();
+            const help = page.getByRole("button", { name: "查看未投放状态说明", exact: true });
+            const tooltip = page.getByRole("tooltip");
+            await help.hover();
+            await expect(tooltip).toBeVisible();
+            await expect(tooltip.locator("p")).toHaveText([
+              "未投放-包含状态：",
+              "审核不通过、新建审核中、修改审核中、已暂停、配额达限、未到投放时间",
+              "项目已暂停、不在投放时段、未达投放时间、账户余额不足、账户超出预算",
+              "预算组超出预算、项目超出预算、广告超出预算、直播间不可投放",
+              "产品不可投放、抖音号不可投放、锚点不可投放",
+            ]);
+            await page.keyboard.press("Escape");
+            await expect(tooltip).toHaveCount(0);
+            await help.click();
+            await expect(tooltip).toBeVisible();
+            await expect(help).toHaveAttribute("aria-describedby", await tooltip.getAttribute("id"));
+            await page.getByRole("heading", { name: "数据分析", exact: true }).click();
+            await expect(tooltip).toHaveCount(0);
+          }
+        }
       }
       if (menu === "标签分析") {
         await expect(page.getByRole("button", { name: "标签分析", exact: true })).toHaveCount(1);
@@ -67,30 +105,7 @@ try {
       console.log(menu, "rows", await page.locator("tbody tr").count());
     }
   }
-  await page.getByRole("button", { name: "创作分析", exact: true }).click();
-  await page.getByRole("button", { name: "音频", exact: true }).click();
-  await expect(page.locator("tbody")).toContainText("AIGC爆款内容拆解部");
-  await page.getByRole("button", { name: "个人数据", exact: true }).click();
-  await expect(page.locator("tbody")).toContainText("徐振");
-  await expect(page.locator("tbody")).toContainText("王剪辑");
-  await page.getByRole("button", { name: "任务分析", exact: true }).click();
-  await page.getByRole("button", { name: "查看详情", exact: true }).first().click();
-  await expect(page.getByText("TSK_20250410_01", { exact: true })).toHaveCount(0);
-  await expect(page.getByText(/任务详情列表 -/)).toBeVisible();
-  await page.getByRole("button", { name: "关闭", exact: true }).click();
-  await page.getByRole("button", { name: "数据洞察", exact: true }).first().click();
-  await expect(page.getByText("上传作品（音频）", { exact: true })).toBeVisible();
-  await expect(page.getByText("上传作品（音视频）", { exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "领导力洞察", exact: true }).click();
-  await expect(page.getByText("领导力洞察", { exact: true }).last()).toBeVisible();
-  await page.getByRole("heading", { name: "领导力洞察", exact: true }).locator("..").getByRole("button").click();
   await page.getByRole("button", { name: "广告账户分析", exact: true }).click();
-  await page.getByRole("button", { name: "广告账户财务报表", exact: true }).click();
-  const financeRows = await page.locator("tbody tr").count();
-  await page.getByPlaceholder("请输入账户名称/ID", { exact: true }).fill("missing-account");
-  await expect(page.locator("tbody tr")).toHaveCount(1);
-  await page.getByRole("button", { name: "重置", exact: true }).click();
-  await expect(page.locator("tbody tr")).toHaveCount(financeRows);
   await page.getByRole("button", { name: "广告账户数据", exact: true }).click();
   await page.getByRole("button", { name: "巨量广告", exact: true }).click();
   await page.getByRole("button", { name: "广告主明细", exact: true }).click();
@@ -117,7 +132,7 @@ try {
   await page.getByRole("button", { name: "查询", exact: true }).click();
   await expect(page.locator("tbody tr")).toHaveCount(1);
   if (errors.length) throw new Error(errors.join("\n"));
-  console.log(`${sections.reduce((count, [, menus]) => count + menus.length, 0)} report views render; resource/task/leader data checks passed`);
+  console.log(`${sections.reduce((count, [, menus]) => count + menus.length, 0)} report views render; account/organization/filter checks passed`);
 } catch (error) {
   await page.screenshot({ path: "tmp/analytics-linked-check/failure.png", fullPage: true });
   throw error;

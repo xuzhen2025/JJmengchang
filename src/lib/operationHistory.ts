@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { OPERATION_EXAMPLE_VIDEOS, operationExampleTime } from "../data/operationExamples";
 
 export type OperationKind = "upload" | "export" | "download" | "login";
 export interface OperationRecord {
@@ -66,12 +67,14 @@ export function exportHistoryCsv(name: string, cells: (string | number)[][], typ
 }
 const seeded = new Set<string>();
 export function seedOperationExamples(ownerId: string) {
-  if (!ownerId || seeded.has(ownerId)) return;
+  if (!ownerId || ownerId === "anonymous" || seeded.has(ownerId)) return;
   seeded.add(ownerId);
   const now = Date.now();
-  const exportUrl = URL.createObjectURL(new Blob(["\uFEFF视频ID,视频标题,状态\r\nFV-260918-026,焕肤精华_投放版.mp4,成功"], { type: "text/csv;charset=utf-8" }));
+  const stamp = new Date(now).toLocaleString("sv-SE").replace(/[-: ]/g, "");
+  const csv = new Blob(["\uFEFF视频ID,视频标题,状态\r\n", ...OPERATION_EXAMPLE_VIDEOS.map(video => `${video.id},${video.title},成功\r\n`)], { type: "text/csv;charset=utf-8" });
+  const exportUrl = URL.createObjectURL(csv);
   const examples: Omit<OperationRecord, "id" | "ownerId" | "createdAt">[] = [
-    { kind: "export", name: "衍生视频记录_20260918.csv", type: "衍生视频记录", status: "成功", message: "导出文件已生成", size: "0.1 KB", url: exportUrl },
+    { kind: "export", name: `成片数据_${stamp}_全部.csv`, type: "成片数据", status: "成功", message: "导出文件已生成", size: `${(csv.size / 1024).toFixed(1)} KB`, url: exportUrl },
     { kind: "upload", name: "植萃精华使用实拍原素材.mp4", type: "素材", status: "成功", message: "美妆护肤 / 商品实拍", size: "28.6 MB", resourceId: "materials-analytics-1" },
     { kind: "upload", name: "0920-精华液质地展示-品牌供片.mp4", type: "第三方", status: "成功", message: "美妆 / 特写质感镜头", size: "0.68 MB", resourceId: "third-party-1" },
     { kind: "upload", name: "防晒植物提取精华液展图.jpg", type: "图片", status: "成功", message: "美妆护肤 / 致上旗舰店", size: "2.4 MB", resourceId: "img-1" },
@@ -84,7 +87,13 @@ export function seedOperationExamples(ownerId: string) {
     { kind: "download", name: "历史成片.mp4", type: "成片", status: "失败", message: "文件已删除或链接失效" },
     { kind: "login", name: ownerId, type: "Microsoft Edge", status: "成功", message: "账号密码登录" },
     { kind: "login", name: ownerId, type: "Microsoft Edge", status: "失败", message: "密码验证失败" },
+    { kind: "upload", name: "护肤演示补拍.mov", type: "成片", status: "失败", message: "视频编码不受支持，文件未入库", size: "42.1 MB" },
+    { kind: "upload", name: "产品包装特写.png", type: "图片", status: "失败", message: "文件传输中断，请重新上传", size: "3.8 MB" },
+    { kind: "export", name: `广告账户数据_${stamp}_巨量千川.csv`, type: "广告账户数据", status: "失败", message: "生成文件超时，请回到广告账户数据页面重新导出" },
+    { kind: "login", name: ownerId, type: "Chrome", status: "成功", message: "账号密码登录" },
+    { kind: "login", name: ownerId, type: "Chrome", status: "失败", message: "登录验证已过期，请重新验证" },
   ];
-  records = [...records, ...examples.map((row, index) => ({ ...row, ownerId, id: `example-${ownerId}-${index}`, createdAt: now - (index + 1) * 3600000, example: true }))];
+  examples.push(...examples.filter(row => row.kind === "upload" && row.status === "成功" && row.type !== "成片").map(row => ({ ...row, kind: "download" as const, status: "已发起" as const, message: "已提交浏览器下载" })));
+  records = [...records, ...examples.map((row, index) => ({ ...row, ownerId, id: `example-${ownerId}-${index}`, createdAt: operationExampleTime(index, now), example: true }))];
   emit();
 }

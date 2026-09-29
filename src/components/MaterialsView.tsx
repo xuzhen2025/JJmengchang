@@ -1061,7 +1061,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
       {activeTab === "secondary" && (
         <div className="space-y-4 animate-fade-in">
           {/* Secondary Creation Header Banner */}
-          <div className="bg-white rounded-2xl border border-purple-200/80 p-5 shadow-xs space-y-3">
+          <div className="bg-white rounded-module border border-purple-200/80 p-5 shadow-xs space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
@@ -1168,7 +1168,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
       {activeTab === "performance" && (
         <div className="space-y-5 animate-fade-in">
           {/* Performance Overview Banner */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+          <div className="bg-white rounded-module border border-slate-200 p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
@@ -1316,7 +1316,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
       <ResourceSearchCondition query={searchQuery} onClear={() => { setSearchQuery(""); onClearSearch?.(); }} />
 
       {/* ===== ROW 7: 高级搜索 ===== */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="bg-white rounded-module border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-slate-900 font-bold shrink-0">高级搜索：</span>
 
@@ -1390,7 +1390,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
       </div>
 
       {/* ===== ROW 8: BOTTOM ACTION TOOLBAR ===== */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs relative">
+      <div className="bg-white rounded-module border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs relative">
 
         {isSelectionActive || selectedVideoIds.length > 0 ? (
           /* ACTIVE SELECTION TOOLBAR (Matching reference screenshot) */
@@ -1549,7 +1549,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
 
       {/* ===== FINISHED VIDEOS DISPLAY ===== */}
       {filteredVideos.length === 0 ? (
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-16 flex flex-col items-center justify-center text-center max-w-xl mx-auto shadow-xs">
+        <div className="bg-white border border-slate-200/80 rounded-module p-16 flex flex-col items-center justify-center text-center max-w-xl mx-auto shadow-xs">
           <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-3 animate-pulse">
             <Film className="w-7 h-7" />
           </div>
@@ -1566,7 +1566,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
         </div>
       ) : viewMode === "list" ? (
         /* LIST VIEW MODE */
-        <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+        <div className="bg-white border border-slate-200/80 rounded-module overflow-hidden shadow-xs">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">

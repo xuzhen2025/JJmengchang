@@ -244,7 +244,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
   return (
     <div className="space-y-4" data-testid="platform-tags-view">
       {/* ================= 1. Platform & Dimension Tabs Bar ================= */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         {/* Top Level Platforms (巨量千川 / 巨量广告) */}
         <div className="flex items-center gap-6 px-5 py-3 border-b border-slate-100 bg-white">
           <button
@@ -386,7 +386,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
       </div>
 
       {/* ================= 2. 占比分析 (Proportion Analysis Panel) ================= */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden transition-all">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden transition-all">
         {/* Card Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-2">
@@ -500,7 +500,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
       </div>
 
       {/* ================= 3. 详细数据 (Detailed Data Table Section) ================= */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         {/* Table Title Bar */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-2 relative">

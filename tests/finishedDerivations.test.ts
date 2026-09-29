@@ -7,6 +7,7 @@ import { derivativeAnalyticsRows } from "../src/lib/derivationAnalytics";
 import { readReportOrganization } from "../src/lib/analyticsOrganization";
 import { getUploadedResources } from "../src/lib/resourceUploads";
 import { INITIAL_FINISHED } from "../src/data/finishedVideos";
+import { PROTOTYPE_OPERATOR } from "../src/data/adminAccounts";
 
 const values = new Map<string, string>();
 const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) };
@@ -14,6 +15,10 @@ Object.defineProperty(globalThis, "localStorage", { value: storage, configurable
 Object.defineProperty(globalThis, "sessionStorage", { value: storage, configurable: true });
 Object.defineProperty(globalThis, "window", { value: new EventTarget(), configurable: true });
 const session = (id: string, permissions: string[] = []) => {
+  if (id !== "chaojiguanliyuan") {
+    const org = readReportOrganization();
+    storage.setItem("cloud_video_members", JSON.stringify([...org.members.filter(m => m.id !== id), { ...PROTOTYPE_OPERATOR, id, name: id }]));
+  }
   storage.setItem("mengchang_prototype_session", JSON.stringify({ username: id }));
   storage.setItem("cloud_video_roles_v2", JSON.stringify([{ id: "role_staff", enabled: true, checkedKeys: permissions }]));
 };

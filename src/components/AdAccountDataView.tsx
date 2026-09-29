@@ -7,11 +7,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
-  HelpCircle,
   Megaphone,
   TrendingUp,
-  X,
 } from "lucide-react";
 import { exportAnalyticsRows } from "../lib/analyticsExport";
 import {
@@ -321,7 +318,6 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
   const [columnOrder, setColumnOrder] = useState(() => standardMetricColumns().map(column => column.key));
   const [exportOpen, setExportOpen] = useState(false);
-  const [unboundOpen, setUnboundOpen] = useState(false);
 
   const platformName = PLATFORMS.find(item => item.id === platform)!.name;
   const metricColumns = useMemo(
@@ -409,17 +405,6 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
       { key: "cat2", label: "二级分类" },
     ];
   }, [dimension, personnelLevel, categoryLevel]);
-
-  const unboundAccounts = useMemo(() => {
-    const accountFacts = aggregateFacts(platformFacts, "advertiser", "team", "primary");
-    return accountFacts.filter(row =>
-      relationText(row.team, "team").startsWith("未绑定") ||
-      relationText(row.group, "group").startsWith("未绑定") ||
-      relationText(row.user, "user").startsWith("未绑定") ||
-      relationText(row.cat1, "category").startsWith("未绑定") ||
-      relationText(row.cat2, "category").startsWith("未绑定")
-    );
-  }, [platformFacts]);
 
   const resetColumns = (nextPromotion = promotion, nextPlatform = platform) => {
     const next = nextPlatform === "qianchuan" && nextPromotion === "product_domain"
@@ -556,7 +541,7 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-2xs">
+      <section className="overflow-hidden rounded-module border border-slate-200/80 bg-white shadow-2xs">
         <div className="flex items-center gap-6 overflow-x-auto border-b border-slate-100 px-5 py-3">
           {PLATFORMS.map(item => {
             const active = platform === item.id;
@@ -583,7 +568,7 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
         </div>}
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-2xs">
+      <section className="overflow-hidden rounded-module border border-slate-200/80 bg-white shadow-2xs">
         <div className="space-y-3 bg-slate-50/50 p-4">
           <div className="inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
             {([
@@ -691,14 +676,6 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
               <LabeledInput label="广告主ID" placeholder="请输入广告主ID" value={filters.advertiserId} onChange={value => updateFilter("advertiserId", value)} />
               <LabeledInput label="广告主名称" placeholder="请输入广告主名称" value={filters.advertiserName} onChange={value => updateFilter("advertiserName", value)} />
 
-              <div className="inline-flex items-center gap-1 text-xs text-slate-400">
-                <button type="button" onClick={() => setUnboundOpen(true)} className="inline-flex cursor-pointer items-center gap-1 hover:text-slate-600">
-                  未绑定数据 <HelpCircle className="h-3.5 w-3.5" />
-                </button>
-                <button type="button" onClick={() => setUnboundOpen(true)} className="inline-flex cursor-pointer items-center gap-1 font-bold text-purple-600 hover:text-purple-700">
-                  点击前往 <ExternalLink className="h-3.5 w-3.5" />
-                </button>
-              </div>
               <button type="button" onClick={handleQuery} className="cursor-pointer rounded-lg bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-2xs transition-colors hover:bg-purple-700">查询</button>
               <button type="button" onClick={() => resetFilters()} className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 shadow-2xs transition-colors hover:bg-slate-50">重置</button>
             </div>
@@ -778,28 +755,6 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
         </div>
       </section>
 
-      {unboundOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs" onMouseDown={() => setUnboundOpen(false)}>
-        <div className="w-full max-w-2xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl" onMouseDown={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="unbound-title">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <div>
-              <h3 id="unbound-title" className="text-sm font-bold text-slate-900">未绑定数据</h3>
-              <p className="mt-1 text-xs text-slate-500">当前平台共有 {unboundAccounts.length} 个账户存在未绑定关系</p>
-            </div>
-            <button type="button" title="关闭" aria-label="关闭" onClick={() => setUnboundOpen(false)} className="cursor-pointer rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"><X className="h-4 w-4" /></button>
-          </div>
-          <div className="max-h-80 overflow-auto">
-            <table className="w-full whitespace-nowrap text-xs">
-              <thead className="sticky top-0 bg-slate-50 text-slate-500"><tr>{["广告账户", "团队", "分组", "用户", "一级分类", "二级分类"].map(label => <th key={label} className="px-4 py-2.5 text-left font-bold">{label}</th>)}</tr></thead>
-              <tbody>{unboundAccounts.map(row => <tr key={row.key} className="border-t border-slate-100">
-                <td className="px-4 py-3"><div className="font-bold text-slate-800">{row.accountName}</div><div className="mt-0.5 font-mono text-[11px] text-slate-400">{row.accountId}</div></td>
-                {[relationText(row.team, "team"), relationText(row.group, "group"), relationText(row.user, "user"), relationText(row.cat1, "category"), relationText(row.cat2, "category")].map((value, index) => <td key={`${row.key}-${index}`} className={`px-4 py-3 ${value.startsWith("未绑定") ? "font-bold text-purple-600" : "text-slate-700"}`}>{value}</td>)}
-              </tr>)}</tbody>
-            </table>
-            {unboundAccounts.length === 0 && <div className="py-12 text-center text-xs text-slate-400">当前平台没有未绑定数据</div>}
-          </div>
-          <div className="flex justify-end border-t border-slate-100 bg-slate-50 px-5 py-3"><button type="button" onClick={() => setUnboundOpen(false)} className="cursor-pointer rounded-lg bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-700">关闭</button></div>
-        </div>
-      </div>}
       <AnalyticsExportDialog
         open={exportOpen}
         pageName="广告账户数据"

@@ -2,14 +2,10 @@ import React, { useEffect, useState } from "react";
 import PlatformTagsView from "./PlatformTagsView";
 import TagAnalyticsView from "./TagAnalyticsView";
 import AdAccountDataView from "./AdAccountDataView";
-import AccountFinanceReportView from "./AccountFinanceReportView";
 import DeliveryStatusReportView from "./DeliveryStatusReportView";
-import DataInsightsView from "./DataInsightsView";
-import CreationAnalyticsView from "./CreationAnalyticsView";
-import TaskAnalyticsView from "./TaskAnalyticsView";
 import AdPlatformAnalysisView from "./AdPlatformAnalysisView";
 import { 
-  BarChart3, Video, Users, Activity, Tag, Tv, FileText, 
+  BarChart3, Video, Activity, Tag, Tv, FileText, 
   DollarSign, PieChart, ShieldCheck, ShoppingBag, Brain, 
   Sparkles, ListTodo, LineChart, Server, Cpu, HardDrive, 
   Search, Filter, RefreshCw, Download, Plus, ArrowUpRight, 
@@ -17,12 +13,11 @@ import {
 } from "lucide-react";
 
 // --- Category & SubTab Types ---
-export type MainCategory = "video_analytics" | "account_analytics" | "team_analytics";
+export type MainCategory = "video_analytics" | "account_analytics";
 
 export type SubTabMap = {
   video_analytics: "platform_tags" | "tag_analytics" | "ad_platform_analysis";
-  account_analytics: "account_data" | "financial_report" | "status_report";
-  team_analytics: "data_insights" | "creation_analytics" | "task_analytics";
+  account_analytics: "account_data" | "status_report";
 };
 
 export default function AdDeliveryView({ initialDerivativeId }: { initialDerivativeId?: string }) {
@@ -61,18 +56,7 @@ export default function AdDeliveryView({ initialDerivativeId }: { initialDerivat
       icon: PieChart,
       subTabs: [
         { id: "account_data", name: "广告账户数据" },
-        { id: "financial_report", name: "广告账户财务报表" },
         { id: "status_report", name: "投放状态报表" },
-      ]
-    },
-    {
-      id: "team_analytics" as MainCategory,
-      name: "部门分析",
-      icon: Users,
-      subTabs: [
-        { id: "data_insights", name: "数据洞察" },
-        { id: "creation_analytics", name: "创作分析" },
-        { id: "task_analytics", name: "任务分析" },
       ]
     }
   ];
@@ -104,7 +88,7 @@ export default function AdDeliveryView({ initialDerivativeId }: { initialDerivat
 
 
       {/* Redesigned Compact Category & Sub-Tab Navigation Panel */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         {/* Level 1 Categories (一级目录) */}
         <div className="flex items-center gap-1.5 p-1.5 bg-slate-50/70 border-b border-slate-100 overflow-x-auto">
           {categories.map((cat) => {
@@ -180,37 +164,13 @@ export default function AdDeliveryView({ initialDerivativeId }: { initialDerivat
               <AdAccountDataView showToast={showToast} />
             )}
 
-            {/* 2. 广告账户财务报表 */}
-            {activeSubTab === "financial_report" && (
-              <AccountFinanceReportView showToast={showToast} />
-            )}
-
-            {/* 3. 投放状态报表 */}
+            {/* 2. 投放状态报表 */}
             {activeSubTab === "status_report" && (
               <DeliveryStatusReportView showToast={showToast} />
             )}
           </>
         )}
 
-        {/* ================= 部门分析 (Department Analytics) ================= */}
-        {activeCategory === "team_analytics" && (
-          <>
-            {/* 1. 数据洞察 */}
-            {activeSubTab === "data_insights" && (
-              <DataInsightsView showToast={showToast} />
-            )}
-
-            {/* 2. 创作分析 */}
-            {activeSubTab === "creation_analytics" && (
-              <CreationAnalyticsView showToast={showToast} />
-            )}
-
-            {/* 3. 任务分析 */}
-            {activeSubTab === "task_analytics" && (
-              <TaskAnalyticsView showToast={showToast} />
-            )}
-          </>
-        )}
       </div>
     </div>
   );

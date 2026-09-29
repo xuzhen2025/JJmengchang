@@ -203,7 +203,7 @@ export default function ImageDetailView({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         
         {/* Main Card: Image Preview + Metadata Details */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200/90 p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="bg-white rounded-module shadow-sm border border-slate-200/90 p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* LEFT COLUMN (6 Cols): Big Image Preview + Thumbnails */}
           <div className="lg:col-span-6 space-y-4">

@@ -394,15 +394,15 @@ export default function UploadFinishedVideoModal({
       data-testid={isPage ? "video-upload-page" : undefined}
       className={
         isPage
-          ? "flex-1 flex flex-col min-h-0 bg-[#F8F9FD] w-full h-full overflow-hidden animate-in fade-in duration-200"
+          ? "flex-1 flex flex-col min-h-0 bg-slate-50 w-full h-full overflow-hidden animate-in fade-in duration-200"
           : "fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
       }
     >
       <div
         className={
           isPage
-            ? "bg-[#F8F9FD] w-full flex-1 flex flex-col overflow-hidden"
-            : "bg-[#F8F9FD] rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden"
+            ? "bg-slate-50 w-full flex-1 flex flex-col overflow-hidden"
+            : "bg-slate-50 rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden"
         }
       >
         {/* Header */}
@@ -852,7 +852,7 @@ export default function UploadFinishedVideoModal({
                 </div>
 
                 {/* 公共标签 3 模块 Panel: 标签组 / 二级标签 / 已添加二级标签 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
                   {/* Col 1: 标签组 */}
                   <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                     <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">
@@ -1017,7 +1017,7 @@ export default function UploadFinishedVideoModal({
                 </div>
 
                 {/* 个人标签 3 模块 Panel: 标签组 / 二级标签 / 已添加二级标签 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
                   {/* Col 1: 标签组 */}
                   <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                     <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">

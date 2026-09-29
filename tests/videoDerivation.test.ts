@@ -75,12 +75,12 @@ test("multiple plans in one account reuse derived files and append output IDs, n
   const d = draft(), store = createAdStore(), actor = getAdActor(), now = Date.now();
   d.method = "full_domain"; d.workbench = { ...defaultWorkbench(), target: "商品全域" };
   const catalog = adCatalog(store.accounts.find(a => a.id === d.rows[0].accountId)!);
-  d.rows = catalog.plans.filter(p => p.goal === "推商品").map((plan, i) => ({ ...d.rows[0], id: `plan-${i}`, douyinId: plan.douyinId, planId: plan.id }));
+  d.rows = catalog.plans.filter(p => p.target === "商品全域").map((plan, i) => ({ ...d.rows[0], id: `plan-${i}`, douyinId: plan.douyinId, planId: plan.id, combinations: [plan.combinations![0]] }));
   store.records = createAdRecords(d, store, actor, video, now);
   assert.equal(store.records.length, 4);
   assert.equal(new Set(store.records.map(r => r.derivativeId)).size, 2);
   const done = advanceAdStore(store, now + 16000);
-  const plans = adCatalog(done.accounts.find(a => a.id === d.rows[0].accountId)!).plans.filter(p => p.goal === "推商品");
+  const plans = adCatalog(done.accounts.find(a => a.id === d.rows[0].accountId)!).plans.filter(p => p.target === "商品全域");
   for (const plan of plans) {
     assert.equal(plan.videoIds.length, 3);
     assert.ok(!plan.videoIds.includes(video.id));
@@ -95,7 +95,7 @@ test("multi-creative derivation honors all-videos and per-plan counts", () => {
   d.rows = [{ ...d.rows[0], douyinId: c.douyins[0].id, storeId: c.stores[0].id, productId: c.products[0].id }];
   d.derivation = { allocation: "per_account", count: 3 };
   d.method = "plan"; d.creative = "多创意"; d.templateIds = ["template-qc-demo"];
-  d.workbench = defaultWorkbench();
+  d.workbench = { ...defaultWorkbench(), target: "商品全域", operation: "create" };
   store.records = createAdRecords(d, store, actor, video, now);
   const all = advanceAdStore(store, now + 16000);
   assert.equal(new Set(all.records.map(r => r.planId)).size, 1);
@@ -115,13 +115,13 @@ test("average allocation divides derived videos across each account's plans", ()
   const d = draft(), store = createAdStore(), now = Date.now();
   d.method = "full_domain"; d.workbench = { ...defaultWorkbench(), target: "商品全域", distribution: "平均分配" };
   const c = adCatalog(store.accounts.find(a => a.id === d.rows[0].accountId)!);
-  d.rows = c.plans.filter(p => p.goal === "推商品").map((p, i) => ({ ...d.rows[0], id: `plan-${i}`, douyinId: p.douyinId, planId: p.id }));
+  d.rows = c.plans.filter(p => p.target === "商品全域").map((p, i) => ({ ...d.rows[0], id: `plan-${i}`, douyinId: p.douyinId, planId: p.id, combinations: [p.combinations![0]] }));
   d.derivation = { allocation: "per_account", count: 4 };
   store.records = createAdRecords(d, store, getAdActor(), video, now);
   assert.equal(store.records.length, 4);
   assert.equal(new Set(store.records.map(r => r.derivativeId)).size, 4);
   const done = advanceAdStore(store, now + 16000);
-  assert.ok(adCatalog(done.accounts.find(a => a.id === d.rows[0].accountId)!).plans.filter(p => p.goal === "推商品").every(p => p.videoIds.length === 3));
+  assert.ok(adCatalog(done.accounts.find(a => a.id === d.rows[0].accountId)!).plans.filter(p => p.target === "商品全域").every(p => p.videoIds.length === 3));
   d.derivation.count = 1;
   assert.throws(() => createAdRecords(d, store, getAdActor(), video), /不足以平均分配/);
 });

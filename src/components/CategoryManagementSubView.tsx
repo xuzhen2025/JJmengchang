@@ -211,7 +211,7 @@ export default function CategoryManagementSubView() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
         {/* 一级分类 */}
-        <div data-testid="category-primary" className="bg-slate-50/60 rounded-2xl p-4 border border-slate-200/80 min-h-[420px] flex flex-col justify-between">
+        <div data-testid="category-primary" className="bg-slate-50/60 rounded-module p-4 border border-slate-200/80 min-h-[420px] flex flex-col justify-between">
           <div className="space-y-3">
             {/* Column Header */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
@@ -285,7 +285,7 @@ export default function CategoryManagementSubView() {
         </div>
 
         {/* 二级分类 */}
-        <div data-testid="category-secondary" className="bg-slate-50/60 rounded-2xl p-4 border border-slate-200/80 min-h-[420px] flex flex-col justify-between">
+        <div data-testid="category-secondary" className="bg-slate-50/60 rounded-module p-4 border border-slate-200/80 min-h-[420px] flex flex-col justify-between">
           <div className="space-y-3">
             {/* Column Header */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">

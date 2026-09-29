@@ -170,7 +170,7 @@ export default function UploadGenericResourcePage({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F5F6FA] w-full h-full overflow-hidden animate-in fade-in duration-150">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 w-full h-full overflow-hidden animate-in fade-in duration-150">
       
       {categoryError && <div role="alert" className="px-6 py-2 text-rose-600 bg-rose-50 shrink-0">{categoryError}</div>}
       {/* Top Page Header Bar */}
@@ -203,8 +203,8 @@ export default function UploadGenericResourcePage({
       <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs text-slate-700 font-sans w-full">
         
         {/* 1. File Upload Dropzone (Upper Card) */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs">
-          <div className="border-2 border-dashed border-purple-300 hover:border-purple-500 bg-[#FAFAFE] rounded-2xl p-10 text-center transition-all relative group cursor-pointer">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs">
+          <div className="border-2 border-dashed border-purple-300 hover:border-purple-500 bg-slate-50 rounded-2xl p-10 text-center transition-all relative group cursor-pointer">
             <input
               type="file"
               accept={config.accept}
@@ -227,7 +227,7 @@ export default function UploadGenericResourcePage({
         </div>
 
         {/* 2. 音频信息 Card */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-6">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs space-y-6">
           {/* Header Row */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2">
@@ -451,7 +451,7 @@ export default function UploadGenericResourcePage({
               </div>
 
               {/* 公共标签 3 模块 Panel */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
                 {/* Col 1: 标签组 */}
                 <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">
@@ -603,7 +603,7 @@ export default function UploadGenericResourcePage({
               </div>
 
               {/* 个人标签 3 模块 Panel */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
                 {/* Col 1: 标签组 */}
                 <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">
@@ -755,7 +755,7 @@ export default function UploadGenericResourcePage({
         </div>
 
         {/* 3. 权限设置 Card */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-6">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs space-y-6">
           {/* Header Row */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2">

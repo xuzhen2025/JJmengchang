@@ -291,7 +291,7 @@ export default function AdminCreditsManagementView() {
 
       {/* Top Header */}
       <div className="p-5 pb-0 space-y-4">
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+        <div className="bg-white p-5 rounded-module border border-slate-200/90 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-purple-600 text-white rounded-2xl shadow-sm shrink-0">
@@ -334,7 +334,7 @@ export default function AdminCreditsManagementView() {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center gap-4">
+            <div className="bg-white border border-slate-200/80 rounded-module p-4 shadow-2xs flex items-center gap-4">
               <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl shrink-0">
                 <Coins className="w-5 h-5" />
               </div>
@@ -346,7 +346,7 @@ export default function AdminCreditsManagementView() {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center gap-4">
+            <div className="bg-white border border-slate-200/80 rounded-module p-4 shadow-2xs flex items-center gap-4">
               <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl shrink-0">
                 <Gift className="w-5 h-5" />
               </div>
@@ -358,7 +358,7 @@ export default function AdminCreditsManagementView() {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center gap-4">
+            <div className="bg-white border border-slate-200/80 rounded-module p-4 shadow-2xs flex items-center gap-4">
               <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl shrink-0">
                 <Wallet className="w-5 h-5" />
               </div>
@@ -416,7 +416,7 @@ export default function AdminCreditsManagementView() {
         {creditsSubTab === "config" && (
           <div className="space-y-6 animate-fade-in">
             {/* 全局配置 Card */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-xs space-y-4">
+            <div className="bg-white rounded-module border border-slate-200/90 p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="space-y-0.5">
                   <div className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
@@ -476,7 +476,7 @@ export default function AdminCreditsManagementView() {
             </div>
 
             {/* 个性化配置 Card */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-xs space-y-4">
+            <div className="bg-white rounded-module border border-slate-200/90 p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div className="space-y-0.5">
                   <div className="text-sm font-extrabold text-slate-900 flex items-center gap-2">

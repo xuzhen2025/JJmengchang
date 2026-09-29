@@ -112,7 +112,6 @@ export default function VideoStatusManagementView() {
       textColor: "#FFFFFF",
       bgColor: "#7C3AED", // 默认紫底白字
       weight: typeof formWeight === "number" ? formWeight : 0,
-      notifyEnabled: true,
       isDefault: false,
     };
 
@@ -194,20 +193,6 @@ export default function VideoStatusManagementView() {
     }
   };
 
-  // 切换单项消息通知
-  const toggleNotify = (id: string) => {
-    setStatusList((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const nextVal = !item.notifyEnabled;
-          showToast(`已${nextVal ? "开启" : "关闭"}【${item.name}】的状态消息通知`);
-          return { ...item, notifyEnabled: nextVal };
-        }
-        return item;
-      })
-    );
-  };
-
   // 修改颜色
   const handleChangeColor = (
     itemId: string,
@@ -244,7 +229,7 @@ export default function VideoStatusManagementView() {
       )}
 
       {/* 顶部控制栏 */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 px-6 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-module border border-slate-200/80 p-4 px-6 shadow-2xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-8">
           {/* 状态功能开关 */}
           <div className="flex items-center gap-3">
@@ -304,7 +289,7 @@ export default function VideoStatusManagementView() {
       </div>
 
       {/* 视频状态列表表格 */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[760px]">
             <thead>
@@ -327,7 +312,6 @@ export default function VideoStatusManagementView() {
                 <th className="py-3.5 px-4 text-center font-bold">字体颜色</th>
                 <th className="py-3.5 px-4 text-center font-bold">背景颜色</th>
                 <th className="py-3.5 px-4 text-center font-bold">权重</th>
-                <th className="py-3.5 px-4 text-center font-bold">消息通知</th>
                 <th className="py-3.5 px-6 text-right font-bold">操作</th>
               </tr>
             </thead>
@@ -450,25 +434,6 @@ export default function VideoStatusManagementView() {
                   {/* 权重 */}
                   <td className="py-4 px-4 text-center font-mono text-slate-600 font-bold">
                     {item.weight}
-                  </td>
-
-                  {/* 消息通知 开关 (对应截图4) */}
-                  <td className="py-4 px-4 text-center">
-                    <button
-                      type="button"
-                      onClick={() => toggleNotify(item.id)}
-                      className={`w-10 h-5 rounded-full transition-colors relative p-0.5 cursor-pointer inline-block align-middle ${
-                        item.notifyEnabled ? "bg-[#7C3AED]" : "bg-slate-300"
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 rounded-full bg-white shadow-md transition-transform ${
-                          item.notifyEnabled
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                        }`}
-                      />
-                    </button>
                   </td>
 
                   {/* 操作: 设为默认值 | 编辑 | 删除 */}

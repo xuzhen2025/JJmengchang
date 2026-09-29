@@ -128,7 +128,7 @@ export default function MessageCenterWorkspace({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-slate-50 text-slate-800">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-module bg-slate-50 text-slate-800">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
         <div className="flex items-center gap-3">
           <button onClick={onBack} title="返回首页" className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"><ArrowLeft className="h-4 w-4" /></button>
@@ -180,9 +180,9 @@ export default function MessageCenterWorkspace({
           <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
             <div className="mb-3"><h2 className="text-sm font-black text-slate-900">{selectedCategory}</h2><p className="mt-1 text-xs text-slate-400">当前筛选结果 {filteredMessages.length} 条</p></div>
             {filteredMessages.length === 0 ? (
-              <div className="flex min-h-80 flex-col items-center justify-center border border-dashed border-slate-200 bg-white text-center"><Inbox className="h-10 w-10 text-slate-300" /><p className="mt-3 text-sm font-bold text-slate-600">没有符合条件的消息</p><button onClick={resetFilters} className="mt-3 text-xs font-bold text-purple-600">清除筛选条件</button></div>
+              <div className="flex min-h-80 flex-col items-center justify-center rounded-module border border-dashed border-slate-200 bg-white text-center"><Inbox className="h-10 w-10 text-slate-300" /><p className="mt-3 text-sm font-bold text-slate-600">没有符合条件的消息</p><button onClick={resetFilters} className="mt-3 text-xs font-bold text-purple-600">清除筛选条件</button></div>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <div className="overflow-hidden rounded-module border border-slate-200 bg-white">
                 {filteredMessages.map((message) => {
                   const categoryMeta = CATEGORY_META[message.category] ?? CATEGORY_META["安全与系统"];
                   const CategoryIcon = categoryMeta.icon;

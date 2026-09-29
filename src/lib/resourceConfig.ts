@@ -8,7 +8,7 @@ export type ResourceScope = keyof typeof RESOURCE_PARTITIONS;
 export type StatusKind = "video" | "script";
 export interface ResourceStatusItem {
   id: string; name: string; partitions: string[]; textColor: string; bgColor: string;
-  weight: number; notifyEnabled: boolean; isDefault: boolean;
+  weight: number; isDefault: boolean;
 }
 export interface ConfigurableResource {
   id: string; status?: string; category?: string; primaryCategory?: string; secondaryCategory?: string;
@@ -19,7 +19,7 @@ type ResourceLink = { scope: string; primaryId?: string; secondaryId?: string; s
 const makeStatuses = (kind: StatusKind, names: string[]): ResourceStatusItem[] => names.map((name, i) => ({
   id: `${kind}-status-${i + 1}`, name, partitions: kind === "script" ? ["脚本"] : name === "已搭" ? ["成片"] : name === "画面利用" ? ["素材", "第三方"] : ["成片", "素材", "第三方"],
   textColor: "#FFFFFF", bgColor: name.includes("通过") ? "#059669" : name.includes("驳回") ? "#DC2626" : name === "已上机" ? "#2563EB" : "#64748B",
-  weight: names.length - i, notifyEnabled: false, isDefault: i === 0,
+  weight: names.length - i, isDefault: i === 0,
 }));
 export const INITIAL_VIDEO_STATUSES = makeStatuses("video", ["待审核", "审核通过", "审核驳回", "已修改", "二次修改", "已上机", "已搭", "画面利用", "放弃"]);
 export const INITIAL_SCRIPT_STATUSES = makeStatuses("script", ["待审核", "审核通过", "驳回-待修改", "已分配", "已归档"]);

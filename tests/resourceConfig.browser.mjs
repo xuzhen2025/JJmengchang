@@ -15,7 +15,7 @@ const switchMode = async mode => {
   await button(mode === "admin" ? "管理端" : "用户端").click();
 };
 const resources = async tab => {
-  await page.locator("#sidebar-item-home").click();
+  await page.locator("#sidebar-item-video_remake").click();
   await page.locator("#sidebar-item-resources").click();
   await button(tab).click();
 };
@@ -107,57 +107,20 @@ try {
   console.log("PASS: copying a script uses the configured default status, not the source status ID");
   await switchMode("admin");
 
-  await button("任务").click();
-  await button("新增字段").click();
-  await dialog().getByPlaceholder("请输入字段名称").fill("拍摄地点");
-  await dialog().getByRole("combobox").selectOption("文本");
-  await dialog().getByRole("radio", { name: "必填", exact: true }).check();
-  await confirm();
-  await switchMode("user");
-  await page.locator("#sidebar-item-task_collaboration").click();
-  await button("发布任务").click();
-  await expect(dialog().getByLabel("拍摄地点", { exact: false })).toBeVisible();
-  await confirm();
-  await expect(dialog().getByText("请填写拍摄地点", { exact: true })).toBeVisible();
-  await cancel();
-
-  await resources("脚本管理");
-  await page.locator("tbody tr").first().getByRole("button", { name: "发布任务", exact: true }).click();
-  await confirm();
-  await expect(dialog().getByText("请填写拍摄地点", { exact: true })).toBeVisible();
-  await dialog().locator("#task-field-tf-product").selectOption("抗衰精华液");
-  await dialog().getByLabel("拍摄地点", { exact: false }).fill("杭州滨江摄影棚");
-  await confirm();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  const saved = await page.evaluate(async () => (await import("/src/components/TaskCollaborationView.tsx")).getTaskRecords()[0]);
-  assert.ok(saved.customFields.fields.some(f => f.name === "拍摄地点"));
-  await resources("脚本管理");
-  await page.getByText("脚本 1 - 口播温和洁面破圈案", { exact: true }).first().click();
-  await button("发布任务").click();
-  await confirm();
-  await expect(dialog().getByText("请填写拍摄地点", { exact: true })).toBeVisible();
-  await cancel();
-
-  await switchMode("admin");
-  await button("任务").click();
-  await page.locator("tbody tr").filter({ hasText: "拍摄地点" }).getByRole("button", { name: "编辑", exact: true }).click();
-  await dialog().getByPlaceholder("请输入字段名称").fill("取景地点");
-  await confirm();
-  await switchMode("user");
-  await page.locator("#sidebar-item-task_collaboration").click();
-  await page.locator("tbody tr").filter({ hasText: saved.id }).getByRole("button", { name: "编辑", exact: true }).click();
-  await expect(dialog().getByLabel("拍摄地点", { exact: false })).toHaveValue("杭州滨江摄影棚");
-  await cancel();
-  await button("发布任务").click();
-  await expect(dialog().getByLabel("取景地点", { exact: false })).toBeVisible();
-  await cancel();
-  console.log("PASS: all three publish forms use current fields; created task survives navigation with original schema");
-
-  await page.reload({ waitUntil: "domcontentloaded" });
-  assert.equal(await page.evaluate(async () => (await import("/src/lib/taskFieldConfig.ts")).taskFieldStore.getFields().length), 2);
-  assert.ok(await page.evaluate(async id => !(await import("/src/components/TaskCollaborationView.tsx")).getTaskRecords().some(t => t.id === id), saved.id));
+  await expect(button("任务")).toHaveCount(0);
+  for (const label of ["视频状态", "脚本状态"]) {
+    await button(label).click();
+    await expect(page.getByRole("columnheader", { name: "消息通知", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("columnheader", { name: "权重", exact: true })).toBeVisible();
+    await expect(button("新增状态")).toBeVisible();
+  }
+  await page.locator("#sidebar-item-system_management").click();
+  await expect(button("消息通知")).toHaveCount(0);
+  await button("系统设置").click();
+  await expect(page.getByText("脚本关联任务后修改状态", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("推送成功后修改视频状态", { exact: true })).toBeVisible();
   assert.deepEqual(errors, []);
-  console.log("PASS: refresh restores initial configuration and tasks; no page errors");
+  console.log("PASS: phase-one admin excludes removed task and notification controls; no page errors");
 } catch (error) {
   await page.screenshot({ path: "tmp/resource-config-failure.png" });
   throw error;

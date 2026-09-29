@@ -34,6 +34,14 @@ export interface AccountMember {
   remark?: string;
 }
 
+// The existing prototype login "putongyonghu" is linked to this editable demo member.
+export const PROTOTYPE_OPERATOR: AccountMember = {
+  id: "mem_prototype_operator", employeeNo: "DEMO-001", name: "普通用户",
+  phone: "", email: "", deptId: "dept_1_1", roleIds: ["role_staff"], roleName: "普通员工",
+  dataScope: "self", status: "normal", createdAt: "2026-09-28", lastActiveAt: "尚未登录", logCount: 0,
+  remark: "原型登录账号：putongyonghu；仅演示数据",
+};
+
 export const ANALYTICS_DEMO_MEMBERS: AccountMember[] = [
   ["mem_demo_1", "刘小青", "dept_1_1", "role_dept_head", "分组负责人"],
   ["mem_demo_2", "王剪辑", "dept_1_1", "role_editor", "视频剪辑师"],
@@ -320,5 +328,6 @@ export const INITIAL_MEMBERS: AccountMember[] = [
     logCount: 0,
     remark: "新邀请剪辑师，等待激活"
   },
-  ...ANALYTICS_DEMO_MEMBERS
+  ...ANALYTICS_DEMO_MEMBERS,
+  PROTOTYPE_OPERATOR,
 ];

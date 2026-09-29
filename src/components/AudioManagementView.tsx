@@ -575,7 +575,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
       <ResourceSearchCondition query={searchQuery} onClear={() => { setSearchQuery(""); onClearSearch?.(); }} />
 
       {/* Filter Card 2: 高级搜索 Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700">
+      <div className="bg-white rounded-module border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700">
         <div className="flex items-center gap-3 flex-wrap flex-1">
           <span className="text-slate-900 font-bold shrink-0">高级搜索：</span>
 
@@ -652,7 +652,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
         }} />}
 
       {/* Sub Toolbar: Selection mode or Batch Action Toolbar (Matches Screenshot 3 & 4) */}
-      <div className="bg-white rounded-2xl p-2.5 border border-slate-200/80 shadow-2xs flex items-center justify-between flex-wrap gap-2 text-xs">
+      <div className="bg-white rounded-module p-2.5 border border-slate-200/80 shadow-2xs flex items-center justify-between flex-wrap gap-2 text-xs">
         
         {isSelectionMode && selectedIds.length > 0 ? (
           /* Mode B: Active Batch Toolbar (Screenshot 4) */
@@ -826,7 +826,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
 
       {/* Audio Cards Grid List (Exact layout of Screenshot 2, 3 & 4) */}
       {filteredAudios.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 space-y-3">
+        <div className="bg-white rounded-module p-12 text-center border border-slate-200/80 space-y-3">
           <Music className="w-12 h-12 text-slate-300 mx-auto" />
           <p className="text-slate-500 font-bold text-sm">暂无符合条件的音频资源</p>
           <p className="text-slate-400 text-xs">尝试重置筛选或上传新的音频文件</p>
@@ -962,7 +962,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
         </div>
       ) : (
         /* List View */
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+        <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-400 font-bold">

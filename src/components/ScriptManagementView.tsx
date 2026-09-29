@@ -680,7 +680,7 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
       <ResourceSearchCondition query={searchQuery} onClear={() => { setSearchQuery(""); onClearSearch?.(); }} />
 
       {/* Filter Card 2: 高级搜索 Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700">
+      <div className="bg-white rounded-module border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700">
         <div className="flex items-center gap-3 flex-wrap flex-1">
           <span className="text-slate-900 font-bold shrink-0">高级搜索：</span>
 
@@ -743,7 +743,7 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
       </div>
 
       {/* Script List Table Section */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-xs overflow-hidden">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold">

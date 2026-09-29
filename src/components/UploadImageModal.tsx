@@ -225,7 +225,7 @@ export default function UploadImageModal({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F8F9FD] w-full h-full overflow-hidden animate-in fade-in duration-150 text-xs text-slate-800 font-sans">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 w-full h-full overflow-hidden animate-in fade-in duration-150 text-xs text-slate-800 font-sans">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[140] bg-slate-900/90 text-white px-5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700/80 text-xs font-bold flex items-center gap-2 animate-in fade-in zoom-in-95 duration-150">
@@ -265,7 +265,7 @@ export default function UploadImageModal({
       {/* Main Form Scrollable Container */}
       <div className="flex-1 overflow-y-auto p-6 space-y-5 w-full">
         {/* ================= 1. Top Card: 图片上传 (Upload Section) ================= */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
               <UploadCloud className="w-4 h-4" />
@@ -412,7 +412,7 @@ export default function UploadImageModal({
         </div>
 
         {/* ================= 2. Second Card: 图片信息 (Image Info Card) ================= */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-6">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs space-y-6">
           {/* Card Header */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2">
@@ -660,7 +660,7 @@ export default function UploadImageModal({
               </div>
 
               {/* 公共标签 3 模块 Panel: 标签组 / 二级标签 / 已添加二级标签 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
                 {/* Col 1: 标签组 */}
                 <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">
@@ -823,7 +823,7 @@ export default function UploadImageModal({
               </div>
 
               {/* 个人标签 3 模块 Panel: 标签组 / 二级标签 / 已添加二级标签 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
                 {/* Col 1: 标签组 */}
                 <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">
@@ -1030,7 +1030,7 @@ export default function UploadImageModal({
         </div>
 
         {/* ================= 3. Third Card: 权限设置 (Permissions Card) ================= */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-6">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">

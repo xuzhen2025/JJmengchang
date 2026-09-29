@@ -7,7 +7,6 @@ import {
   Tag,
   Megaphone,
   Key,
-  Bell,
   Users,
   Search,
   Plus,
@@ -59,9 +58,13 @@ import { useViralVideoRule } from "../lib/useViralVideoRule";
 import { isValidViralVideoRule, saveViralVideoRule, type ViralVideoRule } from "../lib/viralVideoRule";
 import OverlayPortal from "./overlays/OverlayPortal";
 import { useAdStore } from "../lib/useAdStore";
-import { AD_CHANGE_EVENT, adDate, adId, getAdActor, revokeAdAccounts, updateAdStore, type AdAccount, type AdAccountGroup } from "../lib/adPush";
+import { AD_CHANGE_EVENT, adAccountState, adDate, adId, getAdActor, revokeAdAccounts, updateAdStore, type AdAccount, type AdAccountGroup } from "../lib/adPush";
 import { AdDialog } from "./AdAccountPush";
 import AdAuthorizationDialog from "./AdAuthorizationDialog";
+import { normalizeAdPermissionKeys } from "../lib/adPermissions";
+import { syncAdAccounts, type AdSyncResult, type AdSyncScenario } from "../lib/adAccountAuthorization";
+import { EMPTY_ACCOUNT_FILTERS, filterAdvertiserAccounts, type AccountFilters } from "../lib/adAccountManagement";
+import { AdAccountBindingDialog, AdvertiserAccountFilters, AdvertiserAccountTable } from "./AdvertiserAccountControls";
 
 type SystemTabType =
   | "depts"
@@ -73,7 +76,6 @@ type SystemTabType =
   | "auto_tags"
   | "ad_groups"
   | "login_logs"
-  | "notifications"
   | "users";
 
 // ---------------------------------------------------------------------------
@@ -131,6 +133,7 @@ export const USER_CLIENT_PERMISSION_TREE: PermissionNode[] = [
           { id: "uc_finished_download", label: "下载原片" },
           { id: "uc_finished_logs", label: "查看操作记录" },
           { id: "uc_finished_ad_push", label: "推送广告账户" },
+          { id: "uc_ad_plan_manage", label: "管理投放计划" },
           { id: "uc_finished_ad_records", label: "查看推送记录" },
           { id: "uc_derivation", label: "衍生视频" },
           { id: "uc_finished_interaction", label: "查看互动数据" },
@@ -209,7 +212,6 @@ export const ADMIN_BACKEND_PERMISSION_TREE: PermissionNode[] = [
     children: [
       { id: "ab_resource_view", label: "资源库（不包含删除类）" },
       { id: "ab_video_status_manage", label: "视频状态" },
-      { id: "ab_task_manage", label: "任务" },
       { id: "ab_tag_manage", label: "公共标签" },
       { id: "ab_category_manage", label: "分类管理" },
       { id: "ab_script_template_manage", label: "脚本模板" },
@@ -234,9 +236,8 @@ export const ADMIN_BACKEND_PERMISSION_TREE: PermissionNode[] = [
       { id: "ab_watermark_manage", label: "水印" },
       { id: "ab_system_setting_manage", label: "系统设置" },
       { id: "ab_auto_tag_manage", label: "系统自动化标签" },
-      { id: "ab_ad_group_manage", label: "广告组管理" },
+      { id: "ab_ad_group_manage", label: "广告主管理" },
       { id: "ab_login_log_view", label: "登录记录" },
-      { id: "ab_message_rule_manage", label: "消息通知" },
     ]
   },
   { id: "ab_credit_manage", label: "积分管理" },
@@ -265,12 +266,12 @@ const BASIC_USER_KEYS = [
 
 const mergePermissionKeys = (...groups: string[][]): string[] => Array.from(new Set(groups.flat()));
 
-const CONTENT_CREATOR_KEYS = [...USER_PERMISSION_KEYS];
+const CONTENT_CREATOR_KEYS = USER_PERMISSION_KEYS.filter(key => key !== "uc_ad_plan_manage");
 
-const AD_OPERATOR_KEYS = [...BASIC_USER_KEYS, "uc_finished_ad_push", "uc_finished_ad_records"];
+const AD_OPERATOR_KEYS = [...BASIC_USER_KEYS, "uc_finished_ad_push", "uc_ad_plan_manage", "uc_finished_ad_records"];
 
 const ADMIN_CONTENT_KEYS = [
-  "ab_resource_view", "ab_video_status_manage", "ab_task_manage", "ab_tag_manage",
+  "ab_resource_view", "ab_video_status_manage", "ab_tag_manage",
   "ab_category_manage", "ab_script_template_manage"
 ];
 
@@ -278,7 +279,6 @@ const ADMIN_READ_KEYS = ["ab_resource_view", "ab_dept_view", "ab_member_view", "
 
 const DEPT_MANAGER_KEYS = mergePermissionKeys(
   CONTENT_CREATOR_KEYS,
-  ["uc_credit_approve", "uc_data_dashboard", "uc_data_export"],
   ADMIN_READ_KEYS,
   ["ab_credit_manage"]
 );
@@ -294,7 +294,7 @@ const INITIAL_ROLES: RolePermission[] = [
     code: "STAFF",
     type: "preset",
     category: "other",
-    description: "基础工作台、本人资源与被分配任务的最小可用权限",
+    description: "爆款复刻与本人资源的基础使用权限",
     memberCount: 18,
     dataScope: "self",
     enabled: true,
@@ -480,48 +480,6 @@ const INITIAL_ROLES: RolePermission[] = [
     updatedAt: "2026-07-14 11:20"
   },
   {
-    id: "role_live_assist",
-    name: "直播助理",
-    code: "LIVE_ASSIST",
-    type: "preset",
-    category: "other",
-    description: "直播间切片推流、实时挂车与现场协助",
-    memberCount: 5,
-    dataScope: "self",
-    enabled: true,
-    checkedKeys: mergePermissionKeys(BASIC_USER_KEYS, ["uc_material_upload", "uc_material_edit"]),
-    permissions: [],
-    updatedAt: "2026-07-13 19:00"
-  },
-  {
-    id: "role_live_anchor",
-    name: "直播主播",
-    code: "LIVE_ANCHOR",
-    type: "preset",
-    category: "other",
-    description: "直播出镜与录屏切片归档授权",
-    memberCount: 6,
-    dataScope: "self",
-    enabled: true,
-    checkedKeys: BASIC_USER_KEYS,
-    permissions: [],
-    updatedAt: "2026-07-12 16:10"
-  },
-  {
-    id: "role_live_head",
-    name: "直播负责人",
-    code: "LIVE_HEAD",
-    type: "preset",
-    category: "other",
-    description: "直播部门业务统筹、排期与切片发布管理",
-    memberCount: 2,
-    dataScope: "dept_tree",
-    enabled: true,
-    checkedKeys: [...BASIC_USER_KEYS, "uc_finished_upload", "uc_finished_download", "uc_data_dashboard"],
-    permissions: [],
-    updatedAt: "2026-07-11 14:00"
-  },
-  {
     id: "role_ops_head",
     name: "运营负责人",
     code: "OPS_HEAD",
@@ -536,7 +494,7 @@ const INITIAL_ROLES: RolePermission[] = [
       ADMIN_CONTENT_KEYS,
       ADMIN_READ_KEYS,
       [
-        "ab_export_audit_view", "ab_credit_account_view", "ab_credit_application_view", "ab_credit_application_approve",
+        "ab_export_audit_view", "ab_credit_account_view",
         "ab_dashboard_view", "ab_business_data_view", "ab_business_data_export"
       ]
     ),
@@ -549,15 +507,14 @@ const INITIAL_ROLES: RolePermission[] = [
     code: "CONTENT_HEAD",
     type: "preset",
     category: "other",
-    description: "内容生产质量控制、AI复刻模版审批与团队质检",
+    description: "内容生产质量控制、资源分类与脚本模板管理",
     memberCount: 2,
     dataScope: "all",
     enabled: true,
     checkedKeys: mergePermissionKeys(
       CONTENT_CREATOR_KEYS,
       [
-        "uc_finished_delete", "uc_material_pin", "uc_material_delete", "uc_script_delete",
-        "uc_credit_approve"
+        "uc_finished_delete", "uc_material_pin", "uc_material_delete", "uc_script_delete"
       ],
       ADMIN_CONTENT_KEYS,
       ["ab_dept_view", "ab_member_view", "ab_role_view", "ab_audit_view", "ab_dashboard_view"]
@@ -571,7 +528,7 @@ const INITIAL_ROLES: RolePermission[] = [
     code: "DEPT_HEAD",
     type: "preset",
     category: "other",
-    description: "管理本部门及下级分组的任务、内容、数据与积分审批",
+    description: "管理本部门及下级分组的内容、数据与积分配置",
     memberCount: 5,
     dataScope: "dept_tree",
     enabled: true,
@@ -599,260 +556,45 @@ const INITIAL_ROLES: RolePermission[] = [
     code: "FINANCE_ADMIN",
     type: "preset",
     category: "other",
-    description: "管理企业积分账户、审批记录及全公司业务数据只读查看",
+    description: "管理企业积分账户、积分明细及全公司业务数据只读查看",
     memberCount: 2,
     dataScope: "all",
     enabled: true,
     checkedKeys: [
-      "uc_home_view", "uc_message_view", "uc_credit_view", "uc_credit_approve", "uc_data_dashboard",
-      "ab_credit_account_view", "ab_credit_recharge", "ab_credit_application_view", "ab_credit_application_approve",
+      "uc_credit_view", "uc_data_dashboard",
+      "ab_credit_account_view", "ab_credit_recharge",
       "ab_credit_record_export", "ab_credit_rule_manage", "ab_dashboard_view", "ab_business_data_view"
     ],
     permissions: [],
     updatedAt: "2026-08-19 16:20"
   }
-].filter(role => !["role_live_assist", "role_live_anchor", "role_live_head"].includes(role.id)) as RolePermission[];
+] as RolePermission[];
 
 const SUPER_ADMIN_ROLE_ID = "role_super_admin";
+const legacyRoleDescriptions: Record<string, string> = {
+  role_staff: "基础工作台、本人资源与被分配任务的最小可用权限",
+  role_dept_head: "管理本部门及下级分组的任务、内容、数据与积分审批",
+  role_finance: "管理企业积分账户、审批记录及全公司业务数据只读查看",
+  role_content_head: "内容生产质量控制、AI复刻模版审批与团队质检",
+};
 
-function normalizeSystemRoles(roles: RolePermission[]): RolePermission[] {
+export function normalizeSystemRoles(roles: RolePermission[]): RolePermission[] {
   const superAdmin = INITIAL_ROLES.find(role => role.id === SUPER_ADMIN_ROLE_ID)!;
   const validKeys = new Set(ALL_PERMISSION_KEYS);
-  const normalizeKeys = (keys?: string[]) => (keys || []).filter(key => validKeys.has(key));
+  const normalizeKeys = (keys?: string[]) => normalizeAdPermissionKeys(keys).filter(key => validKeys.has(key));
   const next = roles.map<RolePermission>(role => role.id === SUPER_ADMIN_ROLE_ID
     ? { ...role, name: superAdmin.name, code: superAdmin.code, type: "preset",
       category: "default", description: superAdmin.description,
-      enabled: true, dataScope: "all", checkedKeys: [...ALL_PERMISSION_KEYS] }
-    : { ...role, category: role.category === "default" ? "other" : role.category, checkedKeys: normalizeKeys(role.checkedKeys) });
+      enabled: true, dataScope: "all", checkedKeys: [...ALL_PERMISSION_KEYS], permissions: normalizeKeys(role.permissions) }
+    : { ...role, category: role.category === "default" ? "other" : role.category, checkedKeys: normalizeKeys(role.checkedKeys),
+      ...(role.permissions ? { permissions: normalizeKeys(role.permissions) } : {}),
+      description: Object.hasOwn(legacyRoleDescriptions, role.id) && legacyRoleDescriptions[role.id] === role.description
+        ? INITIAL_ROLES.find(item => item.id === role.id)!.description : role.description });
   // Preserve role IDs and ordering because existing member defaults use array positions.
   if (!next.some(role => role.id === "role_staff")) next.unshift({ ...INITIAL_ROLES[0], checkedKeys: normalizeKeys(INITIAL_ROLES[0].checkedKeys) });
   if (!next.some(role => role.id === SUPER_ADMIN_ROLE_ID)) next.push({ ...superAdmin, checkedKeys: [...ALL_PERMISSION_KEYS] });
   return next;
 }
-
-// ---------------------------------------------------------------------------
-// TYPES & DATA STRUCTURES FOR NOTIFICATIONS
-// ---------------------------------------------------------------------------
-export interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  recipients: string;
-  enabled: boolean;
-  channels: {
-    system?: boolean;
-    mobile?: boolean;
-    feishu?: boolean;
-  };
-  hasCustomConfig?: boolean;
-}
-
-export interface NotificationCategory {
-  id: string;
-  title: string;
-  items: NotificationItem[];
-}
-
-export const INITIAL_NOTIFICATION_CATEGORIES: NotificationCategory[] = [
-  {
-    id: "approval",
-    title: "审批待办",
-    items: [
-      {
-        id: "credit_application",
-        title: "积分申请",
-        description: "员工提交额外积分申请后生成待办；审批人可在消息详情中选择同意或拒绝",
-        recipients: "申请人的直属部长/主管",
-        enabled: true,
-        channels: { system: true }
-      }
-    ]
-  },
-  {
-    id: "task",
-    title: "任务协作",
-    items: [
-      {
-        id: "task_created",
-        title: "新任务",
-        description: "发布人创建任务并指派执行人后发送",
-        recipients: "被指派的执行人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "task_rescheduled",
-        title: "任务改期",
-        description: "任务的出片日期或截止时间被发布人修改后发送",
-        recipients: "任务执行人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "task_work_linked",
-        title: "关联作品",
-        description: "执行人为任务新增或移除关联作品后发送，并展示当前已关联数量",
-        recipients: "任务发布人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "task_script_linked",
-        title: "关联脚本",
-        description: "执行人为任务新增、替换或移除关联脚本后发送",
-        recipients: "任务发布人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "task_completed",
-        title: "任务完成",
-        description: "已上传任务所需数量的作品时自动发送，并将任务标记为已达标",
-        recipients: "任务发布人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "task_overdue",
-        title: "任务逾期",
-        description: "超过任务出片时间且未达到要求数量时由系统自动发送",
-        recipients: "任务发布人和执行人",
-        enabled: true,
-        channels: { system: true }
-      }
-    ]
-  },
-  {
-    id: "resource",
-    title: "内容资源",
-    items: [
-      {
-        id: "upload_success",
-        title: "上传成功",
-        description: "素材或成片上传并完成转码入库后发送",
-        recipients: "上传操作人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "upload_failed",
-        title: "上传失败",
-        description: "上传、分片校验或转码失败时发送，并给出失败阶段和重试建议",
-        recipients: "上传操作人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "ai_generation_completed",
-        title: "AI生成完成",
-        description: "AI 视频或爆款复刻任务完成时发送，并展示成功数量和积分消耗",
-        recipients: "AI 任务发起人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "resource_status_changed",
-        title: "状态修改",
-        description: "素材、成片或脚本的业务状态被其他成员修改后发送",
-        recipients: "资源上传人/负责人",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "resource_mentioned",
-        title: "批注与@提醒",
-        description: "成员新增批注、回复批注或在批注中 @ 指定人员时发送",
-        recipients: "被 @ 人；回复时同时通知原批注人",
-        enabled: true,
-        channels: { system: true }
-      }
-    ]
-  },
-  {
-    id: "live",
-    title: "直播",
-    items: [
-      {
-        id: "live_shift_created",
-        title: "新增排班",
-        description: "直播间新增场次并选择参与主播、助播和场控后发送",
-        recipients: "该直播场次关联的全部人员",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "live_shift_changed",
-        title: "排班调整",
-        description: "直播日期、时间段、直播间或参与人员发生变化后发送，并展示调整前后内容",
-        recipients: "调整前后涉及的全部人员",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "live_shift_cancelled",
-        title: "取消场次",
-        description: "直播场次被取消后发送，并展示取消人和取消原因",
-        recipients: "该直播场次关联的全部人员",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "live_start_reminder",
-        title: "开播提醒",
-        description: "按场次设定时间在开播前自动发送准备提醒",
-        recipients: "该直播场次关联的全部人员",
-        enabled: true,
-        channels: { system: true }
-      }
-    ]
-  },
-  {
-    id: "security",
-    title: "安全与系统",
-    items: [
-      {
-        id: "abnormal_login",
-        title: "异常登录",
-        description: "检测到异地 IP、新设备或高风险环境登录时发送",
-        recipients: "账号本人和安全管理员",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "account_locked",
-        title: "账号锁定",
-        description: "连续多次登录失败触发账号临时锁定时发送",
-        recipients: "账号本人和管理员",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "permission_changed",
-        title: "权限变更",
-        description: "用户角色、数据范围或功能权限被管理员调整并生效后发送",
-        recipients: "权限被调整的用户",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "data_export_audit",
-        title: "数据导出记录",
-        description: "用户导出报表或业务数据后生成审计消息；大批量、跨部门或包含敏感字段时标记为高风险",
-        recipients: "超级管理员和指定安全审计角色",
-        enabled: true,
-        channels: { system: true }
-      },
-      {
-        id: "system_notice",
-        title: "系统公告",
-        description: "系统维护、功能停用或重要平台规则调整时由平台发布",
-        recipients: "公告指定范围内的用户",
-        enabled: true,
-        channels: { system: true }
-      }
-    ]
-  }
-];
 
 export default function AdminSystemManagementView() {
   const [activeTab, setActiveTab] = useState<SystemTabType>("roles");
@@ -873,9 +615,8 @@ export default function AdminSystemManagementView() {
     { id: "watermark", label: "水印", icon: ImageIcon, desc: "全局图文水印与视频防盗贴图设置" },
     { id: "system_settings", label: "系统设置", icon: Settings, desc: "站点配置、存储引擎与渲染基础参数" },
     { id: "auto_tags", label: "系统自动化标签", icon: Tag, desc: "AI智能触发打标规则与指标自动分流" },
-    { id: "ad_groups", label: "广告组管理", icon: Megaphone, desc: "跨平台广告组绑定、预算控制与同步" },
+    { id: "ad_groups", label: "广告主管理", icon: Megaphone, desc: "跨平台广告账户授权、绑定与同步" },
     { id: "login_logs", label: "登录记录", icon: Key, desc: "账号登录历史、IP终端及安全预警" },
-    { id: "notifications", label: "消息通知", icon: Bell, desc: "系统预警、任务状态与通知渠道订阅" },
   ];
 
   // ---------------------------------------------------------------------------
@@ -1046,7 +787,6 @@ export default function AdminSystemManagementView() {
     member: AccountMember;
     resetType: "default" | "custom" | "random";
     customPassword: string;
-    notifyUser: boolean;
     forceNextChange: boolean;
   } | null>(null);
 
@@ -1251,7 +991,6 @@ export default function AdminSystemManagementView() {
       member: m,
       resetType: "default",
       customPassword: DEFAULT_PLATFORM_PASSWORD,
-      notifyUser: true,
       forceNextChange: true
     });
   };
@@ -1882,7 +1621,6 @@ export default function AdminSystemManagementView() {
     textDownloadLog: true, // 文案下载，操作记录开关
     finishedListSpendData: true, // 成片列表展示消耗数据开关
     finishedManualLinkMaterial: true, // 成片手动关联素材开关
-    videoPushSuccessNotify: false, // 视频推送成功发送消息开关
     uploadFinishedCutTimeRequired: false, // 上传成片剪辑时间必填
     uploadMaterialShootTimeRequired: false, // 上传素材拍摄时间必填
   });
@@ -1952,8 +1690,6 @@ export default function AdminSystemManagementView() {
   const [autoChangeStatusOnPushSuccess, setAutoChangeStatusOnPushSuccess] = useState<boolean>(false);
   const [pushSuccessDefaultVideoStatus, setPushSuccessDefaultVideoStatus] = useState<string>("已上机");
 
-  const [autoChangeStatusOnScriptLinked, setAutoChangeStatusOnScriptLinked] = useState<boolean>(false);
-  const [scriptLinkedDefaultScriptStatus, setScriptLinkedDefaultScriptStatus] = useState<string>("审核通过");
 
   // ---------------------------------------------------------------------------
   // 5. 系统自动化标签 STATE & HANDLERS
@@ -1995,11 +1731,11 @@ export default function AdminSystemManagementView() {
   };
 
   // ---------------------------------------------------------------------------
-  // 6. 广告主/广告组管理 STATE & HANDLERS
+  // 6. 广告主管理 STATE & HANDLERS
   // ---------------------------------------------------------------------------
   const AD_PLATFORMS = [
-    "巨量广告",
     "巨量千川",
+    "巨量广告",
     "磁力智投",
     "磁力金牛",
     "腾讯ADQ",
@@ -2011,7 +1747,7 @@ export default function AdminSystemManagementView() {
   ];
 
   // 选中的平台与子 Tab ('account' | 'group')
-  const [adPlatform, setAdPlatform] = useState<string>("巨量广告");
+  const [adPlatform, setAdPlatform] = useState<string>("巨量千川");
   const [adSubTab, setAdSubTab] = useState<"account" | "group">("account");
 
   // 广告账户数据列表
@@ -2019,7 +1755,7 @@ export default function AdminSystemManagementView() {
   const adAccounts = adStore.accounts;
   const checkAdManagement = () => {
     if (getAdActor().permissions.includes("ab_ad_group_manage")) return true;
-    showToast("暂无管理广告组权限");
+    showToast("暂无广告主管理权限");
     return false;
   };
   const setAdAccounts = (change: (accounts: AdAccount[]) => AdAccount[]) => {
@@ -2027,48 +1763,21 @@ export default function AdminSystemManagementView() {
   };
   const [adVisibility, setAdVisibility] = useState(adStore.visibility);
 
-  // 账户筛选 State
+  // Account filters apply immediately; selections never include hidden rows.
   const [adAuthFilter, setAdAuthFilter] = useState<"authorized" | "expired">("authorized");
-  const [adCategoryFilter, setAdCategoryFilter] = useState<string>("all"); // 'all' | 'bound' | 'unbound'
-  const [adGroupFilter, setAdGroupFilter] = useState<string>("all"); // 'all' | 'bound' | 'unbound'
-  const [adUserFilter, setAdUserFilter] = useState<string>("all"); // 'all' | 'bound' | 'unbound'
-  const [adGroupSelectFilter, setAdGroupSelectFilter] = useState<string>("all");
-  const [adSearchKeyword, setAdSearchKeyword] = useState<string>("");
-
-  // 批量选中的账户 IDs
+  const [adFilters, setAdFilters] = useState<AccountFilters>(EMPTY_ACCOUNT_FILTERS);
   const [selectedAdAccountIds, setSelectedAdAccountIds] = useState<string[]>([]);
-
-  // 过滤计算出的广告账户列表
-  const filteredAdAccounts = adAccounts.filter((acc) => {
-    if (acc.platform !== adPlatform) return false;
-    if (acc.status !== adAuthFilter) return false;
-
-    if (adCategoryFilter === "bound" && !acc.category) return false;
-    if (adCategoryFilter === "unbound" && acc.category) return false;
-
-    if (adGroupFilter === "bound" && !acc.group) return false;
-    if (adGroupFilter === "unbound" && acc.group) return false;
-
-    if (adUserFilter === "bound" && !acc.user) return false;
-    if (adUserFilter === "unbound" && acc.user) return false;
-
-    if (adGroupSelectFilter !== "all" && acc.group !== adGroupSelectFilter) return false;
-
-    if (adSearchKeyword.trim()) {
-      const kw = adSearchKeyword.toLowerCase();
-      const matchName = acc.name.toLowerCase().includes(kw);
-      const matchId = acc.id.includes(kw);
-      const matchRemark = acc.remark.toLowerCase().includes(kw);
-      if (!matchName && !matchId && !matchRemark) return false;
-    }
-
-    return true;
-  });
-
-  // 批量绑定 Modal State
-  const [batchBindModalOpen, setBatchBindModalOpen] = useState(false);
-  const [batchBindGroup, setBatchBindGroup] = useState("");
-  const [batchBindCategory, setBatchBindCategory] = useState("");
+  const [bindingTargets, setBindingTargets] = useState<{ ids: string[]; editing: boolean } | null>(null);
+  const [revokingAdAccountIds, setRevokingAdAccountIds] = useState<string[]>([]);
+  const filteredAdAccounts = filterAdvertiserAccounts(adAccounts, adPlatform, adAuthFilter, adFilters);
+  const visibleAccountKey = filteredAdAccounts.map(account => account.id).join(",");
+  React.useEffect(() => {
+    const visible = new Set(visibleAccountKey.split(","));
+    setSelectedAdAccountIds(ids => {
+      const next = ids.filter(id => visible.has(id));
+      return next.length === ids.length ? ids : next;
+    });
+  }, [visibleAccountKey]);
 
   // 批量备注 Modal State
   const [batchRemarkModalOpen, setBatchRemarkModalOpen] = useState(false);
@@ -2081,7 +1790,11 @@ export default function AdminSystemManagementView() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [reauthorizingAccount, setReauthorizingAccount] = useState<AdAccount | undefined>();
   const [syncingAdAccounts, setSyncingAdAccounts] = useState(false);
-  const [syncResult, setSyncResult] = useState<{ success: number; failures: { name: string; reason: string }[] } | null>(null);
+  const [syncResult, setSyncResult] = useState<AdSyncResult | null>(null);
+  const [syncScenario, setSyncScenario] = useState<AdSyncScenario>("normal");
+  const [syncExpiryConfirm, setSyncExpiryConfirm] = useState(false);
+  const syncTimer = React.useRef<number | undefined>(undefined);
+  React.useEffect(() => () => window.clearTimeout(syncTimer.current), []);
 
   // 账户分组 STATE
   const accountGroups = adStore.groups;
@@ -2097,7 +1810,7 @@ export default function AdminSystemManagementView() {
   const [groupFormName, setGroupFormName] = useState("");
   const [groupFormTeam, setGroupFormTeam] = useState("");
   const [groupFormGroup, setGroupFormGroup] = useState("");
-  const [groupFormUsers, setGroupFormUsers] = useState<string[]>(["一凡最帅"]);
+  const [groupFormUsers, setGroupFormUsers] = useState<string[]>([]);
   const [groupFormAccountIds, setGroupFormAccountIds] = useState<string[]>([]);
   const [groupFormSearch, setGroupFormSearch] = useState("");
   const [groupAccountPage, setGroupAccountPage] = useState(1);
@@ -2120,37 +1833,14 @@ export default function AdminSystemManagementView() {
   );
 
   // 下拉可选项
-  const availableTeamsList = ["华东运营部", "电商事业部", "品牌营销部", "海外推广部"];
-  const availableGroupsList = ["核心投手一组", "第二投放组", "第一投放组", "千川第一组"];
-  const availableUsersList = ["徐振", "普通用户", "一凡最帅", "罗福强", "童欣园", "张小梅", "李强", "陈斌"];
-  const availableCategoriesList = ["千川引流", "卸妆油类目", "核心精选", "备选类目", "爆款连衣裙", "防晒系列"];
+  const availableTeamsList = [...new Set([...depts.filter(d => d.status === "active" && d.levelType !== "group").map(d => d.name), ...accountGroups.map(g => g.viewTeam).filter(Boolean)])];
+  const availableGroupsList = [...new Set([...depts.filter(d => d.status === "active" && d.levelType === "group").map(d => d.name), ...adAccounts.map(a => a.group).filter(Boolean), ...accountGroups.map(g => g.viewGroup).filter(Boolean)])];
+  const availableUsersList = [...new Set([...members.filter(m => ["normal", "bound"].includes(m.status)).map(m => m.name), ...accountGroups.flatMap(g => g.viewUsers)])];
 
   // 删除分组 Modal State
   const [deleteGroupModalOpen, setDeleteGroupModalOpen] = useState(false);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
 
-  // 批量绑定的点击处理
-  const handleConfirmBatchBind = () => {
-    if (!checkAdManagement()) return;
-    if (selectedAdAccountIds.length === 0) {
-      showToast("请先选择要绑定的广告账户");
-      return;
-    }
-    setAdAccounts((prev) =>
-      prev.map((acc) => {
-        if (!selectedAdAccountIds.includes(acc.id)) return acc;
-        return {
-          ...acc,
-          group: batchBindGroup || acc.group,
-          category: batchBindCategory || acc.category,
-        };
-      })
-    );
-    showToast(`成功为 ${selectedAdAccountIds.length} 个账户绑定小组/分类！`);
-    setBatchBindModalOpen(false);
-    setBatchBindGroup("");
-    setBatchBindCategory("");
-  };
 
   // 批量备注的点击处理
   const handleConfirmBatchRemark = () => {
@@ -2165,7 +1855,7 @@ export default function AdminSystemManagementView() {
     }
     setAdAccounts((prev) =>
       prev.map((acc) => {
-        if (!selectedAdAccountIds.includes(acc.id)) return acc;
+        if (acc.platform !== adPlatform || !selectedAdAccountIds.includes(acc.id)) return acc;
         return {
           ...acc,
           remark: batchRemarkText,
@@ -2179,29 +1869,30 @@ export default function AdminSystemManagementView() {
 
   // 批量取消授权的点击处理
   const handleConfirmBatchCancelAuth = () => {
-    if (!selectedAdAccountIds.length) return;
-    try { revokeAdAccounts(selectedAdAccountIds, adPlatform); }
-    catch (error) { showToast(error instanceof Error ? error.message : "取消授权失败"); return; }
-    showToast(`已成功取消 ${selectedAdAccountIds.length} 个账户的授权！`);
+    if (!revokingAdAccountIds.length) return;
+    try { revokeAdAccounts(revokingAdAccountIds, adPlatform); }
+    catch (error) { showToast(error instanceof Error ? error.message : "操作失败"); return; }
+    showToast(adPlatform === "巨量千川" ? `已解除 ${revokingAdAccountIds.length} 个账户的接入，千川投放不受影响` : `已成功取消 ${revokingAdAccountIds.length} 个账户的授权！`);
     setBatchCancelAuthModalOpen(false);
-    setSelectedAdAccountIds([]);
+    setSelectedAdAccountIds(ids => ids.filter(id => !revokingAdAccountIds.includes(id)));
+    setRevokingAdAccountIds([]);
   };
 
-  const handleSyncAdAccounts = () => {
+  const handleSyncAdAccounts = (retryIds?: string[], expiryConfirmed = false) => {
     if (!checkAdManagement() || syncingAdAccounts) return;
+    const platform = retryIds ? syncResult!.platform : adPlatform;
+    const ids = retryIds || [...selectedAdAccountIds];
+    const scenario = retryIds || platform !== "巨量千川" ? "normal" : syncScenario;
+    if (scenario === "expired" && !expiryConfirmed) { setSyncExpiryConfirm(true); return; }
+    setSyncExpiryConfirm(false);
+    const actorId = getAdActor().id;
     setSyncingAdAccounts(true);
-    window.setTimeout(() => {
-      const failures: { name: string; reason: string }[] = [];
-      let success = 0;
-      if (!checkAdManagement()) { setSyncingAdAccounts(false); return; }
-      updateAdStore(s => ({ ...s, accounts: s.accounts.map(account => {
-        const reason = account.status === "expired" || account.revoked ? "授权已失效，请重新授权" : "";
-        if (reason) { failures.push({ name: `${account.name} (${account.id})`, reason }); return { ...account, syncError: reason }; }
-        success++;
-        return { ...account, syncedAt: adDate(), syncError: "" };
-      }) }));
-      setSyncingAdAccounts(false);
-      setSyncResult({ success, failures });
+    syncTimer.current = window.setTimeout(() => {
+      try {
+        if (getAdActor().id !== actorId) throw new Error("登录身份已变化，请重新操作");
+        setSyncResult(syncAdAccounts(platform, ids, scenario));
+      } catch (error) { showToast(error instanceof Error ? error.message : "同步失败"); }
+      finally { setSyncingAdAccounts(false); setSyncScenario("normal"); }
     }, 700);
   };
 
@@ -2241,11 +1932,14 @@ export default function AdminSystemManagementView() {
       showToast("请输入账户分组名称");
       return;
     }
+    if (accountGroups.some(g => g.platform === adPlatform && g.id !== editingGroupId && g.name === groupFormName.trim())) { showToast("当前平台已存在同名账户分组"); return; }
+    if (groupFormAccountIds.some(id => !adAccounts.some(a => a.platform === adPlatform && a.id === id))) { showToast("分组账户已发生变化，请重新选择"); return; }
+    if (groupModalMode === "edit" && !accountGroups.some(g => g.id === editingGroupId && g.platform === adPlatform)) { showToast("账户分组已不存在，请返回列表"); return; }
     if (groupModalMode === "create") {
       const newGroup = {
         id: `AG-${adId()}`,
         platform: adPlatform,
-        name: groupFormName,
+        name: groupFormName.trim(),
         viewTeam: groupFormTeam,
         viewGroup: groupFormGroup,
         viewUsers: groupFormUsers,
@@ -2259,7 +1953,7 @@ export default function AdminSystemManagementView() {
           g.id === editingGroupId
             ? {
                 ...g,
-                name: groupFormName,
+                name: groupFormName.trim(),
                 viewTeam: groupFormTeam,
                 viewGroup: groupFormGroup,
                 viewUsers: groupFormUsers,
@@ -2291,119 +1985,6 @@ export default function AdminSystemManagementView() {
     { id: "L-2", user: "张小梅", ip: "114.220.10.55", location: "江苏省南京市", device: "Edge 126.0 (Windows)", time: "2026-08-12 21:05:12", status: "正常" },
     { id: "L-3", user: "李强", ip: "220.181.108.91", location: "北京市", device: "Safari 17.5 (iOS)", time: "2026-08-12 19:12:40", status: "异地安全预警" },
   ]);
-
-  // ---------------------------------------------------------------------------
-  // 8. 消息通知 STATE & HANDLERS
-  // ---------------------------------------------------------------------------
-  const [notifications, setNotifications] = useState<NotificationCategory[]>(() => {
-    const saved = localStorage.getItem("cloud_video_notification_settings_v2");
-    if (!saved) return INITIAL_NOTIFICATION_CATEGORIES;
-    try {
-      return JSON.parse(saved);
-    } catch {
-      return INITIAL_NOTIFICATION_CATEGORIES;
-    }
-  });
-
-  const [collapsedCategoryIds, setCollapsedCategoryIds] = useState<string[]>([]);
-  const [configModalItem, setConfigModalItem] = useState<{
-    catId: string;
-    itemId: string;
-    title: string;
-    description: string;
-  } | null>(null);
-  const [customDescInput, setCustomDescInput] = useState("");
-
-  const [spendModalOpen, setSpendModalOpen] = useState(false);
-  const [spendModalCatId, setSpendModalCatId] = useState("");
-  const [spendValue, setSpendValue] = useState("10000");
-  const [growthValue, setGrowthValue] = useState("30");
-
-  const toggleCollapseCategory = (catId: string) => {
-    setCollapsedCategoryIds(prev => 
-      prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
-    );
-  };
-
-  const handleToggleEnable = (catId: string, itemId: string) => {
-    setNotifications(prev => prev.map(cat => {
-      if (cat.id !== catId) return cat;
-      return {
-        ...cat,
-        items: cat.items.map(item => {
-          if (item.id !== itemId) return item;
-          return { ...item, enabled: !item.enabled };
-        })
-      };
-    }));
-  };
-
-  const handleOpenSpendModal = (catId: string, item: NotificationItem) => {
-    setSpendModalCatId(catId);
-    const foundSpend = item.description.match(/(\d+)\s*¥/);
-    const foundGrowth = item.description.match(/(\d+)\s*%/);
-
-    setSpendValue(foundSpend ? foundSpend[1] : "10000");
-    setGrowthValue(foundGrowth ? foundGrowth[1] : "30");
-    setSpendModalOpen(true);
-  };
-
-  const handleSaveSpendConfig = () => {
-    const sVal = spendValue.trim() || "10000";
-    const gVal = growthValue.trim() || "30";
-    const newDesc = `当日消耗大于 ${sVal}¥ 并且涨幅大于 ${gVal}%，管理员收到消息提醒`;
-
-    setNotifications(prev => prev.map(cat => {
-      if (cat.id !== spendModalCatId) return cat;
-      return {
-        ...cat,
-        items: cat.items.map(item => {
-          if (item.id !== "daily_spend_growth") return item;
-          return { ...item, description: newDesc };
-        })
-      };
-    }));
-
-    showToast("✅ 已成功保存【当日消耗增长】配置");
-    setSpendModalOpen(false);
-  };
-
-  const handleOpenConfigModal = (catId: string, item: NotificationItem) => {
-    setConfigModalItem({
-      catId,
-      itemId: item.id,
-      title: item.title,
-      description: item.description
-    });
-    setCustomDescInput(item.description);
-  };
-
-  const handleSaveConfigModal = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!configModalItem) return;
-    const trimmed = customDescInput.trim();
-    if (!trimmed) {
-      showToast("场景规则描述不能为空");
-      return;
-    }
-    setNotifications(prev => prev.map(cat => {
-      if (cat.id !== configModalItem.catId) return cat;
-      return {
-        ...cat,
-        items: cat.items.map(item => {
-          if (item.id !== configModalItem.itemId) return item;
-          return { ...item, description: trimmed };
-        })
-      };
-    }));
-    showToast(`✅ 已更新【${configModalItem.title}】的场景提醒规则`);
-    setConfigModalItem(null);
-  };
-
-  const handleSaveNotificationSettings = () => {
-    localStorage.setItem("cloud_video_notification_settings_v2", JSON.stringify(notifications));
-    showToast("✅ 消息通知设置保存成功！");
-  };
 
   // ---------------------------------------------------------------------------
   // 10. 用户列表 STATE & HANDLERS
@@ -2520,8 +2101,8 @@ export default function AdminSystemManagementView() {
 
       {/* 顶部一排导航栏 (与内容管理/资源库页面风格完全一致，顶部留出 pt-4 边距) */}
       <div className="pt-4 px-5 pb-1 bg-slate-50 shrink-0 z-30 relative overflow-visible">
-        <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs relative overflow-visible">
-          <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-xl overflow-visible">
+        <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs relative overflow-visible">
+          <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-[inherit] overflow-visible">
             <div className="flex items-center gap-1.5 min-w-max overflow-visible">
               {tabs.map((t) => {
                 const Icon = t.icon;
@@ -2590,7 +2171,7 @@ export default function AdminSystemManagementView() {
           return (
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                <div className="bg-white p-4 rounded-module border border-slate-200/90 shadow-2xs flex items-center gap-3">
                   <div className="p-3 bg-purple-100 text-purple-700 rounded-xl shrink-0">
                     <Building2 className="w-5 h-5" />
                   </div>
@@ -2600,7 +2181,7 @@ export default function AdminSystemManagementView() {
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                <div className="bg-white p-4 rounded-module border border-slate-200/90 shadow-2xs flex items-center gap-3">
                   <div className="p-3 bg-indigo-100 text-indigo-700 rounded-xl shrink-0">
                     <Layers className="w-5 h-5" />
                   </div>
@@ -2610,7 +2191,7 @@ export default function AdminSystemManagementView() {
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                <div className="bg-white p-4 rounded-module border border-slate-200/90 shadow-2xs flex items-center gap-3">
                   <div className="p-3 bg-emerald-100 text-emerald-700 rounded-xl shrink-0">
                     <FolderPlus className="w-5 h-5" />
                   </div>
@@ -2622,7 +2203,7 @@ export default function AdminSystemManagementView() {
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
+                <div className="bg-white p-4 rounded-module border border-slate-200/90 shadow-2xs flex items-center gap-3">
                   <div className="p-3 bg-amber-100 text-amber-700 rounded-xl shrink-0">
                     <Users className="w-5 h-5" />
                   </div>
@@ -2633,7 +2214,7 @@ export default function AdminSystemManagementView() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+              <div className="bg-white rounded-module border border-slate-200/90 shadow-xs overflow-hidden">
                 <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-purple-600" />
@@ -2850,7 +2431,7 @@ export default function AdminSystemManagementView() {
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "members" && (
           <div className="space-y-5">
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+            <div className="bg-white p-5 rounded-module border border-slate-200/90 shadow-xs space-y-4">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-purple-600" />
@@ -2986,7 +2567,7 @@ export default function AdminSystemManagementView() {
               )}
             </div>
 
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs overflow-hidden">
+            <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
@@ -3156,7 +2737,7 @@ export default function AdminSystemManagementView() {
         {/* TAB 1: 角色与权限矩阵 (ROLES & PERMISSION MATRIX)                             */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "roles" && (
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+          <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
             {/* Top Banner / Description */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
               <div>
@@ -3416,7 +2997,7 @@ export default function AdminSystemManagementView() {
         {/* TAB 2: 操作记录                                                              */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "audit" && (
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+          <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
             {/* Top Toolbar matching screenshots */}
             <div className="flex flex-wrap items-center gap-3">
               {/* 今日数据 / 历史数据 Switcher */}
@@ -3704,7 +3285,7 @@ export default function AdminSystemManagementView() {
         {/* TAB 3: 水印                                                                  */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "watermark" && (
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-6 space-y-6">
+          <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-6 space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">全局暗水印与视频防盗贴图设置</h3>
@@ -3914,7 +3495,7 @@ export default function AdminSystemManagementView() {
             </div>
 
             {/* 3. 功能开关 */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-5">
+            <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-5">
               <div className="flex items-center gap-2 border-l-4 border-[#7C3AED] pl-2.5">
                 <h3 className="text-sm font-extrabold text-slate-900">功能开关</h3>
               </div>
@@ -3926,15 +3507,11 @@ export default function AdminSystemManagementView() {
                   { key: "textDownloadLog", label: "文案下载，操作记录开关" },
                   { key: "finishedListSpendData", label: "成片列表展示消耗数据开关" },
                   { key: "finishedManualLinkMaterial", label: "成片手动关联素材开关" },
-                  { key: "videoPushSuccessNotify", label: "视频推送成功发送消息开关", desc: "开启后视频推送完成后会收到消息通知。" },
                   { key: "uploadFinishedCutTimeRequired", label: "上传成片剪辑时间必填" },
                   { key: "uploadMaterialShootTimeRequired", label: "上传素材拍摄时间必填" },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
-                    <div>
-                      <span>{item.label}</span>
-                      {item.desc && <p className="text-[11px] text-slate-400 font-normal mt-0.5">{item.desc}</p>}
-                    </div>
+                    <span>{item.label}</span>
                     <button
                       type="button"
                       onClick={() =>
@@ -4050,7 +3627,7 @@ export default function AdminSystemManagementView() {
             </div>
 
             {/* 6. 发布多少天后开放查看 */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+            <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
               <div className="flex items-center justify-between border-l-4 border-[#7C3AED] pl-2.5">
                 <h3 className="text-sm font-extrabold text-slate-900">发布多少天后开放查看</h3>
                 <span className="text-xs text-slate-400 font-normal">设置成片、素材、第三方、图片、文案、音频、脚本发布后多久公开</span>
@@ -4182,7 +3759,7 @@ export default function AdminSystemManagementView() {
             </div>
 
             {/* 8. 外网权限 */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+            <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
               <div className="flex items-center gap-2 border-l-4 border-[#7C3AED] pl-2.5">
                 <h3 className="text-sm font-extrabold text-slate-900">外网权限</h3>
               </div>
@@ -4340,7 +3917,7 @@ export default function AdminSystemManagementView() {
             </div>
 
             {/* 9. 发布作品，可见性设置 */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+            <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
               <div className="flex items-center gap-2 border-l-4 border-[#7C3AED] pl-2.5">
                 <h3 className="text-sm font-extrabold text-slate-900">发布作品，可见性设置</h3>
               </div>
@@ -4504,7 +4081,7 @@ export default function AdminSystemManagementView() {
             </div>
 
             {/* 12. 自动修改状态 (资源状态修改规则) */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+            <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
               <div className="flex items-center gap-2 border-l-4 border-[#7C3AED] pl-2.5">
                 <h3 className="text-sm font-extrabold text-slate-900">自动修改状态</h3>
               </div>
@@ -4544,39 +4121,6 @@ export default function AdminSystemManagementView() {
                   </div>
                 </div>
 
-                {/* 脚本关联任务后修改状态 */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span>脚本关联任务后修改状态</span>
-                    <button
-                      type="button"
-                      onClick={() => setAutoChangeStatusOnScriptLinked(!autoChangeStatusOnScriptLinked)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        autoChangeStatusOnScriptLinked ? "bg-[#7C3AED]" : "bg-slate-200"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
-                          autoChangeStatusOnScriptLinked ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-3 pl-6">
-                    <span className="text-slate-500 font-normal shrink-0">默认值</span>
-                    <select
-                      value={scriptLinkedDefaultScriptStatus}
-                      onChange={(e) => setScriptLinkedDefaultScriptStatus(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-white focus:border-[#7C3AED] outline-none"
-                    >
-                      <option value="审核通过">审核通过</option>
-                      <option value="进行中">进行中</option>
-                      <option value="制作中">制作中</option>
-                      <option value="已封存">已封存</option>
-                    </select>
-                  </div>
-                </div>
               </div>
 
               <div className="flex justify-end pt-2 border-t border-slate-100">
@@ -4598,7 +4142,7 @@ export default function AdminSystemManagementView() {
         {activeTab === "auto_tags" && (
           <div className="space-y-6 pb-12">
             {/* 1. 爆款视频 */}
-            <div data-testid="viral-video-settings" className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+            <div data-testid="viral-video-settings" className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
               <div className="flex items-center gap-2 border-l-4 border-[#7C3AED] pl-2.5">
                 <h3 className="text-sm font-extrabold text-slate-900">爆款视频</h3>
               </div>
@@ -4643,7 +4187,7 @@ export default function AdminSystemManagementView() {
             </div>
 
             {/* 2. 保护标签 */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-5">
+            <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-5">
               <div className="flex items-center gap-2 border-l-4 border-[#7C3AED] pl-2.5">
                 <h3 className="text-sm font-extrabold text-slate-900">保护标签</h3>
               </div>
@@ -4786,355 +4330,42 @@ export default function AdminSystemManagementView() {
         )}
 
         {/* --------------------------------------------------------------------------- */}
-        {/* TAB 6: 广告组管理 / 广告主管理                                              */}
+        {/* TAB 6: 广告主管理                                                        */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "ad_groups" && (
-          <div className="space-y-5 animate-fade-in pb-12">
-            {/* 1. 顶部巨量/腾讯/TikTok等多平台 Tab 栏 */}
-            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-3 overflow-x-auto scrollbar-none">
-              <div className="flex items-center gap-1 min-w-max border-b border-slate-100 pb-2">
-                {AD_PLATFORMS.map((plat) => {
-                  const isActive = adPlatform === plat;
-                  return (
-                    <button
-                      key={plat}
-                      type="button"
-                      onClick={() => {
-                        setAdPlatform(plat);
-                        setSelectedAdAccountIds([]);
-                        setGroupAccountPage(1);
-                      }}
-                      className={`px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                        isActive
-                          ? "text-[#7C3AED] border-b-2 border-[#7C3AED]"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
-                    >
-                      {plat}
-                    </button>
-                  );
-                })}
+          <div className="animate-fade-in space-y-4 pb-12">
+            <div className="rounded-module bg-white">
+              <div className="flex items-center gap-4 overflow-x-auto border-b border-slate-100 px-5" role="tablist" aria-label="广告平台">
+                {AD_PLATFORMS.map(plat => <button key={plat} type="button" role="tab" aria-selected={adPlatform === plat}
+                  onClick={() => { setAdPlatform(plat); setSyncScenario("normal"); setAdAuthFilter("authorized"); setAdFilters(EMPTY_ACCOUNT_FILTERS); setSelectedAdAccountIds([]); setGroupAccountPage(1); }}
+                  className={"shrink-0 border-b-2 px-1 py-4 text-sm font-medium " + (adPlatform === plat ? "border-purple-600 text-purple-600" : "border-transparent text-slate-500 hover:text-slate-900")}>{plat}</button>)}
               </div>
-
-              {/* 2. 二级 Mode 视图切换：广告账户 VS 账户分组 */}
-              <div className="flex items-center gap-6 pt-3 px-2 border-b border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setAdSubTab("account")}
-                  className={`text-xs font-bold pb-2 transition-all cursor-pointer relative ${
-                    adSubTab === "account"
-                      ? "text-[#7C3AED] border-b-2 border-[#7C3AED]"
-                      : "text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  广告账户
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAdSubTab("group")}
-                  className={`text-xs font-bold pb-2 transition-all cursor-pointer relative ${
-                    adSubTab === "group"
-                      ? "text-[#7C3AED] border-b-2 border-[#7C3AED]"
-                      : "text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  账户分组
-                </button>
-              </div>
+              {adSubTab === "account" && <AdvertiserAccountFilters accounts={adAccounts.filter(account => account.platform === adPlatform)} filters={adFilters}
+                onChange={next => { setAdFilters(next); setSelectedAdAccountIds([]); }} groups={availableGroupsList}
+                syncControls={<>
+                  <button type="button" onClick={() => handleSyncAdAccounts()} disabled={syncingAdAccounts} className="flex h-9 items-center gap-1.5 rounded-md border border-slate-200 px-3 text-xs text-slate-700 disabled:opacity-50"><RefreshCw className={"h-3.5 w-3.5 " + (syncingAdAccounts ? "animate-spin" : "")} />{syncingAdAccounts ? "同步中" : "手动同步"}</button>
+                  {adPlatform === "巨量千川" && <label className="flex items-center gap-2 text-xs text-slate-500">模拟同步<select aria-label="模拟同步结果" value={syncScenario} disabled={syncingAdAccounts} onChange={e => setSyncScenario(e.target.value as AdSyncScenario)} className="h-9 rounded-md border border-slate-200 bg-white px-2"><option value="normal">正常返回</option><option value="network">请求失败</option><option value="expired">授权失效</option></select></label>}
+                </>}>
+                <button type="button" onClick={() => { if (!checkAdManagement()) return; setReauthorizingAccount(undefined); setAuthModalOpen(true); }} className="h-10 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">去授权</button>
+                <div className="flex h-10 overflow-hidden rounded-md border border-slate-200">
+                  {(["authorized", "expired"] as const).map(status => <button key={status} type="button" aria-pressed={adAuthFilter === status} onClick={() => { setAdAuthFilter(status); setSelectedAdAccountIds([]); }} className={"px-4 text-xs " + (adAuthFilter === status ? "bg-purple-600 text-white" : "bg-white text-slate-600")}>{status === "authorized" ? "已授权" : "已失效"}</button>)}
+                </div>
+              </AdvertiserAccountFilters>}
             </div>
-
-            {/* ----------------------------------------------------------------------- */}
-            {/* 视图 1：广告账户 (AD ACCOUNTS VIEW)                                    */}
-            {/* ----------------------------------------------------------------------- */}
-            {adSubTab === "account" && (
-              <div className="space-y-4">
-                {/* 筛选与授权工具栏 */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {/* 去授权按钮 */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!checkAdManagement()) return;
-                        setReauthorizingAccount(undefined);
-                        setAuthModalOpen(true);
-                      }}
-                      className="px-4 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer"
-                    >
-                      去授权
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSyncAdAccounts}
-                      disabled={syncingAdAccounts}
-                      className="px-4 py-1.5 border border-slate-200 bg-white text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer disabled:opacity-60"
-                    >
-                      <RefreshCw className={`mr-1 inline h-3.5 w-3.5 ${syncingAdAccounts ? "animate-spin" : ""}`} />
-                      {syncingAdAccounts ? "同步中" : "手动同步"}
-                    </button>
-
-                    {/* 已授权 / 已失效 Tab 开关 */}
-                    <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => setAdAuthFilter("authorized")}
-                        className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                          adAuthFilter === "authorized"
-                            ? "bg-[#7C3AED] text-white shadow-2xs"
-                            : "text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        已授权
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAdAuthFilter("expired")}
-                        className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                          adAuthFilter === "expired"
-                            ? "bg-[#7C3AED] text-white shadow-2xs"
-                            : "text-slate-600 hover:text-slate-900"
-                        }`}
-                      >
-                        已失效
-                      </button>
-                    </div>
-
-                    {/* 下拉筛选：是否关联分类 */}
-                    <select
-                      value={adCategoryFilter}
-                      onChange={(e) => setAdCategoryFilter(e.target.value)}
-                      className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-white shadow-2xs outline-none cursor-pointer focus:border-[#7C3AED]"
-                    >
-                      <option value="all">请选择是否关联分类</option>
-                      <option value="bound">已关联分类</option>
-                      <option value="unbound">未关联分类</option>
-                    </select>
-
-                    {/* 下拉筛选：是否关联小组 */}
-                    <select
-                      value={adGroupFilter}
-                      onChange={(e) => setAdGroupFilter(e.target.value)}
-                      className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-white shadow-2xs outline-none cursor-pointer focus:border-[#7C3AED]"
-                    >
-                      <option value="all">请选择是否关联小组</option>
-                      <option value="bound">已关联小组</option>
-                      <option value="unbound">未关联小组</option>
-                    </select>
-
-                    {/* 下拉筛选：是否关联用户 */}
-                    <select
-                      value={adUserFilter}
-                      onChange={(e) => setAdUserFilter(e.target.value)}
-                      className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-white shadow-2xs outline-none cursor-pointer focus:border-[#7C3AED]"
-                    >
-                      <option value="all">请选择是否关联用户</option>
-                      <option value="bound">已关联用户</option>
-                      <option value="unbound">未关联用户</option>
-                    </select>
-
-                    {/* 下拉筛选：选择小组 */}
-                    <select
-                      value={adGroupSelectFilter}
-                      onChange={(e) => setAdGroupSelectFilter(e.target.value)}
-                      className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-white shadow-2xs outline-none cursor-pointer focus:border-[#7C3AED]"
-                    >
-                      <option value="all">请选择小组</option>
-                      {availableGroupsList.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* 账户ID 搜索框 */}
-                  <div className="relative w-48 shrink-0">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      placeholder="请输入账户ID"
-                      value={adSearchKeyword}
-                      onChange={(e) => setAdSearchKeyword(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:border-[#7C3AED] outline-none shadow-2xs"
-                    />
-                  </div>
-                </div>
-
-                {/* 批量操作控制按钮区 */}
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (selectedAdAccountIds.length === 0) {
-                        showToast("请先勾选需要绑定的广告账户");
-                        return;
-                      }
-                      setBatchBindModalOpen(true);
-                    }}
-                    className="px-4 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer"
-                  >
-                    批量绑定 {selectedAdAccountIds.length > 0 && `(${selectedAdAccountIds.length})`}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (selectedAdAccountIds.length === 0) {
-                        showToast("请先勾选需要备注的广告账户");
-                        return;
-                      }
-                      setBatchRemarkModalOpen(true);
-                    }}
-                    className="px-4 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer"
-                  >
-                    批量备注
-                  </button>
-                  <button
-                    type="button"
-                      onClick={() => {
-                        if (!checkAdManagement()) return;
-                        if (!selectedAdAccountIds.length) {
-                        showToast("请先选择广告账户");
-                        return;
-                      }
-                      setBatchCancelAuthModalOpen(true);
-                    }}
-                    className="px-4 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer"
-                  >
-                    取消授权
-                  </button>
-                </div>
-
-                {/* 广告账户表格 */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold">
-                          <th className="py-3 px-4 w-10 text-center">
-                            <input
-                              type="checkbox"
-                              checked={
-                                filteredAdAccounts.length > 0 &&
-                                filteredAdAccounts.every((a) => selectedAdAccountIds.includes(a.id))
-                              }
-                              onChange={() => {
-                                const allFilteredIds = filteredAdAccounts.map((a) => a.id);
-                                const isAll = allFilteredIds.every((id) =>
-                                  selectedAdAccountIds.includes(id)
-                                );
-                                if (isAll) {
-                                  setSelectedAdAccountIds((prev) =>
-                                    prev.filter((id) => !allFilteredIds.includes(id))
-                                  );
-                                } else {
-                                  setSelectedAdAccountIds((prev) =>
-                                    Array.from(new Set([...prev, ...allFilteredIds]))
-                                  );
-                                }
-                              }}
-                              className="rounded accent-[#7C3AED] cursor-pointer"
-                            />
-                          </th>
-                          <th className="py-3 px-4">广告账户</th>
-                          <th className="py-3 px-4">关联分类</th>
-                          <th className="py-3 px-4">关联小组</th>
-                          <th className="py-3 px-4">关联用户</th>
-                          <th className="py-3 px-4">备注</th>
-                          <th className="py-3 px-4 text-center">授权状态</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                        {filteredAdAccounts.map((acc) => {
-                          const isSelected = selectedAdAccountIds.includes(acc.id);
-                          return (
-                            <tr
-                              key={acc.id}
-                              className={`hover:bg-purple-50/30 transition-colors ${
-                                isSelected ? "bg-purple-50/50" : ""
-                              }`}
-                            >
-                              <td className="py-3.5 px-4 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => {
-                                    setSelectedAdAccountIds((prev) =>
-                                      prev.includes(acc.id)
-                                        ? prev.filter((i) => i !== acc.id)
-                                        : [...prev, acc.id]
-                                    );
-                                  }}
-                                  className="rounded accent-[#7C3AED] cursor-pointer"
-                                />
-                              </td>
-                              <td className="py-3.5 px-4">
-                                <div className="space-y-0.5 max-w-xl">
-                                  <div className="font-bold text-slate-800 text-xs leading-relaxed">
-                                    {acc.name}
-                                  </div>
-                                  <div className="text-[11px] font-mono text-slate-400">
-                                    {acc.id}
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-3.5 px-4">
-                                {acc.category ? (
-                                  <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px] font-medium border border-slate-200/80">
-                                    {acc.category}
-                                  </span>
-                                ) : (
-                                  <span className="text-slate-300 font-normal">--</span>
-                                )}
-                              </td>
-                              <td className="py-3.5 px-4">
-                                {acc.group ? (
-                                  <span className="px-2 py-0.5 bg-purple-50 text-[#7C3AED] rounded-md text-[11px] font-bold">
-                                    {acc.group}
-                                  </span>
-                                ) : (
-                                  <span className="text-slate-300 font-normal">--</span>
-                                )}
-                              </td>
-                              <td className="py-3.5 px-4">
-                                {acc.user ? (
-                                  <span className="text-xs text-slate-700 font-medium">
-                                    {acc.user}
-                                  </span>
-                                ) : (
-                                  <span className="text-slate-300 font-normal">--</span>
-                                )}
-                              </td>
-                              <td className="py-3.5 px-4">
-                                <span className="text-xs text-slate-500 font-mono">
-                                  {acc.remark || "--"}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-4 text-center">
-                                {acc.status === "authorized" ? (
-                                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[11px] font-bold">
-                                    已授权
-                                  </span>
-                                ) : (
-                                  <div className="space-y-2"><span className="px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-[11px] font-bold">已失效</span><button type="button" className="block mx-auto text-xs text-violet-600" onClick={() => { if (!checkAdManagement()) return; setReauthorizingAccount(acc); setAuthModalOpen(true); }}>重新授权</button></div>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-
-                        {filteredAdAccounts.length === 0 && (
-                          <tr>
-                            <td colSpan={7} className="py-12 text-center text-slate-400 text-xs">
-                              暂无符合条件的广告账户
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+            <div className="flex items-center gap-8 rounded-module border-b border-slate-100 bg-white px-5">
+              {(["account", "group"] as const).map(tab => <button key={tab} type="button" onClick={() => { setAdSubTab(tab); setSelectedAdAccountIds([]); }} className={"border-b-2 py-4 text-sm font-medium " + (adSubTab === tab ? "border-purple-600 text-purple-600" : "border-transparent text-slate-500")}>{tab === "account" ? "广告账户" : "账户分组"}</button>)}
+            </div>
+            {adSubTab === "account" && <section className="rounded-module bg-white px-5">
+              <div className="flex flex-wrap items-center gap-3 py-4">
+                <button type="button" aria-label="批量绑定" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先勾选需要绑定的广告账户"); setBindingTargets({ ids: [...selectedAdAccountIds], editing: false }); }} className="h-9 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量绑定{selectedAdAccountIds.length ? " (" + selectedAdAccountIds.length + ")" : ""}</button>
+                <button type="button" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先勾选需要备注的广告账户"); setBatchRemarkText(""); setBatchRemarkModalOpen(true); }} className="h-9 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量备注</button>
+                <button type="button" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先选择广告账户"); setRevokingAdAccountIds([...selectedAdAccountIds]); setBatchCancelAuthModalOpen(true); }} className="h-9 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量取消授权</button>
               </div>
-            )}
+              <AdvertiserAccountTable accounts={filteredAdAccounts} platform={adPlatform} selectedIds={selectedAdAccountIds} onSelection={setSelectedAdAccountIds} showToast={showToast}
+                onEdit={account => { if (checkAdManagement()) setBindingTargets({ ids: [account.id], editing: true }); }}
+                onRevoke={account => { if (checkAdManagement()) { setRevokingAdAccountIds([account.id]); setBatchCancelAuthModalOpen(true); } }}
+                onAuthorize={account => { if (checkAdManagement()) { setReauthorizingAccount(account); setAuthModalOpen(true); } }} />
+            </section>}
 
             {/* ----------------------------------------------------------------------- */}
             {/* 视图 2：账户分组 (ACCOUNT GROUPS VIEW)                                 */}
@@ -5142,7 +4373,7 @@ export default function AdminSystemManagementView() {
             {adSubTab === "group" && (
               <div className="space-y-4">
                 {/* 顶部新增账户分组按钮卡片 */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-4 flex items-center justify-between">
+                <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-4 flex items-center justify-between">
                   <button
                     type="button"
                     onClick={handleOpenCreateGroupModal}
@@ -5161,7 +4392,7 @@ export default function AdminSystemManagementView() {
                 </div>
 
                 {/* 分组列表表格 */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+                <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
@@ -5240,91 +4471,18 @@ export default function AdminSystemManagementView() {
         )}
 
         {authModalOpen && (
-          <AdAuthorizationDialog platform={adPlatform} account={reauthorizingAccount} onClose={() => setAuthModalOpen(false)} onSuccess={() => { setAuthModalOpen(false); setAdAuthFilter('authorized'); setAdSearchKeyword(''); setAdCategoryFilter('all'); setAdGroupFilter('all'); setAdUserFilter('all'); setAdGroupSelectFilter('all'); showToast('广告账户授权成功'); }} />
+          <AdAuthorizationDialog platform={adPlatform} account={reauthorizingAccount} onClose={() => setAuthModalOpen(false)} onSuccess={() => { setAuthModalOpen(false); setAdAuthFilter('authorized'); setAdFilters(EMPTY_ACCOUNT_FILTERS); showToast(adPlatform === '巨量千川' ? '所选广告账户已接入，未发起投放' : '广告账户授权成功'); }} />
         )}
-        {syncResult && <AdDialog title="同步结果" onClose={() => setSyncResult(null)}><div className="space-y-4 text-sm"><p>同步成功 {syncResult.success} 个，失败 {syncResult.failures.length} 个</p><p className="text-xs text-slate-500">原型演示 · {adDate()}</p>{syncResult.failures.map((f, i) => <div key={i} className="border-b border-slate-200 py-3"><p className="break-all">{f.name}</p><p className="mt-2 text-rose-600">{f.reason}</p></div>)}</div></AdDialog>}
+        {syncExpiryConfirm && <AdDialog title="模拟授权失效" onClose={() => setSyncExpiryConfirm(false)} footer={<><button className="rounded-md border border-slate-200 px-4 py-2 text-xs" onClick={() => setSyncExpiryConfirm(false)}>取消</button><button className="rounded-md bg-violet-600 px-4 py-2 text-xs text-white" onClick={() => handleSyncAdAccounts(undefined, true)}>确认模拟</button></>}><p className="text-sm leading-6">{selectedAdAccountIds.length ? `已选择 ${selectedAdAccountIds.length} 个账户。` : "未勾选账户，将同步当前平台全部已接入账户。"}本次仅模拟授权失效；同一授权主体下的已接入账户也会失效，需要重新授权恢复。本平台将阻止继续推送，千川已有投放不会因此停止。</p></AdDialog>}
+        {syncResult && <AdDialog title="同步结果" onClose={() => setSyncResult(null)} footer={<>
+          <button className="rounded-md border border-slate-200 px-4 py-2 text-xs" onClick={() => setSyncResult(null)}>关闭</button>
+          {syncResult.failures.some(f => adAccounts.some(a => a.platform === syncResult.platform && a.id === f.id && adAccountState(a) === "authorized")) && <button disabled={syncingAdAccounts} className="rounded-md bg-violet-600 px-4 py-2 text-xs text-white disabled:opacity-50" onClick={() => handleSyncAdAccounts(syncResult.failures.filter(f => adAccounts.some(a => a.platform === syncResult.platform && a.id === f.id && adAccountState(a) === "authorized")).map(f => f.id))}>{syncingAdAccounts ? "重试中" : "重试失败项"}</button>}
+        </>}><div className="space-y-4 text-sm"><p>同步成功 {syncResult.success} 个，失败 {syncResult.failures.length} 个</p><p className="text-xs text-slate-500">{syncResult.platform} · 模拟结果 · {syncResult.checkedAt}</p>{syncResult.failures.map(f => <div key={f.id} className="border-b border-slate-200 py-3"><p className="break-words">{f.name}</p><p className="mt-1 break-all text-xs text-slate-500">{f.id}</p><p className="mt-2 text-rose-600">{f.reason}</p>{adAccounts.some(a => a.id === f.id && a.platform === syncResult.platform && adAccountState(a) === "expired") && <button className="mt-2 text-xs text-violet-600" onClick={() => { if (!checkAdManagement()) return; setAdPlatform(syncResult.platform); setReauthorizingAccount(adAccounts.find(a => a.id === f.id && a.platform === syncResult.platform)); setSyncResult(null); setAuthModalOpen(true); }}>重新授权</button>}</div>)}</div></AdDialog>}
 
         {/* =========================================================================== */}
         {/* MODAL 1: 批量绑定 MODAL (参见截图5)                                         */}
         {/* =========================================================================== */}
-        {batchBindModalOpen && (
-          <OverlayPortal layer="dialog" role="dialog" aria-modal="true" aria-label="批量绑定" className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-scale-up">
-              {/* Modal 标题 */}
-              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-4 bg-[#7C3AED] rounded-full" />
-                  <h3 className="text-sm font-extrabold text-slate-900">批量绑定</h3>
-                </div>
-                <X
-                  className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  onClick={() => setBatchBindModalOpen(false)}
-                />
-              </div>
-
-              {/* Modal 表单 */}
-              <div className="p-6 space-y-4">
-                <div className="flex items-center gap-4">
-                  <label className="w-20 text-xs font-bold text-slate-700 text-right">
-                    关联小组
-                  </label>
-                  <select
-                    value={batchBindGroup}
-                    onChange={(e) => setBatchBindGroup(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-[#7C3AED] outline-none shadow-2xs"
-                  >
-                    <option value="">请选择</option>
-                    {availableGroupsList.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="w-20 text-xs font-bold text-slate-700 text-right">
-                    关联分类
-                  </label>
-                  <select
-                    value={batchBindCategory}
-                    onChange={(e) => setBatchBindCategory(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-[#7C3AED] outline-none shadow-2xs"
-                  >
-                    <option value="">请选择</option>
-                    {availableCategoriesList.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <p className="text-[11px] text-slate-400 text-center pt-2">
-                  为广告账户绑定小组/用户或分类，后续新产生的数据将按绑定关系统计
-                </p>
-              </div>
-
-              {/* Modal 操作底部 */}
-              <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setBatchBindModalOpen(false)}
-                  className="px-4 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                >
-                  取消
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmBatchBind}
-                  className="px-5 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer"
-                >
-                  确定
-                </button>
-              </div>
-            </div>
-          </OverlayPortal>
-        )}
+        {bindingTargets && <AdAccountBindingDialog accounts={adAccounts} platform={adPlatform} targets={bindingTargets.ids} editing={bindingTargets.editing} onClose={() => setBindingTargets(null)} onSaved={() => { showToast("账户绑定已保存"); setBindingTargets(null); }} />}
 
         {/* =========================================================================== */}
         {/* MODAL 2: 批量备注 MODAL (参见截图6)                                         */}
@@ -5382,10 +4540,10 @@ export default function AdminSystemManagementView() {
         {/* MODAL 3: 批量取消授权 二次确认 MODAL (参见截图7)                             */}
         {/* =========================================================================== */}
         {batchCancelAuthModalOpen && (
-          <OverlayPortal layer="dialog" role="dialog" aria-modal="true" aria-label="取消授权" className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+          <OverlayPortal layer="dialog" role="dialog" aria-modal="true" aria-label={adPlatform === "巨量千川" ? "解除接入" : "取消授权"} className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden animate-scale-up">
               <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-xs font-extrabold text-slate-900">取消授权</h3>
+                <h3 className="text-xs font-extrabold text-slate-900">{adPlatform === "巨量千川" ? "解除接入" : "取消授权"}</h3>
                 <X
                   className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer"
                   onClick={() => setBatchCancelAuthModalOpen(false)}
@@ -5397,7 +4555,7 @@ export default function AdminSystemManagementView() {
                   <AlertCircle className="w-5 h-5 text-amber-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-800">
-                  请确认是否取消所选 {selectedAdAccountIds.length} 个账户的授权，历史推送记录将保留。
+                  {adPlatform === "巨量千川" ? `确认解除所选 ${revokingAdAccountIds.length} 个账户的接入？历史记录保留，不影响其他账户。解除接入不等于停止投放，千川已有广告仍可能继续消耗预算。` : `请确认是否取消所选 ${revokingAdAccountIds.length} 个账户的授权，历史推送记录将保留。`}
                 </p>
               </div>
 
@@ -5467,6 +4625,7 @@ export default function AdminSystemManagementView() {
                       <span className="text-xs text-slate-500 w-12 text-right">部门：</span>
                       <select
                         value={groupFormTeam}
+                        aria-label="可见部门"
                         onChange={(e) => setGroupFormTeam(e.target.value)}
                         className="min-w-0 flex-1 sm:w-64 px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-[#7C3AED] outline-none"
                       >
@@ -5485,6 +4644,7 @@ export default function AdminSystemManagementView() {
                       <span className="text-xs text-slate-500 w-12 text-right">小组：</span>
                       <select
                         value={groupFormGroup}
+                        aria-label="可见小组"
                         onChange={(e) => setGroupFormGroup(e.target.value)}
                         className="min-w-0 flex-1 sm:w-64 px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-[#7C3AED] outline-none"
                       >
@@ -5518,6 +4678,7 @@ export default function AdminSystemManagementView() {
                         ))}
                         {groupFormUsers.length < availableUsersList.length && (
                           <select
+                            aria-label="添加可见用户"
                             onChange={(e) => {
                               if (e.target.value && !groupFormUsers.includes(e.target.value)) {
                                 setGroupFormUsers([...groupFormUsers, e.target.value]);
@@ -5636,9 +4797,9 @@ export default function AdminSystemManagementView() {
                                   </div>
                                   <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5">
                                     <span>{acc.id}</span>
-                                    {acc.status === "expired" && (
+                                    {adAccountState(acc) !== "authorized" && (
                                       <span className="px-1 bg-rose-100 text-rose-600 rounded text-[9px] font-bold">
-                                        失效
+                                        {adAccountState(acc) === "disconnected" ? "已解除接入" : "失效"}
                                       </span>
                                     )}
                                   </div>
@@ -5774,7 +4935,7 @@ export default function AdminSystemManagementView() {
         {/* TAB 7: 登录记录                                                              */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "login_logs" && (
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+          <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
             <h3 className="text-sm font-bold text-slate-900 pb-2 border-b border-slate-100">
               全员登录历史、终端与安全预警记录
             </h3>
@@ -5812,98 +4973,10 @@ export default function AdminSystemManagementView() {
         )}
 
         {/* --------------------------------------------------------------------------- */}
-        {/* TAB 8: 消息通知 (MESSAGE NOTIFICATIONS)                                     */}
-        {/* --------------------------------------------------------------------------- */}
-        {activeTab === "notifications" && (
-          <div className="space-y-4 animate-fade-in pb-12">
-            {notifications.map((cat) => {
-              const isCollapsed = collapsedCategoryIds.includes(cat.id);
-              return (
-                <div 
-                  key={cat.id} 
-                  className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all"
-                >
-                  {/* Category Header */}
-                  <div 
-                    onClick={() => toggleCollapseCategory(cat.id)}
-                    className="p-4 bg-white hover:bg-slate-50/80 cursor-pointer flex items-center justify-between border-b border-slate-100 transition-colors select-none"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-1 h-4 bg-purple-600 rounded-full" />
-                      <span className="font-extrabold text-slate-800 text-sm">{cat.title}</span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isCollapsed ? "rotate-180" : ""}`} />
-                  </div>
-
-                  {/* Category Table Content */}
-                  {!isCollapsed && (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-extrabold text-[11px]">
-                            <th className="py-3 px-5 w-44">消息类型</th>
-                            <th className="py-3 px-5">触发场景</th>
-                            <th className="py-3 px-5 w-64">接收对象</th>
-                            <th className="py-3 px-5 w-28 text-center">站内消息</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100/80 font-medium text-slate-700">
-                            {cat.items.map((item) => {
-                              return (
-                                <tr key={item.id} className="hover:bg-purple-50/20 transition-colors">
-                                  <td className="py-3.5 px-5 font-bold text-slate-900">{item.title}</td>
-                                  <td className="py-3.5 px-5 text-slate-500 text-xs">
-                                    <span>{item.description}</span>
-                                  </td>
-                                  <td className="py-3.5 px-5 text-slate-600 text-xs">{item.recipients}</td>
-                                  <td className="py-3.5 px-5 text-center">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleToggleEnable(cat.id, item.id)}
-                                      title={item.enabled ? "关闭站内消息" : "开启站内消息"}
-                                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                        item.enabled ? "bg-purple-600" : "bg-slate-200"
-                                      }`}
-                                    >
-                                      <span
-                                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
-                                          item.enabled ? "translate-x-4" : "translate-x-0"
-                                        }`}
-                                      />
-                                    </button>
-                                  </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Bottom Floating/Sticky Actions */}
-            <div className="sticky bottom-4 z-10 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200/90 shadow-lg flex items-center justify-between text-xs mt-6">
-              <span className="text-slate-400 font-medium">
-                修改后，点击右侧【保存设置】即可生效
-              </span>
-              <button
-                type="button"
-                onClick={handleSaveNotificationSettings}
-                className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-2 active:scale-95"
-              >
-                <span>保存设置</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* --------------------------------------------------------------------------- */}
         {/* TAB 10: 用户                                                                 */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "users" && (
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
+          <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
@@ -6031,17 +5104,19 @@ export default function AdminSystemManagementView() {
 
       {/* MODAL: 重置密码 */}
       {resetPasswordModal && (
+        <OverlayPortal>
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
           <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl">
             <div className="flex items-center justify-between bg-slate-900 px-5 py-4 text-white"><h3 className="flex items-center gap-2 text-sm font-black"><Key className="h-4 w-4 text-amber-400" />重置人员登录密码</h3><button type="button" onClick={() => setResetPasswordModal(null)} title="关闭" className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"><X className="h-5 w-5" /></button></div>
             <div className="space-y-4 p-6 text-xs">
               <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><img src={resetPasswordModal.member.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop"} alt={resetPasswordModal.member.name} className="h-10 w-10 rounded-full object-cover" referrerPolicy="no-referrer" /><div><p className="font-extrabold text-slate-900">{resetPasswordModal.member.name}</p><p className="mt-1 text-[10px] text-slate-500">{resetPasswordModal.member.roleName} · {resetPasswordModal.member.phone}</p></div></div>
               <div className="space-y-2"><p className="font-bold text-slate-600">选择密码重置模式</p>{([['default', '恢复平台默认初始密码'], ['random', '随机生成 8 位高强度密码'], ['custom', '手动指定新密码']] as const).map(([value, label]) => <label key={value} className={`block cursor-pointer rounded-xl border p-3 ${resetPasswordModal.resetType === value ? "border-purple-300 bg-purple-50 text-purple-900" : "border-slate-200"}`}><span className="flex items-center gap-2 font-bold"><input type="radio" name="resetType" checked={resetPasswordModal.resetType === value} onChange={() => setResetPasswordModal({ ...resetPasswordModal, resetType: value, customPassword: value === "default" ? DEFAULT_PLATFORM_PASSWORD : "" })} className="accent-purple-600" />{label}</span>{value === "custom" && resetPasswordModal.resetType === "custom" && <input value={resetPasswordModal.customPassword} onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, customPassword: e.target.value })} placeholder="请输入 6~20 位新密码" className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono outline-none focus:border-purple-500" />}</label>)}</div>
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3"><label className="flex items-center gap-2 font-bold"><input type="checkbox" checked={resetPasswordModal.notifyUser} onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, notifyUser: e.target.checked })} className="accent-purple-600" />通知该成员</label><label className="flex items-center gap-2 font-bold"><input type="checkbox" checked={resetPasswordModal.forceNextChange} onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, forceNextChange: e.target.checked })} className="accent-purple-600" />下次登录强制修改密码</label></div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><label className="flex items-center gap-2 font-bold"><input type="checkbox" checked={resetPasswordModal.forceNextChange} onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, forceNextChange: e.target.checked })} className="accent-purple-600" />下次登录强制修改密码</label></div>
               <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setResetPasswordModal(null)} className="px-4 py-2 font-bold text-slate-500">取消</button><button type="button" onClick={handleConfirmResetPassword} className="rounded-xl bg-amber-500 px-5 py-2 font-bold text-white hover:bg-amber-600">确认重置密码</button></div>
             </div>
           </div>
         </div>
+        </OverlayPortal>
       )}
 
       {/* MODAL: 快捷邀请 */}
@@ -6111,110 +5186,6 @@ export default function AdminSystemManagementView() {
                   className="px-4 py-1.5 bg-[#7C3AED] text-white text-xs font-bold rounded-lg shadow-2xs"
                 >
                   确认保存
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --------------------------------------------------------------------------- */}
-      {/* MODAL: 提醒规则修改模态框                                                   */}
-      {/* --------------------------------------------------------------------------- */}
-      {configModalItem && (
-        <div className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-800">
-                修改场景提醒规则【{configModalItem.title}】
-              </h3>
-              <button
-                type="button"
-                onClick={() => setConfigModalItem(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <form onSubmit={handleSaveConfigModal} className="p-6 space-y-4">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">场景提醒描述</label>
-                <textarea
-                  value={customDescInput}
-                  onChange={(e) => setCustomDescInput(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-purple-600"
-                />
-              </div>
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setConfigModalItem(null)}
-                  className="px-4 py-1.5 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg"
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg shadow-2xs"
-                >
-                  保存更新
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* --------------------------------------------------------------------------- */}
-      {/* MODAL: 当日消耗增长规则修改                                                 */}
-      {/* --------------------------------------------------------------------------- */}
-      {spendModalOpen && (
-        <div className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-800">修改【当日消耗增长】提醒阈值</h3>
-              <button
-                type="button"
-                onClick={() => setSpendModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">当日消耗金额大于 (¥)</label>
-                <input
-                  type="number"
-                  value={spendValue}
-                  onChange={(e) => setSpendValue(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-purple-600"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">并且涨幅大于 (%)</label>
-                <input
-                  type="number"
-                  value={growthValue}
-                  onChange={(e) => setGrowthValue(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-purple-600"
-                />
-              </div>
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setSpendModalOpen(false)}
-                  className="px-4 py-1.5 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg"
-                >
-                  取消
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveSpendConfig}
-                  className="px-4 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg shadow-2xs"
-                >
-                  确认修改
                 </button>
               </div>
             </div>

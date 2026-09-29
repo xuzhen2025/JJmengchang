@@ -88,7 +88,7 @@ export default function UploadScriptPage({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#F5F6FA] w-full h-full overflow-hidden animate-in fade-in duration-150 text-xs font-sans text-slate-700">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 w-full h-full overflow-hidden animate-in fade-in duration-150 text-xs font-sans text-slate-700">
       
       {categoryError && <div role="alert" className="px-6 py-2 text-rose-600 bg-rose-50 shrink-0">{categoryError}</div>}
       {/* Top Header */}
@@ -140,7 +140,7 @@ export default function UploadScriptPage({
       <div className="flex-1 overflow-y-auto p-6 space-y-5 w-full">
         
         {/* SECTION 1: 脚本基本信息 & 标签 */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-5">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs space-y-5">
           
           {/* 1. 脚本分类 */}
           <div className="flex items-center gap-4">
@@ -241,7 +241,7 @@ export default function UploadScriptPage({
             </div>
 
             {/* 公共标签 3 模块 Panel */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
               {/* Col 1: 标签组 */}
               <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">
@@ -393,7 +393,7 @@ export default function UploadScriptPage({
             </div>
 
             {/* 个人标签 3 模块 Panel */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#F8F9FC] border border-slate-200/80 rounded-xl p-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
               {/* Col 1: 标签组 */}
               <div className="bg-white border border-slate-200 rounded-lg p-2.5 space-y-2 flex flex-col h-[220px]">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-100 pb-1.5 shrink-0">
@@ -523,7 +523,7 @@ export default function UploadScriptPage({
         {/* SECTION 2: 填写脚本 */}
         <DynamicScriptTemplateForm ref={scriptTemplateFormRef} />
         {/* SECTION 3: 更多设置 */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-5">
+        <div className="bg-white rounded-module p-6 border border-slate-200/80 shadow-2xs space-y-5">
           {/* Section Header */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="font-extrabold text-slate-900 text-sm">更多设置</h3>

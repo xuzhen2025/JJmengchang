@@ -32,6 +32,8 @@ const checkLocked = async () => {
   await expect(page.getByRole("checkbox", { name: "衍生视频", exact: true })).toHaveCount(1);
   await expect(page.getByRole("checkbox", { name: "衍生新视频", exact: true })).toHaveCount(0);
   await expect(page.getByRole("checkbox", { name: "衍生视频并推送", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("checkbox", { name: "任务", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("checkbox", { name: "消息通知", exact: true })).toHaveCount(0);
   const before = await readRoles();
   await page.getByText("衍生视频", { exact: true }).click();
   await expect(page.getByRole("checkbox", { name: "衍生视频", exact: true })).toBeChecked();

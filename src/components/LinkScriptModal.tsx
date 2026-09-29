@@ -302,7 +302,7 @@ function LinkScriptModalContent({
         <div className="space-y-3">
           {/* Row 1: Search bar + Query Button */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-[#F8F9FA] border border-slate-200/80 rounded-xl px-3.5 py-2 flex items-center">
+            <div className="flex-1 bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2 flex items-center">
               <input
                 type="text"
                 value={searchQuery}
@@ -326,7 +326,7 @@ function LinkScriptModalContent({
           {/* Row 2: 5 Filter Inputs */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
             {/* 1. 搜索分类 */}
-            <div className="relative flex items-center bg-[#F8F9FA] border border-slate-200/80 rounded-xl px-3 py-1.5">
+            <div className="relative flex items-center bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
               <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
               <input
                 type="text"
@@ -338,7 +338,7 @@ function LinkScriptModalContent({
             </div>
 
             {/* 2. 搜索二级标签 */}
-            <div className="relative flex items-center bg-[#F8F9FA] border border-slate-200/80 rounded-xl px-3 py-1.5">
+            <div className="relative flex items-center bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
               <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
               <input
                 type="text"
@@ -350,7 +350,7 @@ function LinkScriptModalContent({
             </div>
 
             {/* 3. 作者 Dropdown */}
-            <div className="relative flex items-center bg-[#F8F9FA] border border-slate-200/80 rounded-xl px-3 py-1.5 cursor-pointer">
+            <div className="relative flex items-center bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 cursor-pointer">
               <select
                 value={authorFilter}
                 onChange={(e) => setAuthorFilter(e.target.value)}
@@ -366,7 +366,7 @@ function LinkScriptModalContent({
             </div>
 
             {/* 4. 请选择(支持输入搜索) */}
-            <div className="relative flex items-center bg-[#F8F9FA] border border-slate-200/80 rounded-xl px-3 py-1.5 cursor-pointer">
+            <div className="relative flex items-center bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 cursor-pointer">
               <input
                 type="text"
                 value={selectFilter}
@@ -378,7 +378,7 @@ function LinkScriptModalContent({
             </div>
 
             {/* 5. 开始日期 至 结束日期 */}
-            <div className="relative flex items-center bg-[#F8F9FA] border border-slate-200/80 rounded-xl px-3 py-1.5 col-span-2 sm:col-span-1">
+            <div className="relative flex items-center bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 col-span-2 sm:col-span-1">
               <Calendar className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
               <input
                 type="text"
@@ -392,12 +392,12 @@ function LinkScriptModalContent({
         </div>
 
         {/* Table & Pagination Box */}
-        <div className="border border-slate-200/80 rounded-2xl bg-[#F8F9FA]/40 overflow-hidden flex flex-col">
+        <div className="border border-slate-200/80 rounded-2xl bg-slate-50/40 overflow-hidden flex flex-col">
           {/* Table Area */}
           <div className="overflow-x-auto min-h-[260px]">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-200/80 text-slate-600 font-bold bg-[#F8F9FA]/90">
+                <tr className="border-b border-slate-200/80 text-slate-600 font-bold bg-slate-50/90">
                   <th className="py-3 px-4 w-10 text-center">
                     {multiSelect && <input
                       type="checkbox"
@@ -484,7 +484,7 @@ function LinkScriptModalContent({
           </div>
 
           {/* Pagination Bar */}
-          <div className="px-4 py-3 bg-[#F8F9FA]/80 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
             {/* Left Info */}
             <div className="flex items-center gap-3">
               <span>共 <strong className="text-purple-600 font-bold">{totalCount}</strong> 条数据</span>

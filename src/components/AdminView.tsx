@@ -3,7 +3,6 @@ import {
   FolderHeart, 
   Video, 
   FileText, 
-  ListTodo, 
   Tag, 
   FolderTree, 
   Copy, 
@@ -29,7 +28,6 @@ import CategoryManagementSubView from "./CategoryManagementSubView";
 import PlatformTagsView from "./PlatformTagsView";
 import VideoStatusManagementView from "./VideoStatusManagementView";
 import ScriptStatusManagementView from "./ScriptStatusManagementView";
-import TaskFieldsManagementView from "./TaskFieldsManagementView";
 import TagGroupManagementView from "./TagGroupManagementView";
 import ScriptTemplateManagementView from "./ScriptTemplateManagementView";
 import AdminSystemManagementView from "./AdminSystemManagementView";
@@ -38,8 +36,6 @@ import AdminProfileView from "./AdminProfileView";
 
 interface AdminViewProps {
   adminActiveScreen: string;
-  onTriggerTask?: (type: any, name: string, inputFiles: string[], cost: number) => void;
-  onOpenTaskQueue?: () => void;
   onLogout: () => void;
 }
 
@@ -47,12 +43,11 @@ type ContentTabType =
   | "resource_hub"
   | "video_status"
   | "script_status"
-  | "tasks"
   | "tags"
   | "categories"
   | "script_templates";
 
-export default function AdminView({ adminActiveScreen, onTriggerTask, onOpenTaskQueue, onLogout }: AdminViewProps) {
+export default function AdminView({ adminActiveScreen, onLogout }: AdminViewProps) {
   const [activeTab, setActiveTab] = useState<ContentTabType>("resource_hub");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -67,7 +62,6 @@ export default function AdminView({ adminActiveScreen, onTriggerTask, onOpenTask
     { id: "resource_hub", label: "资源库", icon: FolderHeart, desc: "成片/素材/第三方/脚本/图片/音频统一管理" },
     { id: "video_status", label: "视频状态", icon: Video, desc: "渲染成片/审片流转/投放状态监控" },
     { id: "script_status", label: "脚本状态", icon: FileText, desc: "文案拆解/AI分镜/审核归档状态" },
-    { id: "tasks", label: "任务", icon: ListTodo, desc: "后台AI生成与批量渲染任务监控" },
     { id: "tags", label: "公共标签", icon: Tag, desc: "受众偏好与平台爆款标签体系" },
     { id: "categories", label: "分类管理", icon: FolderTree, desc: "多级类目架构与业务属性划分" },
     { id: "script_templates", label: "脚本模板", icon: Copy, desc: "结构化文案框架与AI创作模版" },
@@ -75,9 +69,6 @@ export default function AdminView({ adminActiveScreen, onTriggerTask, onOpenTask
 
   const handleTabClick = (tabId: ContentTabType) => {
     setActiveTab(tabId);
-    if (tabId === "tasks" && onOpenTaskQueue) {
-      onOpenTaskQueue();
-    }
   };
 
   // Mock data for Video Status
@@ -129,8 +120,8 @@ export default function AdminView({ adminActiveScreen, onTriggerTask, onOpenTask
 
       {/* 顶部一排导航栏 (与资源库页面风格完全一致) */}
       <div className="pt-4 px-5 pb-1 bg-slate-50 shrink-0 z-30 relative overflow-visible">
-        <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs relative overflow-visible">
-          <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-xl overflow-visible">
+        <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs relative overflow-visible">
+          <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-[inherit] overflow-visible">
             <div className="flex items-center gap-1.5 min-w-max overflow-visible">
               {navTabs.map((tab) => {
                 const Icon = tab.icon;
@@ -186,13 +177,6 @@ export default function AdminView({ adminActiveScreen, onTriggerTask, onOpenTask
         {activeTab === "script_status" && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <ScriptStatusManagementView />
-          </div>
-        )}
-
-        {/* TAB 4: 任务 */}
-        {activeTab === "tasks" && (
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <TaskFieldsManagementView />
           </div>
         )}
 

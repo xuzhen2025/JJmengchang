@@ -7,6 +7,7 @@ interface AssetPaginationProps {
   pageSize: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  bordered?: boolean;
 }
 
 const getVisiblePages = (page: number, totalPages: number): Array<number | "ellipsis"> => {
@@ -16,7 +17,7 @@ const getVisiblePages = (page: number, totalPages: number): Array<number | "elli
   return [1, "ellipsis", page - 1, page, page + 1, "ellipsis", totalPages];
 };
 
-export default function AssetPagination({ total, page, pageSize, onPageChange, onPageSizeChange }: AssetPaginationProps) {
+export default function AssetPagination({ total, page, pageSize, onPageChange, onPageSizeChange, bordered = true }: AssetPaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(Math.max(page, 1), totalPages);
   const [jumpPage, setJumpPage] = useState("");
@@ -33,7 +34,7 @@ export default function AssetPagination({ total, page, pageSize, onPageChange, o
   };
 
   return (
-    <div className="flex min-h-14 w-full shrink-0 flex-nowrap items-center gap-2 overflow-x-auto border-t border-slate-200 bg-white px-1 py-2 text-xs text-slate-500">
+    <div className={`flex min-h-14 w-full shrink-0 flex-nowrap items-center gap-2 overflow-x-auto ${bordered ? "border-t border-slate-200" : ""} bg-white px-1 py-2 text-xs text-slate-500`}>
       <span className="mr-1 whitespace-nowrap">共 {total} 条记录</span>
       <button type="button" disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} title="上一页" className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:border-violet-300 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button>
       {getVisiblePages(currentPage, totalPages).map((item, index) => item === "ellipsis"

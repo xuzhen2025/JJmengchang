@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ANALYTICS_DEMO_MEMBERS, INITIAL_DEPTS, INITIAL_MEMBERS, type DeptNode, type AccountMember } from "../data/adminAccounts";
+import { ANALYTICS_DEMO_MEMBERS, INITIAL_DEPTS, INITIAL_MEMBERS, PROTOTYPE_OPERATOR, type DeptNode, type AccountMember } from "../data/adminAccounts";
 
 export const ORGANIZATION_CHANGE = "mengchang-organization-change";
 export interface ReportOrganization { depts: DeptNode[]; members: AccountMember[] }
@@ -20,6 +20,13 @@ export function readReportOrganization(): ReportOrganization {
       localStorage.setItem(MIGRATION_KEY, "1");
     }
   } catch { /* Storage is optional for this prototype. */ }
+  try {
+    if (!localStorage.getItem("mengchang-demo-operator-v1")) {
+      if (!members.some(member => member.id === PROTOTYPE_OPERATOR.id)) members = [...members, { ...PROTOTYPE_OPERATOR }];
+      localStorage.setItem("cloud_video_members", JSON.stringify(members));
+      localStorage.setItem("mengchang-demo-operator-v1", "1");
+    }
+  } catch { /* Do not restore intentionally deleted demo members on later reads. */ }
   return { depts, members };
 }
 export function useReportOrganization() {

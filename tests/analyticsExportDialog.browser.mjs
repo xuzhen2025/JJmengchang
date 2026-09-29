@@ -17,10 +17,6 @@ const pages = [
   { category: "视频数据分析", page: "广告平台标签", button: "导出表格" },
   { category: "视频数据分析", page: "标签分析", button: "导出" },
   { category: "广告账户分析", page: "广告账户数据", button: "导出" },
-  { category: "广告账户分析", page: "广告账户财务报表", button: "导出" },
-  { category: "部门分析", page: "数据洞察", button: "导出" },
-  { category: "部门分析", page: "创作分析", button: "导出数据" },
-  { category: "部门分析", page: "任务分析", button: "导出数据" },
 ];
 
 const main = page.locator("main");
@@ -75,7 +71,7 @@ try {
   await page.locator("#sidebar-item-operation_records").click();
   await page.getByRole("tab", { name: "导出记录", exact: true }).click();
   await expect(page.locator("tbody")).toContainText("自定义_广告平台分析.csv");
-  await expect(page.locator("tbody")).toContainText("任务分析_");
+  await expect(page.locator("tbody")).toContainText("广告账户数据_");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator("#sidebar-item-ad_delivery").click();
@@ -89,7 +85,7 @@ try {
   await mobileDialog.getByRole("button", { name: "取消", exact: true }).click();
 
   assert.deepEqual(errors, []);
-  console.log("Eight analytics export dialogs, CSV/XLSX downloads, editable names, date isolation, history and mobile layout passed");
+  console.log(`${pages.length} analytics export dialogs, CSV/XLSX downloads, editable names, date isolation, history and mobile layout passed`);
 } finally {
   await browser.close();
 }

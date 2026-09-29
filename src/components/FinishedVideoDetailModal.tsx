@@ -1286,7 +1286,7 @@ export default function FinishedVideoDetailModal({
       )}
 
       {/* Main Page Container */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200/90 w-full overflow-hidden text-slate-800">
+      <div className="bg-white rounded-module shadow-sm border border-slate-200/90 w-full overflow-hidden text-slate-800">
         
         {/* 1. Page Header with Back Button Only */}
         <div className="px-6 py-4 bg-slate-50 text-slate-900 flex items-center justify-between border-b border-slate-200 shrink-0">
@@ -1311,7 +1311,7 @@ export default function FinishedVideoDetailModal({
 
               {/* Top Controls Header Bar for Video Audit (Only visible when activeRightTab === "review") */}
               {activeRightTab === "review" && (
-                <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2 text-xs font-medium text-slate-700 animate-in fade-in duration-150">
+                <div className="bg-white p-3 rounded-module border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2 text-xs font-medium text-slate-700 animate-in fade-in duration-150">
                   <div className="flex items-center gap-2">
                     <select
                       value={selectedVersion}
@@ -1350,7 +1350,7 @@ export default function FinishedVideoDetailModal({
 
               {/* Platform Overlay / Safe-Zone Style Switcher (Hidden when in Video Audit / review tab) */}
               {activeRightTab !== "review" && (
-                <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
+                <div className="bg-white p-3 rounded-module border border-slate-200/90 shadow-2xs space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-slate-700 flex items-center gap-1.5">
                       <Smartphone className="w-4 h-4 text-purple-600" />
@@ -1857,7 +1857,7 @@ export default function FinishedVideoDetailModal({
 
                     {/* Track 3: ANNOTATION DRAWING TOOLBAR (ONLY SHOWN WHEN ANNOTATION IS ACTIVE) */}
                     {annotationType !== null && (
-                      <div className="w-full bg-white border border-slate-200/90 rounded-2xl px-3 py-2 shadow-2xs flex items-center justify-between text-xs text-slate-700 select-none whitespace-nowrap gap-2 font-medium animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="w-full bg-white border border-slate-200/90 rounded-module px-3 py-2 shadow-2xs flex items-center justify-between text-xs text-slate-700 select-none whitespace-nowrap gap-2 font-medium animate-in fade-in slide-in-from-top-1 duration-150">
                         {/* Left: 工具 Label & Tool Buttons */}
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className="font-bold text-slate-700 text-[11px]">工具</span>
@@ -2378,7 +2378,7 @@ export default function FinishedVideoDetailModal({
             <div className="lg:col-span-7 space-y-4">
               
               {/* MAIN CONTAINER CARD: Header + Nav Tabs + Tab Content */}
-              <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+              <div className="bg-white p-5 rounded-module border border-slate-200/90 shadow-xs space-y-4">
                 
                 {/* 1. Header Row (Brand Path + Timestamps) */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
@@ -2982,7 +2982,7 @@ export default function FinishedVideoDetailModal({
                       ))}
 
                       {filteredAuditAnnotations.length === 0 && (
-                        <div className="py-12 text-center text-slate-400 text-xs bg-white rounded-2xl border border-slate-200/80">
+                        <div className="py-12 text-center text-slate-400 text-xs bg-white rounded-module border border-slate-200/80">
                           暂无匹配的审核批注记录，可通过左侧视频浮窗添加“片段批注”或“单帧批注”。
                         </div>
                       )}
@@ -3228,7 +3228,7 @@ export default function FinishedVideoDetailModal({
                               }
                             }}
                           >
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color-slate-200)" />
                             <XAxis
                               dataKey="secondLabel"
                               tick={{ fontSize: 10, fill: '#64748b' }}
@@ -3535,7 +3535,7 @@ export default function FinishedVideoDetailModal({
 
             {/* Bottom Full-Width Section: 素材数据 (Asset Performance Data & Sync) */}
             {!isMaterialMode && !isAdminMode && (
-              <div className="lg:col-span-12 bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+              <div className="lg:col-span-12 bg-white p-5 rounded-module border border-slate-200/90 shadow-xs space-y-4">
                 {/* Header row matching Screenshot 1 */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-3 flex-wrap">
@@ -3709,7 +3709,7 @@ export default function FinishedVideoDetailModal({
 
             {/* Bottom Full-Width Section: 镜头溯源与视频关联 / 被引用后出片 */}
             {!isAdminMode && (
-              <div className="reference-cards-section lg:col-span-12 bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+              <div className="reference-cards-section lg:col-span-12 bg-white p-5 rounded-module border border-slate-200/90 shadow-xs space-y-4">
                 {isMaterialMode ? (
                 <>
                   <div className="border-b border-slate-100 pb-3">
@@ -3784,7 +3784,7 @@ export default function FinishedVideoDetailModal({
                       {/* ... rest ... */}
                 
                 {/* Left Column: Donut Breakdown Chart & Filters */}
-                <div className="w-full lg:w-[320px] shrink-0 bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between space-y-3">
+                <div className="w-full lg:w-[320px] shrink-0 bg-white p-3.5 rounded-module border border-slate-200/80 shadow-2xs flex flex-col justify-between space-y-3">
                   {/* Donut Chart & Legend Display - Vertically Centered */}
                   <div className="flex-1 flex items-center justify-center gap-3 py-1 my-auto">
                     {/* SVG Donut Chart */}
@@ -4839,8 +4839,8 @@ export default function FinishedVideoDetailModal({
                         <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color-slate-200)" />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border-color-slate-200)' }} />
                     <YAxis yAxisId="left" stroke="#8b5cf6" fontSize={11} tickLine={false} axisLine={false} />
                     <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" fontSize={11} tickLine={false} axisLine={false} />
                     <Tooltip

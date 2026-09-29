@@ -576,7 +576,7 @@ export default function ScriptDetailPage({
       )}
 
       {/* 1. TOP HEADER NAVIGATION BAR */}
-      <div className="flex items-center justify-between bg-white px-5 py-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+      <div className="flex items-center justify-between bg-white px-5 py-3.5 rounded-module border border-slate-200/90 shadow-2xs">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-slate-600 hover:text-purple-600 font-bold text-xs transition-colors cursor-pointer group"
@@ -597,7 +597,7 @@ export default function ScriptDetailPage({
       </div>
 
       {/* 2. TOP SECTION: BASIC INFO CARD (Matching FinishedVideoDetailModal & MaterialsView UI) */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+      <div className="bg-white rounded-module border border-slate-200/90 p-5 shadow-2xs space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
           {/* LEFT: Author, Title, Category, Public & Personal Tags */}
           <div className="space-y-3.5 flex-1 min-w-0">
@@ -836,7 +836,7 @@ export default function ScriptDetailPage({
         </div>
       </div>
       {/* 3. MIDDLE SECTION: "脚本内容" MODULE */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden relative">
+      <div className="bg-white rounded-module border border-slate-200/90 shadow-2xs overflow-hidden relative">
 
 
         {/* Part A: 脚本分镜拆解 Table matching Image 1 */}
@@ -984,7 +984,7 @@ export default function ScriptDetailPage({
       </div>
 
       {/* 4. BOTTOM SECTION: ASSOCIATED TASKS & WORKS (关联任务 & 关联作品 - Matching Image 2) */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+      <div className="bg-white rounded-module border border-slate-200/90 p-5 shadow-2xs space-y-4">
         {/* Header Bar with Segmented Tabs on Left & FIXED Action Buttons on Right */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           {/* Left Segmented Tab Group */}
@@ -1337,7 +1337,7 @@ export default function ScriptDetailPage({
             </div>
 
             {/* 3. Advanced Search Bar */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700">
+            <div className="bg-white rounded-module border border-slate-200/80 p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700">
               <div className="flex flex-wrap items-center gap-3 flex-1">
                 <span className="text-slate-900 font-bold shrink-0">高级搜索：</span>
 

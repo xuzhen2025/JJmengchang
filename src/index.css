@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+/* Property-specific tokens keep text, icons and brand colors unchanged. */
+@theme {
+  --background-color-slate-50: #f6f7fa;
+  --background-color-slate-100: #f0f2f7;
+  --background-color-slate-200: #e2e7ef;
+  --border-color-slate-50: #f0f2f7;
+  --border-color-slate-100: #e7ebf2;
+  --border-color-slate-200: #d5ddeb;
+  --ring-color-slate-100: #e7ebf2;
+  --ring-color-slate-200: #d5ddeb;
+  --radius-module: 1rem;
+}

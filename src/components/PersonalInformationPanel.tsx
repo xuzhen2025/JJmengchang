@@ -34,7 +34,7 @@ export default function PersonalInformationPanel({
 }: PersonalInformationPanelProps) {
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+      <div className="relative overflow-hidden rounded-module border border-slate-200/90 bg-white p-6 shadow-xs">
         <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-gradient-to-br from-purple-100/40 to-pink-100/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
@@ -78,7 +78,7 @@ export default function PersonalInformationPanel({
         </div>
       </div>
 
-      <div className="space-y-4 rounded-3xl border border-slate-200/90 bg-white p-5 shadow-xs">
+      <div className="space-y-4 rounded-module border border-slate-200/90 bg-white p-5 shadow-xs">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
           <Building2 className="h-4 w-4 text-purple-600" />
           <h3 className="text-sm font-extrabold text-slate-800">所属部门与分组架构</h3>

@@ -472,7 +472,7 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
   return (
     <div className="space-y-4">
       {/* ===== 平台一级 Tab（白卡片） ===== */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         <div className="flex items-center gap-6 px-5 py-3 border-b border-slate-100 bg-white overflow-x-auto">
           {PLATFORMS.map((p) => {
             const active = activePlatform === p.id;
@@ -525,7 +525,7 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
       </div>
 
       {/* ===== 数据维度 + 筛选 + 表格 白卡片 ===== */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         <div className="p-4 bg-slate-50/50 space-y-3">
         {/* 维度 Tab 按钮式 */}
         <div className="flex items-center gap-1.5 flex-wrap">

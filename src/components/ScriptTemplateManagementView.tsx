@@ -336,7 +336,7 @@ export default function ScriptTemplateManagementView() {
       {/* ========================================================================= */}
       {/* 左侧：脚本模板列表 (完全匹配截图 1 & 截图 2)                               */}
       {/* ========================================================================= */}
-      <div className="w-full lg:w-72 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden shrink-0">
+      <div className="w-full lg:w-72 bg-white rounded-module border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden shrink-0">
         {/* 左侧表头 */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <span className="text-xs font-bold text-slate-800">脚本模板</span>
@@ -419,7 +419,7 @@ export default function ScriptTemplateManagementView() {
       {/* ========================================================================= */}
       {/* 右侧：脚本模板网格字段结构编辑器 (完全匹配截图 4, 5, 6)                   */}
       {/* ========================================================================= */}
-      <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden relative">
+      <div className="flex-1 bg-white rounded-module border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden relative">
         {/* 右侧头部：当前模板名称 + 状态 */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <div className="flex items-center gap-3">

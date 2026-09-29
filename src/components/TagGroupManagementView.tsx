@@ -397,7 +397,7 @@ export default function TagGroupManagementView() {
       {/* ========================================================================= */}
       {/* 左侧面板：标签组列表 (Tag Group Sidebar)                                */}
       {/* ========================================================================= */}
-      <div className="w-full lg:w-80 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden shrink-0">
+      <div className="w-full lg:w-80 bg-white rounded-module border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden shrink-0">
         {/* 左侧顶栏：搜索/输入框 + [添加] 按钮 */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 space-y-3">
           <div className="flex items-center gap-2">
@@ -511,7 +511,7 @@ export default function TagGroupManagementView() {
       {/* ========================================================================= */}
       {/* 右侧面板：二级标签管理区域 (Sub-Tags Panel)                                */}
       {/* ========================================================================= */}
-      <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden">
+      <div className="flex-1 bg-white rounded-module border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden">
         {/* 顶栏控制组：新增 | 选择/取消选择 | 选中本页 | 批量删除 | 搜索框 */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">

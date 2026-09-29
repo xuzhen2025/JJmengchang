@@ -117,6 +117,8 @@ const readPersistedSession = (): PersistedSession | null => {
   }
 };
 
+import { FINISHED_LIBRARY_EVENT } from "./lib/resourceNavigation";
+
 export default function App() {
   useAdStore();
   const initialSession = readPersistedSession();
@@ -130,6 +132,16 @@ export default function App() {
   const [resourceSearchIntent, setResourceSearchIntent] =
     useState<ResourceSearchIntent | null>(null);
   const [analyticsDerivativeId, setAnalyticsDerivativeId] = useState<string | undefined>();
+  const [resourceNavigationVersion, setResourceNavigationVersion] = useState(0);
+  useEffect(() => {
+    const navigate = () => {
+      setResourceSearchIntent({ type: "成片", query: "", openDetail: false, requestId: Date.now() });
+      setResourceNavigationVersion(value => value + 1);
+      setScreenHistory(previous => previous[previous.length - 1] === "resources" ? previous : [...previous, "resources"]);
+    };
+    window.addEventListener(FINISHED_LIBRARY_EVENT, navigate);
+    return () => window.removeEventListener(FINISHED_LIBRARY_EVENT, navigate);
+  }, []);
   useEffect(() => {
     const navigate = (event: Event) => {
       const id = (event as CustomEvent<{ derivativeId: string }>).detail?.derivativeId;
@@ -1498,8 +1510,6 @@ export default function App() {
       return (
         <AdminView
           adminActiveScreen={adminActiveScreen}
-          onTriggerTask={handleAddTask}
-          onOpenTaskQueue={() => setIsQueueOpen(true)}
           onLogout={() => setLogoutDialogOpen(true)}
         />
       );
@@ -1550,6 +1560,7 @@ export default function App() {
       case "scripts":
         return (
           <ResourcesView
+            key={resourceNavigationVersion}
             uploadedVideos={assets.filter((asset) => asset.id.startsWith("face-published-") && !uploadedResources.some((item) => item.url === asset.url))}
             initialSearch={resourceSearchIntent}
             onClearInitialSearch={() => setResourceSearchIntent(null)}
@@ -1647,6 +1658,8 @@ export default function App() {
         appMode={appMode}
         setAppMode={handleModeChange}
         allowedModes={currentAccount.allowedModes}
+        userName={getAdActor().name}
+        accountLabel={currentAccount.label}
         adminActiveScreen={adminActiveScreen}
         setAdminActiveScreen={setAdminActiveScreen}
       />

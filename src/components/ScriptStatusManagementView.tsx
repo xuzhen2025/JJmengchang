@@ -89,7 +89,6 @@ export default function ScriptStatusManagementView() {
       textColor: "#FFFFFF",
       bgColor: "#EA580C", // 默认橙色
       weight: newWeight,
-      notifyEnabled: true,
       isDefault: statusList.length === 0,
     };
 
@@ -163,20 +162,6 @@ export default function ScriptStatusManagementView() {
     }
   };
 
-  // 切换消息通知
-  const handleToggleNotify = (id: string) => {
-    setStatusList((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const nextVal = !item.notifyEnabled;
-          showToast(`已${nextVal ? "开启" : "关闭"} [${item.name}] 的消息通知`);
-          return { ...item, notifyEnabled: nextVal };
-        }
-        return item;
-      })
-    );
-  };
-
   // 修改颜色
   const handleChangeColor = (
     id: string,
@@ -199,7 +184,7 @@ export default function ScriptStatusManagementView() {
       )}
 
       {/* 顶部：状态功能开关 */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 px-6 shadow-2xs flex items-center justify-between">
+      <div className="bg-white rounded-module border border-slate-200/80 p-4 px-6 shadow-2xs flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-slate-800">状态功能开关</span>
           <button
@@ -227,7 +212,7 @@ export default function ScriptStatusManagementView() {
       </div>
 
       {/* 脚本状态列表表格 */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -250,7 +235,6 @@ export default function ScriptStatusManagementView() {
                 <th className="py-3.5 px-6 font-bold">字体颜色</th>
                 <th className="py-3.5 px-6 font-bold">背景颜色</th>
                 <th className="py-3.5 px-6 font-bold">权重</th>
-                <th className="py-3.5 px-6 font-bold">消息通知</th>
                 <th className="py-3.5 px-6 text-right font-bold pr-8">操作</th>
               </tr>
             </thead>
@@ -353,23 +337,6 @@ export default function ScriptStatusManagementView() {
                   {/* 权重 */}
                   <td className="py-4 px-6 font-mono text-xs text-slate-600 font-bold">
                     {item.weight}
-                  </td>
-
-                  {/* 消息通知 Toggle */}
-                  <td className="py-4 px-6">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleNotify(item.id)}
-                      className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer focus:outline-hidden p-0.5 shrink-0 inline-block align-middle ${
-                        item.notifyEnabled ? "bg-[#7C3AED]" : "bg-slate-300"
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform duration-150 ${
-                          item.notifyEnabled ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
-                    </button>
                   </td>
 
                   {/* 操作列 */}

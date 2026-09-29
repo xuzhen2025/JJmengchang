@@ -144,7 +144,7 @@ try {
   await dialog("添加推送任务").getByRole("button", { name: "确定", exact: true }).click();
   await expect(table().getByText("已提交 1 条推送记录", { exact: true })).toBeVisible();
   await page.locator("#sidebar-item-operation_records").click();
-  await expect(page.getByTestId("derivation-history").locator("tbody tr")).toHaveCount(6);
+  await expect(page.getByTestId("derivation-history").locator("tbody tr")).toHaveCount(8);
   await expect(page.getByTestId("derivation-history")).not.toContainText("复投测试");
   await setRole([]);
   await expect(page.getByRole("tab", { name: "衍生视频记录", exact: true })).toBeVisible();

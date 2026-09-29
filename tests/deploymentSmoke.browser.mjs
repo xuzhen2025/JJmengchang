@@ -15,10 +15,10 @@ try {
   const response = await page.goto(url, { waitUntil: "domcontentloaded" });
   assert.equal(response.status(), 200);
   await page.locator("#sidebar-item-operation_records").click();
-  await expect(page.getByRole("tab")).toHaveText(["衍生视频记录", "推送视频记录", "上传文件记录", "导出记录", "下载记录", "登录记录"]);
-  await expect(page.locator("tbody tr")).toHaveCount(6);
+  await expect(page.getByRole("tab")).toHaveText(["衍生视频记录", "推送视频记录", "创建计划队列", "上传文件记录", "导出记录", "下载记录", "登录记录"]);
+  await expect(page.locator("tbody tr")).toHaveCount(8);
   await expect(page.locator("tbody img")).toHaveCount(0);
-  await page.getByTestId("derivation-row-成功").getByRole("button").click();
+  await page.getByTestId("derivation-row-成功").first().getByRole("button").first().click();
   const preview = page.locator('[role="dialog"] video');
   await expect.poll(() => preview.evaluate(video => video.readyState)).toBeGreaterThan(1);
   assert.ok((await preview.getAttribute("src")).startsWith("./assets/"));
@@ -27,6 +27,9 @@ try {
     await page.getByRole("tab", { name, exact: true }).click();
     await expect(page.locator("tbody tr").first()).toBeVisible();
   }
+  await page.getByRole("tab", { name: "创建计划队列", exact: true }).click();
+  await expect(page.getByTestId("plan-history").locator("thead th")).toHaveText(["", "视频标题", "计划模板", "定向", "广告账户", "营销目标", "推送状态", "失败原因", "操作人", "操作时间", "更新时间", "任务ID"]);
+  await expect(page.getByLabel("创建状态").locator("option")).toHaveText(["请选择状态", "待创建", "创建中", "创建成功", "创建失败", "取消创建"]);
   await page.getByRole("tab", { name: "衍生视频记录", exact: true }).click();
   await page.screenshot({ path: "tmp/deployment-records.png" });
   await page.locator("#sidebar-item-resources").click();

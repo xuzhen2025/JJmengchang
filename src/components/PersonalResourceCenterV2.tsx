@@ -438,7 +438,7 @@ export default function PersonalResourceCenterV2({ mode, assets, onToast }: Pers
 
   if (mode === "personal_tags") {
     return (
-      <div className="flex min-h-[560px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs" style={{ height: "calc(100vh - 160px)" }}>
+      <div className="flex min-h-[560px] overflow-hidden rounded-module border border-slate-200 bg-white shadow-xs" style={{ height: "calc(100vh - 160px)" }}>
         <aside className="flex w-72 shrink-0 flex-col border-r border-slate-200 bg-white xl:w-80">
           <div className="space-y-3 border-b border-slate-200 p-4">
             <div className="flex gap-2">
@@ -500,7 +500,7 @@ export default function PersonalResourceCenterV2({ mode, assets, onToast }: Pers
 
   return (
     <div className="space-y-4">
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs" aria-label="资源筛选">
+      <section className="rounded-module border border-slate-200 bg-white p-4 shadow-xs" aria-label="资源筛选">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative min-w-[220px] flex-1">
@@ -539,7 +539,7 @@ export default function PersonalResourceCenterV2({ mode, assets, onToast }: Pers
         <div className="space-y-5">
           {visualAssets.length > 0 && <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">{visualAssets.map((asset) => <ResourceLibraryItem key={asset.id} item={toResourceItem(asset)} onOpen={() => onToast(`正在查看《${asset.name}》`)} footerAction={mode === "resources" ? bindingButton(asset) : undefined} />)}</div>}
           {audioAssets.length > 0 && <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{audioAssets.map((asset) => <ResourceLibraryItem key={asset.id} item={toResourceItem(asset)} onOpen={() => onToast(`正在查看《${asset.name}》`)} footerAction={mode === "resources" ? bindingButton(asset) : undefined} />)}</div>}
-          {scriptAssets.length > 0 && <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-xs"><div className="min-w-[860px]"><div className="grid grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_100px_150px_90px] gap-4 border-b border-slate-200 bg-slate-50/80 px-4 py-3 text-xs font-bold text-slate-500"><span>脚本</span><span>脚本内容</span><span>状态</span><span>分类/标签</span><span className="text-right">绑定任务</span></div>{scriptAssets.map((asset) => <ResourceLibraryItem key={asset.id} item={toResourceItem(asset)} onOpen={() => onToast(`正在查看《${asset.name}》`)} footerAction={mode === "resources" ? bindingButton(asset) : undefined} />)}</div></div>}
+          {scriptAssets.length > 0 && <div className="overflow-x-auto rounded-module border border-slate-200/80 bg-white shadow-xs"><div className="min-w-[860px]"><div className="grid grid-cols-[minmax(180px,1.2fr)_minmax(240px,2fr)_100px_150px_90px] gap-4 border-b border-slate-200 bg-slate-50/80 px-4 py-3 text-xs font-bold text-slate-500"><span>脚本</span><span>脚本内容</span><span>状态</span><span>分类/标签</span><span className="text-right">绑定任务</span></div>{scriptAssets.map((asset) => <ResourceLibraryItem key={asset.id} item={toResourceItem(asset)} onOpen={() => onToast(`正在查看《${asset.name}》`)} footerAction={mode === "resources" ? bindingButton(asset) : undefined} />)}</div></div>}
         </div>
       )}
 

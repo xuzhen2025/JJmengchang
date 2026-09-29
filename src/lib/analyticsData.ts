@@ -425,49 +425,6 @@ export function qualityTotals(rows: AdFact[]) {
     }),
   );
 }
-export function financeRows(facts: AdFact[], filter: AdFilter) {
-  const selected = filterAdFacts(facts, { ...filter, start: REPORT_START });
-  return grouped(selected, (row) => row.accountId).map(([id, history]) => {
-    const current = history.filter((row) => row.date >= filter.start),
-      sum = adTotals(current).spend;
-    const before = adTotals(
-      history.filter((row) => row.date < filter.start),
-    ).spend;
-    const opening = 50000 + Math.ceil(before / 20000) * 20000 - before;
-    const deposit =
-      Math.ceil((before + sum) / 20000) * 20000 -
-      Math.ceil(before / 20000) * 20000;
-    const cash = Math.round(sum * 80) / 100,
-      grant = Math.round(sum * 10) / 100,
-      rebate = Math.round(sum * 5) / 100,
-      total = opening + deposit - sum;
-    return {
-      id,
-      label: `${history[0].account} (${id})`,
-      department: history[0].department,
-      group: history[0].group,
-      person: history[0].person,
-      category: `${history[0].category} / ${history[0].subcategory}`,
-      spend: sum,
-      cash,
-      grant,
-      rebate,
-      wallet: sum - cash - grant - rebate,
-      opening,
-      deposit,
-      transferIn: 0,
-      transferOut: 0,
-      balance: total,
-      grantBalance: Math.round(total * 10) / 100,
-      cashBalance: total - Math.round(total * 10) / 100,
-      standard: adTotals(current.filter((row) => row.promotion === "标准推广"))
-        .spend,
-      global: adTotals(current.filter((row) => row.promotion !== "标准推广"))
-        .spend,
-      rows: current,
-    };
-  });
-}
 export function csvText(headers: string[], rows: (string | number)[][]) {
   const escape = (value: string | number) => {
     const raw = String(value),

@@ -8,6 +8,8 @@ interface AnchoredPopoverProps {
   anchorRef: RefObject<HTMLElement | null>;
   getAnchorRect?: () => DOMRect | DOMRectReadOnly | null;
   children: React.ReactNode;
+  id?: string;
+  role?: React.AriaRole;
   className?: string;
   align?: PopoverAlign;
   side?: PopoverSide;
@@ -34,6 +36,8 @@ export default function AnchoredPopover({
   anchorRef,
   getAnchorRect,
   children,
+  id,
+  role = "dialog",
   className = "",
   align = "start",
   side = "bottom",
@@ -141,7 +145,8 @@ export default function AnchoredPopover({
     <OverlayPortal
       ref={setPopover}
       layer="popover"
-      role="dialog"
+      id={id}
+      role={role}
       onClick={onClick}
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}

@@ -238,7 +238,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
   return (
     <div className="space-y-4">
       {/* Platform and filters */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         {/* Platform Selector Buttons (抖音 | 腾讯 | TikTok) */}
         <div className="p-4 bg-slate-50/40 space-y-3">
           <div className="flex items-center gap-1.5 border border-slate-200/90 rounded-lg p-0.5 bg-white inline-flex shadow-2xs">
@@ -358,7 +358,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
       </div>
 
       {/* ================= 2. Proportion Donut Chart Section (Screenshot 2) ================= */}
-      <div className="bg-white rounded-xl border border-slate-200/80 p-6 shadow-2xs space-y-4">
+      <div className="bg-white rounded-module border border-slate-200/80 p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <PieChartIcon className="w-5 h-5 text-purple-600" />
@@ -429,7 +429,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
       </div>
 
       {/* ================= 3. Detailed Data Table Section (Screenshots 3, 4, 5) ================= */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         {/* Title Bar with Export button */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-2">

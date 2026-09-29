@@ -29,6 +29,8 @@ interface SidebarProps {
   allowedModes?: ("user" | "admin")[];
   adminActiveScreen?: string;
   setAdminActiveScreen?: (screen: string) => void;
+  userName?: string;
+  accountLabel?: string;
 }
 
 export default function Sidebar({
@@ -43,7 +45,9 @@ export default function Sidebar({
   setAppMode = () => {},
   allowedModes = ["user", "admin"],
   adminActiveScreen = "content_management",
-  setAdminActiveScreen = () => {}
+  setAdminActiveScreen = () => {},
+  userName = "徐振",
+  accountLabel,
 }: SidebarProps) {
   const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
   const modeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -227,8 +231,8 @@ export default function Sidebar({
           />
           {!collapsed && (
             <div className="text-left min-w-0">
-              <p className="text-xs font-semibold text-slate-800 truncate">徐振</p>
-              <p className="text-[10px] text-slate-400 truncate">{appMode === "admin" ? "超级管理员" : "剪辑师"}</p>
+              <p className="text-xs font-semibold text-slate-800 truncate">{userName}</p>
+              <p className="text-[10px] text-slate-400 truncate">{accountLabel || (appMode === "admin" ? "超级管理员" : "剪辑师")}</p>
             </div>
           )}
         </div>

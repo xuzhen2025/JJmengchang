@@ -21,10 +21,21 @@ import {
 import OverlayPortal from "./overlays/OverlayPortal";
 import AnchoredPopover from "./overlays/AnchoredPopover";
 import { AdDialog, TemplateEditor } from "./AdPushDialogs";
+import { AdAuthorizationRepair } from "./AdPushRecovery";
+import { AD_EXECUTION_SCENARIOS, applyAdExecutionScenario, repairableProducts, type AdExecutionScenario } from "../lib/adPushRecovery";
 import { useResourceConfig } from "../lib/useResourceConfig";
 import { useAdStore } from "../lib/useAdStore";
 import {
   adCatalog,
+  adConfirmationIssue,
+  adProductIssue,
+  adSubmissionSummary,
+  adPlanTarget,
+  canUseAdAccount,
+  combinationKey,
+  planCombinations,
+  selectedPlanCombinations,
+  validPlanSelection,
   adId,
   activeAdDerivationCount,
   createAdRecords,
@@ -44,6 +55,9 @@ import {
 } from "../lib/adPush";
 import {
   AD_TARGETS,
+  adCharacterCount,
+  adToday,
+  unsupportedRemovalReason,
   VIDEO_NAME_WORDS,
   companyVideoNaming,
   defaultWorkbench,
@@ -57,23 +71,11 @@ import "./AdPushWorkspace.css";
 import { activeDerivationCount, derivationCount, useDerivationTasks, validateDerivationCount, type DerivationOptions } from "../lib/videoDerivation";
 
 type Mode = "push" | "full_domain" | "single" | "multi";
-const MODES: { key: Mode; label: string; description: string }[] = [
-  { key: "push", label: "仅推送", description: "将视频推送到千川视频库" },
-  {
-    key: "full_domain",
-    label: "全域推广",
-    description: "投放新视频至全域推广计划",
-  },
-  {
-    key: "single",
-    label: "推送并搭建计划（单创意）",
-    description: "每个计划一个视频创意，推送后根据模板搭建计划",
-  },
-  {
-    key: "multi",
-    label: "推送并搭建计划（多创意）",
-    description: "每个计划多个视频创意，推送后根据模板搭建计划",
-  },
+type Operation = "push" | "append" | "create";
+const MODES: { key: Operation; label: string }[] = [
+  { key: "push", label: "仅推送" },
+  { key: "append", label: "追加已有计划" },
+  { key: "create", label: "新建计划并投放" },
 ];
 const emptyRow = (accountId: string): DeliveryRow => ({
   id: adId(),
@@ -156,12 +158,16 @@ function Choices({
   value,
   onChange,
   radio = false,
+  disabled = [],
+  disabledReason = "当前选项不可用",
 }: {
   label: string;
   values: string[];
   value: string;
   onChange: (value: string) => void;
   radio?: boolean;
+  disabled?: string[];
+  disabledReason?: string;
 }) {
   return (
     <div
@@ -170,11 +176,12 @@ function Choices({
       aria-label={label}
     >
       {values.map((v) => (
-        <label key={v} className={value === v ? "is-active" : ""}>
+        <label key={v} className={value === v ? "is-active" : ""} title={disabled.includes(v) ? disabledReason : undefined}>
           <input
             type="radio"
             name={`ap-${label}`}
             checked={value === v}
+            disabled={disabled.includes(v)}
             onChange={() => onChange(v)}
           />
           <span>{v}</span>
@@ -287,7 +294,7 @@ function AccountPanel({
 }) {
   const store = useAdStore(),
     actor = getAdActor();
-  const [scope, setScope] = useState("收藏账户"),
+  const [scope, setScope] = useState(active && !accounts.find(a => a.id === active)?.isStarred ? "全部账户" : "收藏账户"),
     [search, setSearch] = useState(""),
     [group, setGroup] = useState(""),
     [category, setCategory] = useState("");
@@ -310,7 +317,7 @@ function AccountPanel({
       (!keywords.length ||
         keywords.some((k) => `${a.name} ${a.id}`.toLowerCase().includes(k))),
   );
-  const enabled = list.filter((a) => a.status === "authorized" && !a.revoked),
+  const enabled = list.filter(canUseAdAccount),
     checked =
       enabled.length > 0 && enabled.every((a) => selected.includes(a.id));
   return (
@@ -398,14 +405,14 @@ function AccountPanel({
         {list.map((a) => (
           <div
             key={a.id}
-            className={`ap-account ${selected.includes(a.id) || active === a.id ? "is-active" : ""} ${a.status === "expired" || a.revoked ? "is-disabled" : ""}`}
+            className={`ap-account ${selected.includes(a.id) || active === a.id ? "is-active" : ""} ${!canUseAdAccount(a) ? "is-disabled" : ""}`}
           >
             {onSelect ? (
               <label>
                 <input
                   aria-label={a.name}
                   type="checkbox"
-                  disabled={a.status === "expired" || a.revoked}
+                  disabled={!canUseAdAccount(a)}
                   checked={selected.includes(a.id)}
                   onChange={() => onSelect(toggle(selected, a.id))}
                 />
@@ -420,7 +427,7 @@ function AccountPanel({
             ) : (
               <button
                 className="ap-account-name"
-                disabled={a.status === "expired" || a.revoked}
+                disabled={!canUseAdAccount(a)}
                 onClick={() => onActivate?.(a.id)}
               >
                 {a.name}
@@ -455,6 +462,8 @@ function AccountPanel({
 function PlanPicker({
   accounts,
   goal,
+  target,
+  videoIds,
   initial,
   reference = false,
   onClose,
@@ -462,13 +471,15 @@ function PlanPicker({
 }: {
   accounts: AdAccount[];
   goal: AdDraft["goal"];
+  target: AdTarget;
+  videoIds: string[];
   initial: DeliveryRow[];
   reference?: boolean;
   onClose: () => void;
   onConfirm: (rows: DeliveryRow[]) => void;
 }) {
   const [active, setActive] = useState(
-      accounts.find((a) => a.status === "authorized" && !a.revoked)?.id || "",
+      accounts.find(canUseAdAccount)?.id || "",
     ),
     [picked, setPicked] = useState(initial);
   const [bidding, setBidding] = useState("控成本投放"),
@@ -484,6 +495,7 @@ function PlanPicker({
     .filter(
       (p) =>
         p.goal === goal &&
+        (!adPlanTarget(p) || adPlanTarget(p) === target) &&
         p.name.includes(search) &&
         (p.bidding || "控成本投放") === bidding &&
         (status === "所有(不含已删除)" || p.status === status),
@@ -506,11 +518,22 @@ function PlanPicker({
       );
     });
   const rows = plans.slice((page - 1) * size, page * size);
+  const unavailable = (plan: (typeof plans)[number]) => !adPlanTarget(plan)
+    ? "计划类型待同步"
+    : !reference && videoIds.some(id => plan.videoIds.includes(id)) ? "视频已在该计划中"
+    : !reference && goal === "推商品" && !planCombinations(plan).length ? "商品与抖音号关联待同步" : "";
+  const validPicked = picked.filter(row => {
+    const account = accounts.find(a => a.id === row.accountId && canUseAdAccount(a));
+    const plan = account && adCatalog(account).plans.find(p => p.id === row.planId && adPlanTarget(p) === target);
+    return plan && !unavailable(plan) && (reference || validPlanSelection(plan, row));
+  });
   const choose = (plan: (typeof plans)[number]) => {
+    if (unavailable(plan)) return;
     const row = {
       ...emptyRow(active),
       douyinId: plan.douyinId,
       planId: plan.id,
+      combinations: planCombinations(plan).length === 1 ? planCombinations(plan) : [],
     };
     setPicked((p) =>
       reference
@@ -530,14 +553,15 @@ function PlanPicker({
         <>
           <span className="ap-footer-count">
             已选：<b>{picked.length}</b> 个计划
+            {validPicked.length !== picked.length && <span role="status"> · {picked.length - validPicked.length} 个计划待补全有效组合</span>}
           </span>
           <button className="ap-button" onClick={onClose}>
             取消
           </button>
           <button
             className="ap-button primary"
-            disabled={!picked.length}
-            onClick={() => onConfirm(picked)}
+            disabled={!validPicked.length || validPicked.length !== picked.length}
+            onClick={() => onConfirm(validPicked)}
           >
             确定
           </button>
@@ -555,7 +579,7 @@ function PlanPicker({
           }}
         />
         <div className="ap-plan-panel">
-          <div className="ap-plan-caption">选择账户已有计划</div>
+          <div className="ap-plan-caption">{target} · {a?.name || "请选择账户"}</div>
           <div className="ap-filters">
             {reference && (
               <input
@@ -616,10 +640,12 @@ function PlanPicker({
               </thead>
               <tbody>
                 {rows.map((p) => (
-                  <tr key={p.id}>
+                  <React.Fragment key={p.id}><tr>
                     <td>
                       <input
                         aria-label={`选择计划 ${p.name}`}
+                        disabled={Boolean(unavailable(p))}
+                        title={unavailable(p) || p.name}
                         type={reference ? "radio" : "checkbox"}
                         checked={picked.some(
                           (r) => r.accountId === active && r.planId === p.id,
@@ -630,6 +656,7 @@ function PlanPicker({
                     <td>
                       {p.name}
                       <small>{p.id}</small>
+                      {unavailable(p) && <small>{unavailable(p)}</small>}
                     </td>
                     <td>
                       {catalog?.douyins.find((d) => d.id === p.douyinId)?.name}
@@ -647,6 +674,21 @@ function PlanPicker({
                       })}
                     </td>
                   </tr>
+                  {!reference && goal === "推商品" && picked.some(row => row.accountId === active && row.planId === p.id) && <tr><td colSpan={7} className="ap-combination-cell">
+                    <div role="group" aria-label={`${p.name}投放组合`} className="ap-combinations">
+                      {planCombinations(p).map(combination => {
+                        const row = picked.find(row => row.accountId === active && row.planId === p.id)!;
+                        const selected = selectedPlanCombinations(p, row);
+                        const key = combinationKey(combination);
+                        const product = catalog?.products.find(product => product.id === combination.productId);
+                        const douyin = catalog?.douyins.find(douyin => douyin.id === combination.douyinId);
+                        return <label key={key} className="ap-combination"><input type="checkbox" checked={selected.some(item => combinationKey(item) === key)} onChange={() => setPicked(previous => previous.map(item => item.id !== row.id ? item : { ...item, combinations: selected.some(item => combinationKey(item) === key) ? selected.filter(item => combinationKey(item) !== key) : [...selected, combination] }))} />
+                          <span><b>{product?.name || `商品 ${combination.productId}`}</b><small>商品 ID：{combination.productId}</small></span><span>{douyin?.name || `抖音号 ${combination.douyinId}`}<small>抖音号 ID：{combination.douyinId}</small></span>
+                        </label>;
+                      })}
+                    </div>
+                  </td></tr>}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -714,6 +756,7 @@ export default function AdPushWorkspace({
     ...defaultWorkbench(),
     target: initialDraft?.goal === "推商品" ? "商品全域" : "直播全域",
     ...initialDraft?.workbench,
+    operation: initialDraft?.method === "plan" ? "create" : initialDraft?.workbench?.operation || "append",
   }));
   const [draft, setDraft] = useState<AdDraft>(() =>
     initialDraft
@@ -771,24 +814,33 @@ export default function AdPushWorkspace({
     [busy, setBusy] = useState(false);
   const [referenceTemplate, setReferenceTemplate] = useState("");
   const [cardDraft, setCardDraft] = useState({ title: "", points: "" });
+  const [confirmationRecords, setConfirmationRecords] = useState<AdPushRecord[]>([]);
+  const [repairAccountId, setRepairAccountId] = useState("");
+  const [executionScenario, setExecutionScenario] = useState<AdExecutionScenario>("normal");
   const namingRef = useRef<HTMLInputElement>(null),
     [nameMenu, setNameMenu] = useState(false),
     mainRef = useRef<HTMLDivElement>(null),
     submitting = useRef(false);
   const canPlan = actor.permissions.includes("uc_ad_plan_manage"),
     accounts = visibleAdAccounts(store, actor).filter(
-      (a) => a.platform === "巨量千川" && !a.revoked,
+      (a) => a.platform === "巨量千川" && a.connectionStatus !== "disconnected" && !a.revoked,
     );
   const goal = mode === "full_domain" ? targetGoal(config.target) : draft.goal;
   const isPlanMode = mode === "single" || mode === "multi",
     isCreate = mode === "full_domain" && config.operation === "create";
-  const planCount = isCreate
-    ? groupAdRows({ ...draft, method: "full_domain", workbench: config }).length
-    : 0;
+  const operation: Operation = mode === "push" ? "push" : isCreate || isPlanMode ? "create" : "append";
+  useEffect(() => setExecutionScenario("normal"), [operation, config.target]);
+  const currentDraft: AdDraft = { ...draft, method: mode === "push" ? "push" : isPlanMode ? "plan" : "full_domain", creative: mode === "multi" ? "多创意" : "单创意", workbench: config, derivation: deriving ? derivation : undefined };
+  const summary = adSubmissionSummary(currentDraft, store, videos?.length || 1);
+  const planCount = summary.plans;
+  const canCoupon = draft.rows.length > 0 && draft.rows.every(row => accounts.find(a => a.id === row.accountId)?.capabilities?.coupon === true);
+  const canCommission = draft.rows.length > 0 && draft.rows.every(row => accounts.find(a => a.id === row.accountId)?.capabilities?.commission === true);
+  const canSetProfile = draft.rows.length > 0 && draft.rows.every(row => { const account = accounts.find(a => a.id === row.accountId); return account && ["OFFICIAL", "SELF"].includes(adCatalog(account).douyins.find(item => item.id === row.douyinId)?.bindType || ""); });
   const templates = store.templates.filter(
     (t) =>
       t.platform === "巨量千川" &&
       t.goal === goal &&
+      (!t.workbench || t.workbench.target === config.target) &&
       (t.scope === "公司模板" || t.ownerId === actor.id),
   );
   const visibleTemplates = templates.filter(
@@ -812,6 +864,7 @@ export default function AdPushWorkspace({
             (t) =>
               t.id === id &&
               t.goal === goal &&
+              (!t.workbench || t.workbench.target === config.target) &&
               t.platform === "巨量千川" &&
               (t.scope === "公司模板" || t.ownerId === actor.id),
           ),
@@ -825,13 +878,14 @@ export default function AdPushWorkspace({
           (t) =>
             t.id === id &&
             t.goal === goal &&
+            (!t.workbench || t.workbench.target === config.target) &&
             t.platform === "巨量千川" &&
             (t.scope === "公司模板" || t.ownerId === actor.id),
         ),
       ),
     }));
     setNotice("原模板已删除或不再适用，请重新选择模板");
-  }, [actor.id, draft.templateIds, goal, isPlanMode, store.templates]);
+  }, [actor.id, config.target, draft.templateIds, goal, isPlanMode, store.templates]);
   const settings = readAdPushSettings(),
     activeCount = store.records.filter(
       (r) => r.operatorId === actor.id && isAdActive(r),
@@ -863,7 +917,7 @@ export default function AdPushWorkspace({
     setConfig((c) => ({
       ...c,
       target,
-      operation: "append",
+      operation: operation === "create" ? "create" : "append",
       bidding: target === "商品乘方" ? "控成本投放" : c.bidding,
       grouping: target === "商品乘方" ? "每个商品一条计划" : "一个计划一个商品",
     }));
@@ -941,22 +995,28 @@ export default function AdPushWorkspace({
         const issue = validateDerivationCount(amount, readAdPushSettings().maxDerive, activeDerivationCount(actor.id) + activeAdDerivationCount(readAdStore().records, actor.id));
         if (issue) return report(issue);
       }
-      const records = createAdRecords(next, readAdStore(), getAdActor(), videos || video);
+      const currentStore = readAdStore();
+      const validatedRecords = createAdRecords(next, currentStore, getAdActor(), videos || video);
+      if (confirmed) {
+        const issue = adConfirmationIssue(confirmationRecords, currentStore);
+        if (issue) throw new Error(issue);
+      }
+      const records = confirmed && confirmationRecords.length ? confirmationRecords : validatedRecords;
       if (activeCount + records.length > settings.maxPush)
         return report(
           "本次推送超过当前员工同时推送上限，请减少目标或等待任务结束",
         );
       if (
-        mode === "full_domain" &&
-        config.operation === "append" &&
+        mode !== "push" &&
         !confirmed
       ) {
+        setConfirmationRecords(records);
         setDialog("confirm");
         return;
       }
       submitting.current = true;
       setBusy(true);
-      onCreate(records);
+      onCreate(applyAdExecutionScenario(records, executionScenario));
     } catch (e) {
       submitting.current = false;
       setBusy(false);
@@ -1010,7 +1070,7 @@ export default function AdPushWorkspace({
     setError("");
     setNotice("保存成功");
   };
-  const multiplier = isCreate && config.target === "商品乘方";
+  const multiplier = operation === "create" && config.target === "商品乘方";
   const deliveryTable = (
     <div className="ap-table-scroll">
       <table className="ap-table ap-delivery">
@@ -1025,7 +1085,6 @@ export default function AdPushWorkspace({
             </th>
             <th>{multiplier ? "商品/抖音号" : "抖音号"}</th>
             {goal === "推商品" && <th>{multiplier ? "选择预览" : "商品"}</th>}
-            {!isCreate && <th>店铺</th>}
             <th>操作</th>
           </tr>
         </thead>
@@ -1036,19 +1095,20 @@ export default function AdPushWorkspace({
             const douyinSelect = (
               <select
                 aria-label="抖音号"
+                disabled={multiplier && !row.productId}
                 value={row.douyinId}
                 onChange={(e) =>
                   updateRow(row.id, {
                     douyinId: e.target.value,
-                    productId: "",
-                    storeId: "",
+                    productId: multiplier ? row.productId : "",
+                    storeId: multiplier ? row.storeId : "",
                   })
                 }
               >
                 <option value="">请选择抖音号</option>
                 {c?.douyins.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
+                  <option key={d.id} value={d.id} disabled={Boolean(d.disabledReason || multiplier && row.productId && a && adProductIssue(a, row.productId, d.id, config.target))}>
+                    {d.name}{d.disabledReason ? `（${d.disabledReason}）` : ""}
                   </option>
                 ))}
               </select>
@@ -1056,11 +1116,12 @@ export default function AdPushWorkspace({
             const productSelect = (
               <select
                 aria-label="商品"
-                disabled={!row.douyinId}
+                disabled={!row.douyinId && !multiplier}
                 value={row.productId}
                 onChange={(e) =>
                   updateRow(row.id, {
                     productId: e.target.value,
+                    ...(multiplier ? { douyinId: "" } : {}),
                     storeId:
                       c?.products.find((p) => p.id === e.target.value)
                         ?.storeId || "",
@@ -1069,16 +1130,9 @@ export default function AdPushWorkspace({
               >
                 <option value="">请选择商品</option>
                 {c?.products
-                  .filter((p) =>
-                    c.stores.some(
-                      (s) =>
-                        s.id === p.storeId &&
-                        s.douyinIds.includes(row.douyinId),
-                    ),
-                  )
                   .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
+                    <option key={p.id} value={p.id} disabled={Boolean(p.grayReasons?.length || !multiplier && row.douyinId && a && adProductIssue(a, p.id, row.douyinId, config.target))}>
+                      {p.name}{p.grayReasons?.length ? `（${p.grayReasons.join("；")}）` : ""}
                     </option>
                   ))}
               </select>
@@ -1088,12 +1142,14 @@ export default function AdPushWorkspace({
                 <td>
                   {a?.name || "账户不可用"}
                   <small>{row.accountId}</small>
+                  <small>{a?.ecpType === "COMMON_STAR" ? "达人商品" : a?.ecpType === "AGENT" ? "机构商品" : "商家商品"}</small>
+                  {a && canPlan && (repairableProducts(a).length > 0 || a.authRepair) && <button className="ap-link" onClick={() => setRepairAccountId(a.id)}>修复商品投放权限</button>}
                 </td>
                 <td>
                   {multiplier ? (
                     <div className="ap-object-selects">
-                      {douyinSelect}
                       {productSelect}
+                      {douyinSelect}
                     </div>
                   ) : (
                     douyinSelect
@@ -1113,30 +1169,6 @@ export default function AdPushWorkspace({
                     ) : (
                       productSelect
                     )}
-                  </td>
-                )}
-                {!isCreate && (
-                  <td>
-                    <select
-                      aria-label="店铺"
-                      disabled={!row.douyinId}
-                      value={row.storeId}
-                      onChange={(e) =>
-                        updateRow(row.id, {
-                          storeId: e.target.value,
-                          productId: "",
-                        })
-                      }
-                    >
-                      <option value="">请选择店铺</option>
-                      {c?.stores
-                        .filter((s) => s.douyinIds.includes(row.douyinId))
-                        .map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>
-                        ))}
-                    </select>
                   </td>
                 )}
                 <td>
@@ -1231,7 +1263,7 @@ export default function AdPushWorkspace({
                 {MODES.map((m) => (
                   <button
                     aria-label={m.label}
-                    aria-pressed={mode === m.key}
+                    aria-pressed={operation === m.key}
                     key={m.key}
                     disabled={m.key !== "push" && !canPlan}
                     title={
@@ -1239,11 +1271,13 @@ export default function AdPushWorkspace({
                         ? "暂无管理投放计划权限"
                         : m.label
                     }
-                    className={mode === m.key ? "is-active" : ""}
-                    onClick={() => switchMode(m.key)}
+                    className={operation === m.key ? "is-active" : ""}
+                    onClick={() => {
+                      switchMode(m.key === "push" ? "push" : "full_domain");
+                      if (m.key === "create") setConfig({ ...defaultWorkbench(), target: "商品全域", operation: "create" });
+                    }}
                   >
                     <span>{m.label}</span>
-                    <small>{m.description}</small>
                   </button>
                 ))}
               </div>
@@ -1294,11 +1328,11 @@ export default function AdPushWorkspace({
                 </div>
               </Section>
             )}
-            {mode === "full_domain" && (
+            {operation !== "push" && (
               <Section title="推广设置">
                 <Row label="营销目标">
                   <div className="ap-targets">
-                    {AD_TARGETS.map((t, i) => (
+                    {AD_TARGETS.filter(t => operation !== "create" || t.startsWith("商品")).map((t, i) => (
                       <button
                         aria-pressed={config.target === t}
                         key={t}
@@ -1320,34 +1354,19 @@ export default function AdPushWorkspace({
                     ))}
                   </div>
                 </Row>
-                <Row label="计划投放方式">
+                {operation === "create" && <Row label="计划创建方式">
                   <Choices
-                    label="计划投放方式"
-                    values={
-                      config.target.startsWith("商品")
-                        ? [
-                            "已有计划添加视频",
-                            config.target === "商品全域"
-                              ? "批量创建全域计划"
-                              : "批量创建乘方计划",
-                          ]
-                        : ["已有计划添加视频"]
-                    }
-                    value={
-                      config.operation === "append"
-                        ? "已有计划添加视频"
-                        : config.target === "商品全域"
-                          ? "批量创建全域计划"
-                          : "批量创建乘方计划"
-                    }
+                    label="计划创建方式"
+                    values={["直接配置", "单创意模板", "多创意模板"]}
+                    value={mode === "single" ? "单创意模板" : mode === "multi" ? "多创意模板" : "直接配置"}
                     onChange={(v) => {
-                      set(
-                        "operation",
-                        v === "已有计划添加视频" ? "append" : "create",
-                      );
-                      change({ rows: [] });
+                      setMode(v === "单创意模板" ? "single" : v === "多创意模板" ? "multi" : "full_domain");
+                      setConfig(c => ({ ...c, operation: "create" }));
+                      change({ rows: [], templateIds: [], goal: "推商品" });
                     }}
                   />
+                </Row>}
+                {mode === "full_domain" && <Row label="预设模板">
                   <Select
                     label="选择预设模板"
                     value={preset}
@@ -1396,7 +1415,7 @@ export default function AdPushWorkspace({
                   >
                     重置
                   </button>
-                </Row>
+                </Row>}
                 {config.operation === "append" ? (
                   <>
                     <Row label="选择已有计划">
@@ -1415,6 +1434,7 @@ export default function AdPushWorkspace({
                               adCatalog(
                                 accounts.find((a) => a.id === r.accountId)!,
                               ).plans.find((p) => p.id === r.planId)?.name}
+                            {goal === "推商品" && <small className="ap-plan-chip-selection">已选 {r.combinations?.length || 0} 个商品/抖音号组合</small>}
                             <button
                               className="ap-icon"
                               title="移除已选计划"
@@ -1431,9 +1451,7 @@ export default function AdPushWorkspace({
                       </div>
                     )}
                   </>
-                ) : (
-                  deliveryTable
-                )}
+                ) : !isPlanMode ? deliveryTable : null}
               </Section>
             )}
             {isCreate && (
@@ -1478,7 +1496,7 @@ export default function AdPushWorkspace({
                     引用模板
                   </button>
                 </Row>
-                <Row label="出价方式">
+                <Row label="出价方式（必填）">
                   <Choices
                     label="出价方式"
                     values={
@@ -1488,11 +1506,11 @@ export default function AdPushWorkspace({
                     }
                     value={config.bidding}
                     onChange={(v) =>
-                      set("bidding", v as AdWorkbenchConfig["bidding"])
+                      setConfig(c => ({ ...c, bidding: v as AdWorkbenchConfig["bidding"], roi: v === "放量投放" ? "" : c.roi }))
                     }
                   />
                 </Row>
-                <Row label={config.target === "商品乘方" ? "日预算" : "预算"}>
+                <Row label="预算（元，必填）">
                   <input
                     className="ap-input-medium"
                     aria-label="预算"
@@ -1503,16 +1521,13 @@ export default function AdPushWorkspace({
                     placeholder="请输入金额"
                   />
                   <span className="ap-hint">
-                    支持范围：{config.bidding === "放量投放" ? "30" : "300"}
-                    ~999,999,999.99，最多两位小数
+                    大于0，最多两位小数；账户实际限额以千川校验为准
                   </span>
                 </Row>
                 {config.bidding === "控成本投放" && (
                   <Row
                     label={
-                      config.target === "商品乘方"
-                        ? "综合营销ROI目标"
-                        : "净成交ROI目标"
+                      "支付ROI目标（条件必填）"
                     }
                   >
                     <input
@@ -1525,11 +1540,11 @@ export default function AdPushWorkspace({
                       placeholder="请输入目标"
                     />
                     <span className="ap-hint">
-                      支持范围：0.01~10000，最多两位小数
+                      控成本必填，大于0，最多两位小数
                     </span>
                   </Row>
                 )}
-                <Row label="投放日期">
+                <Row label="投放日期（选填）">
                   <Choices
                     label="投放日期"
                     values={["从今天起长期投放", "设置开始和结束时间"]}
@@ -1543,6 +1558,7 @@ export default function AdPushWorkspace({
                       <input
                         aria-label="投放开始日期"
                         type="date"
+                        min={adToday()}
                         value={config.start}
                         onChange={(e) => set("start", e.target.value)}
                       />
@@ -1550,19 +1566,21 @@ export default function AdPushWorkspace({
                       <input
                         aria-label="投放结束日期"
                         type="date"
-                        min={config.start}
+                        min={config.start || adToday()}
                         value={config.end}
                         onChange={(e) => set("end", e.target.value)}
                       />
                     </div>
                   )}
                 </Row>
-                <Row label="智能优惠券">
+                <Row label="智能优惠券（条件选填）">
                   <Switch
                     label="智能优惠券"
                     value={config.coupon}
+                    disabled={!canCoupon && !config.coupon}
                     onChange={(v) => set("coupon", v)}
                   />
+                  {!canCoupon && <span className="ap-hint">所选账户能力尚未确认，不可开启</span>}
                 </Row>
                 {config.target === "商品乘方" &&
                   (
@@ -1576,8 +1594,10 @@ export default function AdPushWorkspace({
                       <Switch
                         label={label}
                         value={config[key]}
+                        disabled={key === "commission" && !canCommission && !config[key]}
                         onChange={(v) => set(key, v)}
                       />
+                      {key === "commission" && !canCommission && <span className="ap-hint">所选账户白名单尚未确认，不可开启</span>}
                     </Row>
                   ))}
               </Section>
@@ -1597,6 +1617,8 @@ export default function AdPushWorkspace({
                           "移除卡审视频",
                         ]}
                         value={config.removal}
+                        disabled={["移除低数据视频", "移除卡审视频"]}
+                        disabledReason={unsupportedRemovalReason}
                         onChange={(v) =>
                           set("removal", v as AdWorkbenchConfig["removal"])
                         }
@@ -1694,7 +1716,7 @@ export default function AdPushWorkspace({
                   </>
                 ) : (
                   <>
-                    <Row label="标题">
+                    <Row label="标题（当前成片场景必填）">
                       <div className="ap-title-inputs">
                         <button
                           className="ap-link"
@@ -1713,7 +1735,6 @@ export default function AdPushWorkspace({
                               <input
                                 aria-label={`创意标题${i + 1}`}
                                 placeholder="请输入标题"
-                                maxLength={55}
                                 value={t}
                                 onChange={(e) =>
                                   set(
@@ -1724,7 +1745,7 @@ export default function AdPushWorkspace({
                                   )
                                 }
                               />
-                              <span>{t.length}/55</span>
+                              <span>{adCharacterCount(t)}/110</span>
                             </div>
                             {config.titles.length > 1 && (
                               <button
@@ -1745,9 +1766,11 @@ export default function AdPushWorkspace({
                       </div>
                     </Row>
                     {config.target === "商品全域" && (
-                      <Row label="推广卡片">
+                      <Row label="推广卡片（暂不可用）">
                         <button
                           className={`ap-button ${config.cardTitle ? "" : "danger-text"}`}
+                          disabled
+                          title="创建接口写入字段尚未确认"
                           onClick={() => {
                             setCardDraft({
                               title: config.cardTitle,
@@ -1758,17 +1781,20 @@ export default function AdPushWorkspace({
                         >
                           {config.cardTitle || "未配置推广卡片"}
                         </button>
+                        {(config.cardTitle || config.cardSellingPoints) && <button className="ap-link" onClick={() => setConfig(c => ({ ...c, cardTitle: "", cardSellingPoints: "" }))}>清除历史配置</button>}
                       </Row>
                     )}
-                    <Row label="抖音主页可见性">
+                    <Row label="抖音主页可见性（条件选填）">
                       <Choices
                         label="抖音主页可见性"
-                        values={["仅单次展示可见", "主页始终可见"]}
+                        values={["默认", "仅单次展示可见", "主页始终可见"]}
                         value={config.profile}
+                        disabled={canSetProfile ? [] : ["仅单次展示可见", "主页始终可见"]}
                         onChange={(v) =>
                           set("profile", v as AdWorkbenchConfig["profile"])
                         }
                       />
+                      {!canSetProfile && <span className="ap-hint">所选抖音号关系不支持或尚未确认，请选择默认</span>}
                     </Row>
                   </>
                 )}
@@ -1793,7 +1819,7 @@ export default function AdPushWorkspace({
                     onChange={(v) => set("grouping", v)}
                   />
                 </Row>
-                <Row label="计划名称">
+                <Row label="计划名称（本平台必填）">
                   <input
                     className="ap-input-wide"
                     aria-label="计划名称"
@@ -1827,14 +1853,8 @@ export default function AdPushWorkspace({
                     ))}
                   </div>
                 </Row>
-                <Row label="计划创建后状态">
-                  <Switch
-                    label="计划创建后状态"
-                    value={false}
-                    onChange={() => {}}
-                    disabled
-                  />
-                  <span className="ap-hint">已暂停</span>
+                <Row label="提交操作">
+                  <span>创建计划并请求开启投放</span>
                 </Row>
               </Section>
             )}
@@ -1904,7 +1924,7 @@ export default function AdPushWorkspace({
                       <Select
                         label="模板营销目标"
                         value={draft.goal}
-                        options={["推商品", "推直播间"]}
+                        options={["推商品"]}
                         onChange={(v) =>
                           change({
                             goal: v as AdDraft["goal"],
@@ -1934,7 +1954,7 @@ export default function AdPushWorkspace({
                             <span>
                               {t.name}
                               <small>
-                                {t.goal} · 日预算 {t.params.budget} 元
+                                {t.workbench?.target || t.goal} · 预算 {t.workbench?.budget ?? t.params.budget} 元
                               </small>
                             </span>
                           </label>
@@ -1980,7 +2000,7 @@ export default function AdPushWorkspace({
                       已选模板/广告账户
                       <span className="ap-ml-auto">
                         预计搭建{" "}
-                        <b>{draft.rows.length * selectedTemplates.length}</b>{" "}
+                        <b>{planCount}</b>{" "}
                         个计划
                       </span>
                     </div>
@@ -2088,7 +2108,7 @@ export default function AdPushWorkspace({
                   )}
                 </Row>
               )}
-              {(mode === "multi" || mode === "full_domain") && (
+              {(mode === "multi" || isCreate) && (
                 <Row label="推送搭建策略">
                   <Choices
                     radio
@@ -2163,6 +2183,7 @@ export default function AdPushWorkspace({
                 <p className="text-sm leading-6 text-slate-600">已选择 {new Set(draft.rows.map(row => row.accountId)).size} 个广告账户，预计衍生 {Number.isSafeInteger(derivation.count) && derivation.count > 0 ? derivationCount(derivation, new Set(draft.rows.map(row => row.accountId)).size) : "--"} 个新视频，完成后推送至所选账户。本地衍生上限 {settings.maxDerive} 个。</p>
               </div>}
             </Section>
+            <Row label="模拟执行反馈"><select aria-label="模拟执行反馈" value={executionScenario} onChange={e => setExecutionScenario(e.target.value as AdExecutionScenario)}>{AD_EXECUTION_SCENARIOS.filter(s => operation === "push" ? ["normal", "media", "upload", "upload_unknown", "library"].includes(s.value) : operation === "create" ? !["append_unknown", "capacity"].includes(s.value) : !["create_unknown", "enable_unknown"].includes(s.value)).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}</select></Row>
             <footer className="ap-footer">
               {error && (
                 <p role="alert" className="ap-error">
@@ -2200,7 +2221,7 @@ export default function AdPushWorkspace({
                   disabled={busy}
                   onClick={() => submit()}
                 >
-                  {isCreate ? "开始计划搭建" : "确定"}
+                  {operation === "create" ? "创建并请求投放" : "确定"}
                 </button>
                 <span className="ap-capacity">
                   您当前还能推送{" "}
@@ -2265,6 +2286,8 @@ export default function AdPushWorkspace({
         <PlanPicker
           accounts={accounts}
           goal={goal}
+          target={config.target}
+          videoIds={deriving ? [] : (videos || [video]).map(item => item.derivativeId || item.id)}
           reference={dialog === "reference"}
           initial={dialog === "plans" ? draft.rows : []}
           onClose={() => setDialog(null)}
@@ -2561,9 +2584,9 @@ export default function AdPushWorkspace({
                       c.target === "商品乘方"
                         ? "控成本投放"
                         : t.workbench?.bidding || "控成本投放",
-                    budget: String(t.params.budget),
-                    roi: String(t.params.bid),
-                    coupon: t.params.coupon,
+                    budget: t.workbench?.budget ?? String(t.params.budget),
+                    roi: t.workbench?.roi ?? String(t.params.bid),
+                    coupon: t.workbench?.coupon ?? t.params.coupon,
                     planName: t.naming,
                   }));
                   setDialog(null);
@@ -2607,10 +2630,10 @@ export default function AdPushWorkspace({
                     <dl>
                       <dt>营销目标</dt>
                       <dd>{t.goal}</dd>
-                      <dt>日预算</dt>
-                      <dd>{t.params.budget} 元</dd>
-                      <dt>ROI / 出价</dt>
-                      <dd>{t.params.bid}</dd>
+                      <dt>预算</dt>
+                      <dd>{t.workbench?.budget ?? t.params.budget} 元</dd>
+                      <dt>支付ROI目标</dt>
+                      <dd>{t.workbench?.bidding === "放量投放" ? "不涉及" : t.workbench?.roi ?? t.params.bid}</dd>
                       <dt>计划名称</dt>
                       <dd>{t.naming}</dd>
                     </dl>
@@ -2625,6 +2648,7 @@ export default function AdPushWorkspace({
         <TemplateEditor
           initial={editor.template}
           goal={goal}
+          target={config.target}
           video={video}
           onClose={() => setEditor(null)}
           onSave={(t) => {
@@ -2667,9 +2691,10 @@ export default function AdPushWorkspace({
           <p>确定删除“{deleting.name}”？已创建任务保留当时配置。</p>
         </AdDialog>
       )}
+      {repairAccountId && accounts.some(a => a.id === repairAccountId) && <AdAuthorizationRepair account={accounts.find(a => a.id === repairAccountId)!} store={store} onClose={() => setRepairAccountId("")} />}
       {dialog === "confirm" && (
         <AdDialog
-          title="确认计划视频操作"
+          title={operation === "create" ? "确认新建计划并投放" : "确认计划视频操作"}
           className="ad-push-ui ap-dialog"
           onClose={() => setDialog(null)}
           footer={
@@ -2686,15 +2711,21 @@ export default function AdPushWorkspace({
             </>
           }
         >
-          <p>
+          {operation === "create" ? <>
+            <p>共 {summary.accounts} 个账户、{summary.plans} 个计划、{summary.videos} 条视频分配；预算合计 {summary.budget.toFixed(2)} 元。</p>
+            <div className="ap-table-scroll"><table className="ap-table ap-confirm-table"><thead><tr><th>广告账户</th><th>计划名称</th><th>视频数</th><th>预算（元）</th></tr></thead><tbody>{[...new Map(confirmationRecords.map(record => [record.planGroupId, record])).values()].map(record => <tr key={record.planGroupId}><td>{record.account}</td><td className="break-all">{record.planName}</td><td>{confirmationRecords.filter(item => item.planGroupId === record.planGroupId).length}</td><td>{record.snapshot.workbench?.budget}</td></tr>)}</tbody></table></div>
+            <p className="ap-confirm-warning">确认后将创建计划并请求开启，符合千川审核及投放条件后可能产生广告消耗。预算合计不是实际消耗。</p>
+          </> : <><p>
             将向 {draft.rows.length} 个计划添加当前视频。
+            {goal === "推商品" && `共 ${draft.rows.reduce((count, row) => count + (row.combinations?.length || 0), 0)} 个商品/抖音号组合。`}
             {config.removal !== "不移除"
-              ? `同时执行“${config.removal}”，仅从所选计划移除匹配素材，不删除资源库文件。`
+              ? `同时执行“${config.removal}”。旧素材影响未选组合、范围无法确认或新视频未确认可用时保留；不删除资源库文件。`
               : "保留计划原有视频。"}
           </p>
           <p className="ap-confirm-warning">
             已在投计划中的新增视频可能进入投放，不改变计划当前开启状态。
           </p>
+          </>}
         </AdDialog>
       )}
     </OverlayPortal>

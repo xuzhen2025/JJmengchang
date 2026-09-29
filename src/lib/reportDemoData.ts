@@ -100,19 +100,6 @@ export function statusTotals(rows: ReportFact[]) {
   return { total: plans.length, delivering: count("投放中"), pending: count("未投放", "审核不通过"), terminated: count("已暂停"), finished: count("已完成"), deleted: count("已删除"),
     ineffective: count("未投放"), auditNew: 0, auditEdit: 0, auditFailed: count("审核不通过"), paused: count("已暂停") };
 }
-export function financialReportRows(facts: ReportFact[], platform: string, date: string) {
-  const history = selectReportFacts(facts, platform, { end: date });
-  return reportRows(history, "account").map(row => {
-    const daily = reportTotals(row.facts.filter(fact => fact.date === date));
-    const deposits = 50000 + Math.ceil(row.spend / 20000) * 20000, balance = deposits - row.spend;
-    const cash = Math.round(daily.spend * 80) / 100, grant = Math.round(daily.spend * 10) / 100, rebate = Math.round(daily.spend * 5) / 100;
-    return { ...row, totalSpend: daily.spend, nonGrantSpend: cash, grantSpend: grant, rebateSpend: rebate, sharedWalletSpend: daily.spend - cash - grant - rebate,
-      totalDeposit: deposits, totalTransferIn: 0, totalTransferOut: 0, totalBalance: balance, grantBalance: Math.round(balance * 10) / 100,
-      nonGrantBalance: balance - Math.round(balance * 10) / 100,
-      standardSpend: reportTotals(row.facts.filter(fact => fact.date === date && fact.promotion === "标准推广")).spend,
-      globalSpend: reportTotals(row.facts.filter(fact => fact.date === date && fact.promotion !== "标准推广")).spend, remark: "-" };
-  });
-}
 
 type QualityKey = "firstRelease" | "highQuality" | "lowEfficiency" | "lowQuality" | "homogeneitySevere" | "homogeneityRisk";
 type QualityReport = { totalMaterials: number } & Record<QualityKey, number> & Record<`${QualityKey}Ratio` | `${QualityKey}Spend` | `${QualityKey}SpendRatio`, string>;

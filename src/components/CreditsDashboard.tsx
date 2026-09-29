@@ -124,7 +124,7 @@ export default function CreditsDashboard({
               </div>
             </section>
 
-            <section data-testid="monthly-credit-limit" className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+            <section data-testid="monthly-credit-limit" className="rounded-module border border-slate-200 bg-white p-5 shadow-xs">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-bold text-slate-800">本月上限</p>
                 <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-700">每月额度</span>
@@ -181,7 +181,7 @@ export default function CreditsDashboard({
         {activeSubTab === "history" && (
           <div className="space-y-4">
             {/* Filters Row */}
-            <div className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="bg-white border border-slate-200 p-4 rounded-module flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
                   <Filter className="w-3.5 h-3.5" />
@@ -221,7 +221,7 @@ export default function CreditsDashboard({
             </div>
 
             {/* Logs Table */}
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+            <div className="bg-white border border-slate-200 rounded-module overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>

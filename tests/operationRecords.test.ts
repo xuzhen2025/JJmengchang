@@ -19,7 +19,8 @@ test("confirmed status set, owner isolation and one-time examples", () => {
   assert.deepEqual(DERIVATION_STATUSES, ["成功", "失败", "处理中", "取消衍生", "待衍生", "已删除"]);
   seedDerivationExamples("owner-a"); seedDerivationExamples("owner-a");
   const own = getDerivationRecords().filter(r => r.ownerId === "owner-a");
-  assert.equal(own.length, 6);
+  assert.equal(own.length, 8);
+  assert.equal(own.filter(record => record.taskId === own[0].taskId).length, 3);
   assert.throws(() => changeDerivations([own[0].id], "owner-b", "note", "bad"));
   assert.throws(() => validateDerivationSelection([own[0].id, "missing"], "owner-a"));
   assert.throws(() => changeDerivations([own[0].id, own[4].id], "owner-a", "cancel"));
@@ -84,14 +85,17 @@ test("existing outputs batch push keeps IDs, skips derivation delay, and groups 
   const before = getDerivationRecords().length, store = createAdStore(), d = draft(), now = Date.now();
   const c = adCatalog(store.accounts.find(a => a.id === d.rows[0].accountId)!);
   d.rows = [{ ...d.rows[0], douyinId: c.douyins[0].id, storeId: c.stores[0].id, productId: c.products[0].id }];
-  d.method = "plan"; d.creative = "多创意"; d.templateIds = ["template-qc-demo"]; d.workbench = { ...defaultWorkbench(), videoCount: "每个计划分配n个视频", count: 2 };
+  d.method = "plan"; d.creative = "多创意"; d.templateIds = ["template-qc-demo"]; d.workbench = { ...defaultWorkbench(), target: "商品全域", operation: "create", videoCount: "每个计划分配n个视频", count: 2 };
   store.records = createAdRecords(d, store, actor, videos, now);
-  assert.equal(store.records.length, 3); assert.equal(new Set(store.records.map(r => r.planId)).size, 2);
+  assert.equal(store.records.length, 3); assert.equal(new Set(store.records.map(r => r.planGroupId)).size, 2);
+  assert.ok(store.records.every(record => !record.planId));
   assert.ok(store.records.every(r => !r.snapshot.derivation));
   assert.throws(() => createAdRecords(d, store, actor, [videos[0], videos[0]], now), /重复/);
   syncPushDerivations(store.records, now);
   assert.equal(getDerivationRecords().length, before);
-  const done = advanceAdStore(store, now + 8000);
+  const enabling = advanceAdStore(store, now + 8000);
+  assert.ok(enabling.records.every(r => r.status === "请求开启中"));
+  const done = advanceAdStore(enabling, now + 10000);
   assert.ok(done.records.every(r => r.status === "推送成功"));
   createAdRecords({ ...d, method: "push" }, done, actor, videos, now + 10000);
   assert.equal(getDerivationRecords().length, before);
@@ -135,7 +139,20 @@ test("library upload records each accepted file; rejected categories create no h
 test("operation fixtures are idempotent and scoped per user", () => {
   seedOperationExamples("fixture-a"); seedOperationExamples("fixture-a"); seedOperationExamples("fixture-b");
   const own = getOperationRecords().filter(r => r.ownerId === "fixture-a");
-  assert.equal(own.length, 13);
+  assert.equal(own.length, 23);
   assert.equal(own.filter(r => r.kind === "upload" && r.status === "成功").length, 6);
   assert.ok(own.every(r => r.ownerId !== "fixture-b"));
+  assert.equal(own.filter(r => r.kind === "download" && r.status === "已发起").length, 6);
+  assert.ok(own.every(r => new Date(r.createdAt).toDateString() === new Date().toDateString()));
+});
+
+test("successful export examples contain a downloadable file and failed exports have none", async () => {
+  seedOperationExamples("export-fixture");
+  const own = getOperationRecords().filter(record => record.ownerId === "export-fixture" && record.kind === "export");
+  const success = own.find(record => record.status === "成功")!;
+  assert.match(success.name, /^成片数据_\d{14}_全部\.csv$/);
+  const response = await fetch(success.url!);
+  assert.equal(response.ok, true);
+  assert.match(await response.text(), /fv-analytics-1,0912-植萃修护精华居家实测\.mp4,成功/);
+  assert.ok(own.filter(record => record.status === "失败").every(record => !record.url));
 });

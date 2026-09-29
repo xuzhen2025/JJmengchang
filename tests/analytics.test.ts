@@ -3,24 +3,16 @@ import test from "node:test";
 import {
   AD_FACTS,
   REPORT_PLATFORMS,
-  REPORT_START,
-  REPORT_TODAY,
   adKey,
   adTotals,
   csvText,
   defaultAdFilter,
   filterAdFacts,
-  financeRows,
   grouped,
   planTotals,
   qualityTotals,
   dateError,
 } from "../src/lib/analyticsData";
-import {
-  creationTotals,
-  taskTotals,
-  fileStatusTotals,
-} from "../src/lib/platformAnalytics";
 
 test("platform facts reconcile across dimensions and use weighted ratios", () => {
   for (const platform of REPORT_PLATFORMS) {
@@ -86,35 +78,6 @@ test("empty filters, invalid ranges and zero denominators are safe", () => {
     ),
   );
 });
-test("finance ledgers balance and reconcile with delivery spend", () => {
-  const filter = defaultAdFilter(),
-    facts = AD_FACTS.filter((row) => row.platform === "巨量千川"),
-    rows = financeRows(facts, filter);
-  assert.ok(
-    Math.abs(
-      rows.reduce((sum, row) => sum + row.spend, 0) -
-        adTotals(filterAdFacts(facts, filter)).spend,
-    ) < 1e-6,
-  );
-  for (const row of rows) {
-    assert.ok(
-      Math.abs(
-        row.opening +
-          row.deposit +
-          row.transferIn -
-          row.transferOut -
-          row.spend -
-          row.balance,
-      ) < 1e-6,
-    );
-    assert.ok(
-      Math.abs(row.spend - row.cash - row.grant - row.rebate - row.wallet) <
-        1e-6,
-    );
-    assert.ok(Math.abs(row.spend - row.standard - row.global) < 1e-6);
-    assert.ok(row.balance >= 0);
-  }
-});
 test("distinct materials and plans are not multiplied by days", () => {
   const facts = AD_FACTS.filter((row) => row.platform === "巨量千川");
   assert.equal(adTotals(facts).materials, 48);
@@ -127,58 +90,6 @@ test("distinct materials and plans are not multiplied by days", () => {
     48,
   );
   assert.ok(qualityTotals(facts).quality0 <= 48);
-});
-test("platform statistics count canonical resources and task snapshots", () => {
-  const base = {
-    sourceId: "r1",
-    scope: "finished",
-    label: "test",
-    person: "徐振",
-    department: "内容部",
-    group: "剪辑组",
-    date: REPORT_TODAY,
-    category: "美妆",
-    downloads: 3,
-    cuts: 1,
-    pushed: false,
-    used: true,
-    viral: true,
-    status: "通过",
-  };
-  const total = creationTotals([
-    { ...base, id: "finished:r1" },
-    {
-      ...base,
-      id: "materials:r1",
-      scope: "materials",
-      viral: false,
-      downloads: 0,
-    },
-  ]);
-  assert.equal(total.uploads, 2);
-  assert.equal(total.uploaders, 1);
-  assert.equal(total.downloads, 3);
-  assert.equal(total.viral, 1);
-  const tasks = [
-    {
-      id: "t1",
-      publisher: "徐振",
-      publishDate: REPORT_START,
-      deadlineDate: REPORT_TODAY,
-      assignee: "徐振",
-      orderCount: 2,
-      completedCount: 3,
-      status: "completed" as const,
-      cost: 0,
-      completionSnapshot: [
-        { id: "r1", type: "video" as const, name: "旧文件", status: "通过" },
-      ],
-      associatedWorks: [],
-    },
-  ];
-  assert.equal(taskTotals(tasks).delivered, 3);
-  assert.equal(taskTotals(tasks).completed, 1);
-  assert.equal(fileStatusTotals(tasks)[0].value, 1);
 });
 test("CSV preserves Unicode, quotes, and blocks formula injection", () => {
   const csv = csvText(

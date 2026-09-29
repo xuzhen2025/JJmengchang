@@ -132,7 +132,7 @@ export default function MessageCenterView({
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-[#F9FAFB] text-slate-800 font-sans overflow-hidden relative">
+    <div className="flex-1 h-full flex flex-col bg-slate-50 text-slate-800 font-sans overflow-hidden relative">
       
       {/* 1. Top Bar */}
       <div className="bg-white border-b border-slate-200/90 px-6 pt-3 pb-0 flex items-center justify-between">
