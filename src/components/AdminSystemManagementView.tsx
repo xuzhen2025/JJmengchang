@@ -217,20 +217,19 @@ export const USER_CLIENT_PERMISSION_TREE: PermissionNode[] = [
           { id: "uc_analysis_status_report", label: "投放状态报表" },
         ]
       },
-      {
-        id: "uc_operation_records",
-        label: "操作记录",
-        children: [
-          { id: "uc_operation_records_derivation", label: "衍生视频记录" },
-          { id: "uc_operation_records_push", label: "推送视频记录" },
-          { id: "uc_operation_records_plan", label: "创建计划队列" },
-          { id: "uc_operation_records_upload", label: "上传文件记录" },
-          { id: "uc_operation_records_export", label: "导出记录" },
-          { id: "uc_operation_records_download", label: "下载记录" },
-          { id: "uc_operation_records_login", label: "登录记录" },
-          { id: "uc_operation_records_export_btn", label: "导出" },
-        ]
-      },
+    ]
+  },
+  {
+    id: "uc_operation_records",
+    label: "操作记录",
+    children: [
+      { id: "uc_operation_records_derivation", label: "衍生视频记录" },
+      { id: "uc_operation_records_push", label: "推送视频记录" },
+      { id: "uc_operation_records_plan", label: "创建计划队列" },
+      { id: "uc_operation_records_upload", label: "上传文件记录" },
+      { id: "uc_operation_records_export", label: "导出记录" },
+      { id: "uc_operation_records_download", label: "下载记录" },
+      { id: "uc_operation_records_login", label: "登录记录" },
     ]
   },
 ];
@@ -339,13 +338,11 @@ const DATA_ANALYSIS_KEYS = [
   "uc_analysis_status_report"
 ];
 
-const OPERATION_RECORDS_EXPORT_KEY = "uc_operation_records_export_btn";
-
 const BASIC_USER_KEYS = [...RESOURCE_VIEW_KEYS, "uc_remake_run", ...OPERATION_RECORDS_KEYS];
 
 const mergePermissionKeys = (...groups: string[][]): string[] => Array.from(new Set(groups.flat()));
 
-const CONTENT_CREATOR_KEYS = USER_PERMISSION_KEYS.filter(key => !DATA_ANALYSIS_KEYS.includes(key) && key !== OPERATION_RECORDS_EXPORT_KEY);
+const CONTENT_CREATOR_KEYS = USER_PERMISSION_KEYS.filter(key => !DATA_ANALYSIS_KEYS.includes(key));
 
 const AD_OPERATOR_KEYS = [...BASIC_USER_KEYS, "uc_finished_ad_push", "uc_derivation_push", "uc_finished_ad_records"];
 

@@ -24,7 +24,6 @@ export const OPERATION_RECORDS_KEYS = [
   "uc_operation_records_login"
 ] as const;
 
-export const OPERATION_RECORDS_EXPORT_KEY = "uc_operation_records_export_btn";
 
 // 数据分析各子页菜单（不含导出按钮权限）
 export const DATA_ANALYSIS_MENU_KEYS = [

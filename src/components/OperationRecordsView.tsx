@@ -44,7 +44,7 @@ import {
   type OperationRecord,
 } from "../lib/operationHistory";
 import type { ResourceSearchType } from "../types";
-import { hasUserPermission, useUserPermissions, OPERATION_RECORDS_EXPORT_KEY } from "../lib/userPermissions";
+import { useUserPermissions } from "../lib/userPermissions";
 
 const tabs = [
   { id: "derivation", name: "衍生视频记录", icon: Film },
@@ -216,7 +216,7 @@ function DerivationHistory({ ownerId, ownerName }: { ownerId: string; ownerName:
         <button type="button" className={primaryClass} disabled={!everySelected("成功")} onClick={() => startPush(selected)}>批量推送</button>
         <button type="button" className={primaryClass} disabled={!everySelected("成功") || busy} onClick={() => void download(selected)}>批量下载</button>
         <button type="button" className={primaryClass} disabled={!selected.length} onClick={() => editNotes(selected)}>批量备注</button>
-        <button type="button" ref={exportAnchor} className={primaryClass} disabled={!filtered.length || busy} aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => { if (!hasUserPermission(OPERATION_RECORDS_EXPORT_KEY)) { setError("暂无权限"); setNotice(""); return; } setExportOpen(value => !value); }}>导出<ChevronDown size={14} /></button>
+        <button type="button" ref={exportAnchor} className={primaryClass} disabled={!filtered.length || busy} aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => setExportOpen(value => !value)}>导出<ChevronDown size={14} /></button>
       </div>
     </form>
     {error && <p role="alert" className="mb-3 text-sm text-rose-600">{error}</p>}
