@@ -6,10 +6,13 @@ import { DEFAULT_ASSOCIATED_SCRIPTS, DEFAULT_RELATED_VIDEOS } from "../data/vide
 import { toPublishedVideo } from "./publishedVideo";
 import { useResourceEdits } from "./useResourceEdits";
 import { useUploadedResources } from "./resourceUploads";
+import { filterByDataScope, useDataScope } from "./dataScope";
+import { withOwners } from "./resourceOwners";
 
 type FinishedVideoEdit = FinishedVideo & { deleted?: boolean };
 
 export function useFinishedVideos(uploadedVideos: Asset[]) {
+  const scope = useDataScope();
   const uploaded = useUploadedResources();
   const { edits, saveEdits } = useResourceEdits<FinishedVideoEdit>("finished");
   const baseVideos = useMemo(() => {
@@ -28,6 +31,6 @@ export function useFinishedVideos(uploadedVideos: Asset[]) {
           ...edits[video.id],
         }));
   }, [uploadedVideos, uploaded, edits]);
-  const videos = useTaggedResources("finished", baseVideos);
+  const videos = useTaggedResources("finished", useMemo(() => filterByDataScope(withOwners(baseVideos)), [baseVideos, scope]));
   return { videos, saveEdits };
 }

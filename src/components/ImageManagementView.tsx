@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useTaggedResources, useTagCatalog } from "../lib/useResourceTags";
+import { filterByDataScope, useDataScope } from "../lib/dataScope";
+import { withOwners } from "../lib/resourceOwners";
 import { hasUserPermission } from "../lib/userPermissions";
 import { resourceTagStore } from "../lib/resourceTags";
 import { resourceConfigStore } from "../lib/resourceConfig";
@@ -225,8 +227,9 @@ resourceTagStore.register("images", MOCK_IMAGES);
 resourceConfigStore.register("images", MOCK_IMAGES);
 
 export default function ImageManagementView({ onTriggerTask, onDetailStateChange, initialSearch, onClearSearch }: ImageManagementViewProps) {
+  const scope = useDataScope();
   const uploaded = useUploadedResources();
-  const images = useTaggedResources<ImageItem>("images", [...uploaded.filter((item) => item.resourceCategory === "图片").map(uploadedImage), ...MOCK_IMAGES]);
+  const images = useTaggedResources<ImageItem>("images", filterByDataScope(withOwners([...uploaded.filter((item) => item.resourceCategory === "图片").map(uploadedImage), ...MOCK_IMAGES])));
   // Category & Filter States
   const [selectedPrimaryCat, setSelectedPrimaryCat] = useState("全部");
   const [secondarySearch, setSecondarySearch] = useState("");

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useTaggedResources } from "../lib/useResourceTags";
+import { filterByDataScope, useDataScope } from "../lib/dataScope";
+import { withOwners } from "../lib/resourceOwners";
 import { resourceTagStore } from "../lib/resourceTags";
 import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
@@ -398,8 +400,9 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
 
   // Mock script dataset
   const [baseScripts, setScripts] = useState<ScriptItem[]>(INITIAL_SCRIPTS);
+  const scope = useDataScope();
   const uploaded = useUploadedResources();
-  const scripts = useTaggedResources("scripts", [...uploaded.filter((item) => item.resourceCategory === "脚本").map(uploadedScript), ...baseScripts]).map(script => {
+  const scripts = useTaggedResources("scripts", filterByDataScope(withOwners([...uploaded.filter((item) => item.resourceCategory === "脚本").map(uploadedScript), ...baseScripts]))).map(script => {
     const linked = taskRecords.filter(task => task.associatedScript?.id === script.id);
     const tasks = [...linked.map(task => ({ id: task.id, name: script.title, assignee: task.assignee, department: task.assigneeDeptPath || "", deadline: task.deadlineDate, status: task.status === "completed" ? "已完成" as const : task.status === "pending" ? "待处理" as const : "进行中" as const, updatedAt: task.publishDate })), ...script.tasks.filter(task => !linked.some(item => item.id === task.id))];
     return { ...script, tasks, tasksCount: Math.max(script.tasksCount, tasks.length) };

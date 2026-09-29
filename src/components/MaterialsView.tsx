@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { recordDownload } from "../lib/operationHistory";
 import { useTaggedResources } from "../lib/useResourceTags";
+import { filterByDataScope, useDataScope } from "../lib/dataScope";
+import { withOwners } from "../lib/resourceOwners";
 import { resourceTagStore } from "../lib/resourceTags";
 import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
@@ -642,6 +644,7 @@ interface MaterialsViewProps {
 
 export default function MaterialsView({ uploadedVideos = [], resourceScope = "materials", onTriggerTask, onNavigateToDelivery, onDetailStateChange, initialSearch, onClearSearch }: MaterialsViewProps) {
   const resourceName = resourceScope === "thirdParty" ? "第三方" : "素材";
+  const scope = useDataScope();
   const uploaded = useUploadedResources();
   const lifecycle = useThirdPartyLifecycle();
   const [baseVideos, setVideos] = useState<FinishedVideo[]>(() => [...uploadedVideos.map(toPublishedVideo), ...(resourceScope === "thirdParty" ? INITIAL_THIRD_PARTY : INITIAL_FINISHED)]);
@@ -654,7 +657,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
       ...video, associatedScripts: DEFAULT_ASSOCIATED_SCRIPTS, relatedVideos: DEFAULT_RELATED_VIDEOS,
       ...edits[video.id],
     }));
-  const videos = useTaggedResources<FinishedVideo>(resourceScope, untaggedVideos);
+  const videos = useTaggedResources<FinishedVideo>(resourceScope, filterByDataScope(withOwners(untaggedVideos)));
   const [activeTab, setActiveTab] = useState<"all" | "secondary" | "performance">("all");
   
   // Screenshot Filter States

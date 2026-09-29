@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTaggedResources, useTagCatalog } from "../lib/useResourceTags";
+import { filterByDataScope, useDataScope } from "../lib/dataScope";
+import { withOwners } from "../lib/resourceOwners";
 import { resourceTagStore } from "../lib/resourceTags";
 import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
@@ -273,10 +275,11 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
 
   // Audio items list
   const [baseAudioList, setAudioList] = useState<AudioItem[]>(INITIAL_AUDIO_LIST);
+  const scope = useDataScope();
   const uploaded = useUploadedResources();
   const { edits: audioEdits, saveEdits: saveAudioEdits } = useResourceEdits<AudioItem>("audio");
   const untaggedAudioList = [...uploaded.filter((item) => item.resourceCategory === "音频").map(uploadedAudio), ...baseAudioList].map(item => ({ ...item, ...audioEdits[item.id] }));
-  const audioList = useTaggedResources("audio", untaggedAudioList);
+  const audioList = useTaggedResources("audio", filterByDataScope(withOwners(untaggedAudioList)));
   const { publicGroups: PUBLIC_TAG_GROUPS, personalGroups: PERSONAL_TAG_GROUPS } = useTagCatalog();
   const [batchTagKind, setBatchTagKind] = useState<"public" | "personal" | null>(null);
 
