@@ -28,8 +28,10 @@ interface LoginViewProps {
 }
 
 export default function LoginView({ accounts, onLogin }: LoginViewProps) {
-  const [username, setUsername] = useState(accounts[0]?.username ?? "");
-  const [password, setPassword] = useState(accounts[0]?.password ?? "");
+  // 默认预填超级管理员账号（不依赖账号表顺序）
+  const defaultAccount = accounts.find((a) => a.username === "chaojiguanliyuan") || accounts[0];
+  const [username, setUsername] = useState(defaultAccount?.username ?? "");
+  const [password, setPassword] = useState(defaultAccount?.password ?? "");
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
