@@ -2535,14 +2535,6 @@ export default function AdminSystemManagementView() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    onClick={handleOpenInviteModal}
-                    className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border border-purple-200"
-                  >
-                    <UserPlus className="w-3.5 h-3.5" />
-                    <span>快捷邀请</span>
-                  </button>
-
-                  <button
                     onClick={handleExportMembersCsv}
                     className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                   >
@@ -2849,7 +2841,7 @@ export default function AdminSystemManagementView() {
             {/* Split View Container */}
             <div className="flex flex-col lg:flex-row gap-5 min-h-[580px]">
               {/* Left Column: Role List Sidebar */}
-              <div className="w-full lg:w-64 border-r-0 lg:border-r border-slate-200/80 pr-0 lg:pr-4 space-y-4 shrink-0">
+              <div className="w-full lg:w-72 border-r-0 lg:border-r border-slate-200/80 pr-0 lg:pr-4 space-y-4 shrink-0">
                 {/* Default Roles Section */}
                 <div className="space-y-1.5" data-testid="default-roles">
                   <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-2">
@@ -2895,7 +2887,7 @@ export default function AdminSystemManagementView() {
                     </button>
                   </div>
 
-                  <div className="space-y-1 max-h-[460px] overflow-y-auto pr-1 scrollbar-thin">
+                  <div className="space-y-1 max-h-[calc(100vh-330px)] overflow-y-auto pr-1 scrollbar-thin">
                     {roles.filter(r => r.category !== "default").map(r => {
                       const isSelected = r.id === selectedRoleId;
                       return (
