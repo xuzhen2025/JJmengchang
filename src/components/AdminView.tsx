@@ -33,6 +33,7 @@ import ScriptTemplateManagementView from "./ScriptTemplateManagementView";
 import AdminSystemManagementView from "./AdminSystemManagementView";
 import AdminCreditsManagementView from "./AdminCreditsManagementView";
 import AdminProfileView from "./AdminProfileView";
+import { useAdminPermissions } from "../lib/userPermissions";
 
 interface AdminViewProps {
   adminActiveScreen: string;
@@ -49,15 +50,7 @@ type ContentTabType =
 
 export default function AdminView({ adminActiveScreen, onLogout }: AdminViewProps) {
   const [activeTab, setActiveTab] = useState<ContentTabType>("resource_hub");
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
-  };
-
+  const { has: hasAdminNav } = useAdminPermissions();
   const navTabs: { id: ContentTabType; label: string; icon: any; desc: string }[] = [
     { id: "resource_hub", label: "资源库", icon: FolderHeart, desc: "成片/素材/第三方/脚本/图片/音频统一管理" },
     { id: "video_status", label: "视频状态", icon: Video, desc: "渲染成片/审片流转/投放状态监控" },
@@ -66,6 +59,29 @@ export default function AdminView({ adminActiveScreen, onLogout }: AdminViewProp
     { id: "categories", label: "分类管理", icon: FolderTree, desc: "多级类目架构与业务属性划分" },
     { id: "script_templates", label: "脚本模板", icon: Copy, desc: "结构化文案框架与AI创作模版" },
   ];
+  // 内容管理菜单权限（AUTH-02）：无权限页签隐藏
+  const navTabKeyMap: Record<string, string> = {
+    resource_hub: "ab_resource_view", video_status: "ab_video_status_manage",
+    script_status: "ab_content_management", tags: "ab_tag_manage",
+    categories: "ab_category_manage", script_templates: "ab_script_template_manage",
+  };
+  const visibleNavTabs = navTabs.filter(t => hasAdminNav(navTabKeyMap[t.id]));
+  // 当前页签无权限时自动回退到第一个有权限页签
+  React.useEffect(() => {
+    if (!visibleNavTabs.some(t => t.id === activeTab)) {
+      const first = visibleNavTabs[0];
+      if (first) setActiveTab(first.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
 
   const handleTabClick = (tabId: ContentTabType) => {
     setActiveTab(tabId);
@@ -123,7 +139,7 @@ export default function AdminView({ adminActiveScreen, onLogout }: AdminViewProp
         <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs relative overflow-visible">
           <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-[inherit] overflow-visible">
             <div className="flex items-center gap-1.5 min-w-max overflow-visible">
-              {navTabs.map((tab) => {
+              {visibleNavTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 const isScriptTemplates = tab.id === "script_templates";

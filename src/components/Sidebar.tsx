@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { ActiveScreen } from "../types";
 import AnchoredPopover from "./overlays/AnchoredPopover";
-import { useUserPermissions, RESOURCE_VIEW_KEYS, OPERATION_RECORDS_KEYS, DATA_ANALYSIS_MENU_KEYS } from "../lib/userPermissions";
+import { useUserPermissions, useAdminPermissions, RESOURCE_VIEW_KEYS, OPERATION_RECORDS_KEYS, DATA_ANALYSIS_MENU_KEYS } from "../lib/userPermissions";
 
 interface SidebarProps {
   activeScreen: ActiveScreen;
@@ -54,6 +54,7 @@ export default function Sidebar({
   const modeButtonRef = useRef<HTMLButtonElement | null>(null);
   const canSwitchModes = allowedModes.length > 1;
   const { has, hasAny } = useUserPermissions();
+  const { has: hasAdmin, hasAny: hasAdminAny } = useAdminPermissions();
 
   const userMenuItems: { id: string; label: string; icon: any; badge?: string }[] = [
     { id: "video_remake", label: "爆款复刻", icon: RefreshCw },
@@ -68,8 +69,13 @@ export default function Sidebar({
     { id: "credits_management", label: "积分管理", icon: Coins },
   ];
 
-  // 菜单权限过滤：缺失即隐藏对应菜单
-  const currentMenuItems = appMode === "admin" ? adminMenuItems : userMenuItems.filter(item => {
+  // 菜单权限过滤：缺失即隐藏对应菜单（管理端按管理端角色 ab_* 键过滤）
+  const currentMenuItems = appMode === "admin" ? adminMenuItems.filter(item => {
+    if (item.id === "content_management") return hasAdminAny(["ab_content_management", "ab_resource_view", "ab_video_status_manage", "ab_tag_manage", "ab_category_manage", "ab_script_template_manage"]);
+    if (item.id === "system_management") return hasAdminAny(["ab_system_management", "ab_dept_view", "ab_member_view", "ab_role_view", "ab_audit_view", "ab_watermark_manage", "ab_system_setting_manage", "ab_auto_tag_manage", "ab_ad_group_manage", "ab_login_log_view"]);
+    if (item.id === "credits_management") return hasAdmin("ab_credit_manage");
+    return true;
+  }) : userMenuItems.filter(item => {
     if (item.id === "video_remake") return has("uc_remake_run");
     if (item.id === "resources") return hasAny(RESOURCE_VIEW_KEYS);
     if (item.id === "ad_delivery") return hasAny(DATA_ANALYSIS_MENU_KEYS);

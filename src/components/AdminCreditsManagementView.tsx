@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { 
+
+import { hasAdminPermission } from "../lib/userPermissions";import { 
   Sparkles, 
   Coins, 
   Gift, 
@@ -160,6 +161,7 @@ export default function AdminCreditsManagementView() {
 
   // Credit Handlers
   const handleSaveGlobalQuota = () => {
+    if (!hasAdminPermission("ab_credit_manage")) { showToast("暂无权限"); return; }
     if ([globalDailyLimit, globalMonthlyLimit].some(value => value.trim() === "" || !Number.isFinite(Number(value)) || Number(value) < 0)) {
       showToast("⚠️ 日上限和月上限必须为大于等于 0 的数字");
       return;
@@ -169,6 +171,7 @@ export default function AdminCreditsManagementView() {
   };
 
   const handleOpenCustomModal = (item?: CreditQuotaRule) => {
+    if (!hasAdminPermission("ab_credit_manage")) { showToast("暂无权限"); return; }
     if (item) {
       setEditingCustomConfig(item);
       setCustomForm({
@@ -192,6 +195,7 @@ export default function AdminCreditsManagementView() {
   };
 
   const handleSaveCustomConfig = () => {
+    if (!hasAdminPermission("ab_credit_manage")) { showToast("暂无权限"); return; }
     if (!customForm.name.trim()) {
       showToast("⚠️ 请输入配置名称");
       return;
@@ -232,6 +236,7 @@ export default function AdminCreditsManagementView() {
   };
 
   const handleDeleteCustomConfig = (id: string) => {
+    if (!hasAdminPermission("ab_credit_manage")) { showToast("暂无权限"); return; }
     if (confirm("确定要删除该个性化积分限制规则吗？")) {
       setCustomConfigs(prev => {
         const next = prev.filter(c => c.id !== id);
@@ -243,6 +248,7 @@ export default function AdminCreditsManagementView() {
   };
 
   const handleToggleCustomConfig = (id: string) => {
+    if (!hasAdminPermission("ab_credit_manage")) { showToast("暂无权限"); return; }
     setCustomConfigs(prev => {
       const next = prev.map(c => c.id === id ? { ...c, enabled: !c.enabled } : c);
       saveCreditQuotaSettings({ globalDailyLimit, globalMonthlyLimit, customConfigs: next });
@@ -252,6 +258,7 @@ export default function AdminCreditsManagementView() {
   };
 
   const handleSimulatePayment = () => {
+    if (!hasAdminPermission("ab_credit_manage")) { showToast("暂无权限"); return; }
     const tier = RECHARGE_TIERS[rechargeTierIndex];
     const username = operationUser();
     const operator = members.find(member => [member.id, member.name, member.employeeNo, member.phone, member.boundAccount].includes(username))

@@ -73,14 +73,72 @@ export function readUserPermissionKeys(): string[] {
 
 const LISTEN_EVENTS = [AD_CHANGE_EVENT, ORGANIZATION_CHANGE, PERMISSION_CHANGE_EVENT, "storage"];
 
-let cachedKeys: string[] = readUserPermissionKeys();
+// ---------------------------------------------------------------------------
+// 管理端权限读取（AUTH-02）：管理端菜单与操作统一按角色过滤。
+// 口径：有菜单权限即有其操作权限；没有菜单权限则不显示该菜单/入口。
+// ---------------------------------------------------------------------------
+export function readAdminPermissionKeys(): string[] {
+  let session: SessionLike = {};
+  let roles: RoleLike[] = [];
+  try {
+    const savedSession = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
+    const savedRoles = JSON.parse(localStorage.getItem("cloud_video_roles_v2") || "[]");
+    if (savedSession && typeof savedSession.username === "string") session = savedSession;
+    const upgradeRoleKeys = (r: RoleLike): RoleLike => {
+      if (r.id === "role_super_admin") { const def = INITIAL_ROLES.find(d => d.id === r.id); return { ...r, checkedKeys: [...(def?.checkedKeys || r.checkedKeys || [])] }; }
+      const defaults = INITIAL_ROLES.find(d => d.id === r.id);
+      if (!defaults) return r;
+      return { ...r, checkedKeys: Array.from(new Set([...(defaults.checkedKeys || []), ...(r.checkedKeys || [])])) };
+    };
+    roles = (Array.isArray(savedRoles) && savedRoles.length > 0) ? savedRoles.filter((r): r is RoleLike => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys))).map(upgradeRoleKeys) : (INITIAL_ROLES as unknown as RoleLike[]);
+  } catch { /* fail closed */ }
+  // 管理端演示账号映射：超管→超级管理员（全权限）；管理员→部门负责人/主管（部分菜单，演示只读与菜单过滤）
+  const roleId = session.username === "chaojiguanliyuan" ? "role_super_admin"
+    : session.username === "guanliyuan" ? "role_dept_head" : "";
+  if (!roleId) return [];
+  const role = roles.find(r => r.id === roleId);
+  const keys = role?.checkedKeys || [];
+  return keys.filter((k): k is string => typeof k === "string" && k.startsWith("ab_"));
+}
+
+// 惰性初始化：模块循环依赖（userPermissions ↔ AdminSystemManagementView）下，首次读取推迟到渲染/事件时，避免 TDZ
+let cachedAdminKeys: string[] | null = null;
+function subscribeAdmin(cb: () => void) {
+  const handler = () => { cachedAdminKeys = readAdminPermissionKeys(); cb(); };
+  LISTEN_EVENTS.forEach(ev => window.addEventListener(ev, handler));
+  return () => LISTEN_EVENTS.forEach(ev => window.removeEventListener(ev, handler));
+}
+const adminSnapshot = () => { if (cachedAdminKeys === null) cachedAdminKeys = readAdminPermissionKeys(); return cachedAdminKeys; };
+
+// 响应式管理端权限（管理端菜单/页签过滤使用）
+export function useAdminPermissions() {
+  const keys = useSyncExternalStore(subscribeAdmin, adminSnapshot, adminSnapshot);
+  const has = (key: string) => keys.includes(key);
+  const hasAny = (required: readonly string[]) => required.some(k => keys.includes(k));
+  return { keys, has, hasAny };
+}
+
+// 即时管理端权限（管理端操作校验使用，每次点击读取最新配置）
+export function hasAdminPermission(key: string): boolean {
+  return readAdminPermissionKeys().includes(key);
+}
+
+// 是否超级管理员账号（资源库删除类等'不包含删除类'权限的专属能力判定）
+export function isSuperAdminAccount(): boolean {
+  try {
+    const session = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
+    return !!session && session.username === "chaojiguanliyuan";
+  } catch { return false; }
+}
+
+let cachedKeys: string[] | null = null;
 
 function subscribe(cb: () => void) {
   const handler = () => { cachedKeys = readUserPermissionKeys(); cb(); };
   LISTEN_EVENTS.forEach(ev => window.addEventListener(ev, handler));
   return () => LISTEN_EVENTS.forEach(ev => window.removeEventListener(ev, handler));
 }
-const snapshot = () => cachedKeys;
+const snapshot = () => { if (cachedKeys === null) cachedKeys = readUserPermissionKeys(); return cachedKeys; };
 
 // 响应式权限（菜单隐藏/页签过滤使用，权限变更自动刷新）
 export function useUserPermissions() {

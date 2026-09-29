@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useResourceConfig } from "../lib/useResourceConfig";
+
+import { hasAdminPermission } from "../lib/userPermissions";import { useResourceConfig } from "../lib/useResourceConfig";
 import type { ResourceStatusItem } from "../lib/resourceConfig";
 import OverlayPortal from "./overlays/OverlayPortal";
 import AnchoredPopover from "./overlays/AnchoredPopover";
@@ -73,6 +74,7 @@ export default function VideoStatusManagementView() {
 
   // 保存顶部全局设置
   const handleSaveGlobalConfig = () => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     store.setSettings("video", { enabled: globalEnabled, partitions: globalPartitions });
     showToast("状态功能与显示分区配置保存成功！");
   };
@@ -88,6 +90,7 @@ export default function VideoStatusManagementView() {
 
   // 打开新增模态框
   const handleOpenAddModal = () => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     setFormName("");
     setFormPartitions([...PARTITION_OPTIONS]);
     setFormWeight("");
@@ -96,6 +99,7 @@ export default function VideoStatusManagementView() {
 
   // 提交新增
   const handleConfirmAdd = () => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     if (!formName.trim()) {
       showToast("请输入状态名称");
       return;
@@ -124,6 +128,7 @@ export default function VideoStatusManagementView() {
 
   // 打开编辑模态框
   const handleOpenEditModal = (item: VideoStatusItem) => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     setEditingItem(item);
     setFormName(item.name);
     setFormPartitions(item.partitions);
@@ -132,6 +137,7 @@ export default function VideoStatusManagementView() {
 
   // 提交编辑
   const handleConfirmEdit = () => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     if (!editingItem) return;
     if (!formName.trim()) {
       showToast("状态名称不能为空");
@@ -163,6 +169,7 @@ export default function VideoStatusManagementView() {
 
   // 打开删除模态框
   const handleOpenDeleteModal = (item: VideoStatusItem) => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     setDeletingItem(item);
     setReplaceOtherStatus(false);
     // 默认选取第一个其他可用的状态
@@ -172,6 +179,7 @@ export default function VideoStatusManagementView() {
 
   // 确认删除
   const handleConfirmDelete = () => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     if (!deletingItem) return;
     try {
       store.deleteStatus("video", deletingItem.id, replaceOtherStatus ? replacementStatusId : undefined);
@@ -182,6 +190,7 @@ export default function VideoStatusManagementView() {
 
   // 设为默认值
   const handleSetDefault = (id: string) => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     const updated = statusList.map((item) => ({
       ...item,
       isDefault: item.id === id,
@@ -199,6 +208,7 @@ export default function VideoStatusManagementView() {
     type: "textColor" | "bgColor",
     colorHex: string
   ) => {
+    if (!hasAdminPermission("ab_video_status_manage")) { showToast("暂无权限"); return; }
     setStatusList((prev) =>
       prev.map((item) => {
         if (item.id === itemId) {

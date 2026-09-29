@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useResourceConfig } from "../lib/useResourceConfig";
+
+import { hasAdminPermission } from "../lib/userPermissions";import { useResourceConfig } from "../lib/useResourceConfig";
 import type { ResourceStatusItem } from "../lib/resourceConfig";
 import OverlayPortal from "./overlays/OverlayPortal";
 import AnchoredPopover from "./overlays/AnchoredPopover";
@@ -62,12 +63,14 @@ export default function ScriptStatusManagementView() {
 
   // 保存顶部全局设置
   const handleSaveGlobalConfig = () => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     store.setSettings("script", { enabled: globalEnabled, partitions: ["脚本"] });
     showToast("状态功能配置保存成功！");
   };
 
   // 打开新增模态框
   const handleOpenAddModal = () => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     setFormName("");
     setFormWeight("");
     setIsAddModalOpen(true);
@@ -75,6 +78,7 @@ export default function ScriptStatusManagementView() {
 
   // 提交新增状态
   const handleAddStatus = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!formName.trim()) {
       showToast("请输入状态名称");
@@ -99,6 +103,7 @@ export default function ScriptStatusManagementView() {
 
   // 打开编辑模态框
   const handleOpenEditModal = (item: ScriptStatusItem) => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     setEditingItem(item);
     setFormName(item.name);
     setFormWeight(item.weight);
@@ -106,6 +111,7 @@ export default function ScriptStatusManagementView() {
 
   // 提交编辑状态
   const handleEditStatus = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!editingItem) return;
     if (!formName.trim()) {
@@ -132,6 +138,7 @@ export default function ScriptStatusManagementView() {
 
   // 打开删除模态框
   const handleOpenDeleteModal = (item: ScriptStatusItem) => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     setDeletingItem(item);
     setReplaceOtherStatus(false);
     const otherItems = store.replacementStatuses("script", item.id);
@@ -140,6 +147,7 @@ export default function ScriptStatusManagementView() {
 
   // 确认删除状态
   const handleConfirmDelete = () => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     if (!deletingItem) return;
     try {
       store.deleteStatus("script", deletingItem.id, replaceOtherStatus ? replacementStatusId : undefined);
@@ -150,6 +158,7 @@ export default function ScriptStatusManagementView() {
 
   // 设为默认值
   const handleSetDefault = (id: string) => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     setStatusList((prev) =>
       prev.map((item) => ({
         ...item,
@@ -168,6 +177,7 @@ export default function ScriptStatusManagementView() {
     type: "textColor" | "bgColor",
     colorHex: string
   ) => {
+    if (!hasAdminPermission("ab_content_management")) { showToast("暂无权限"); return; }
     setStatusList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [type]: colorHex } : item))
     );

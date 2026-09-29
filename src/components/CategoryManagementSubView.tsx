@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Edit2, Trash2, Copy, Sparkles, AlertCircle, X } from "lucide-react";
+
+import { hasAdminPermission } from "../lib/userPermissions";import { Edit2, Trash2, Copy, Sparkles, AlertCircle, X } from "lucide-react";
 import OverlayPortal from "./overlays/OverlayPortal";
 import { useResourceConfig } from "../lib/useResourceConfig";
 import { RESOURCE_PARTITIONS } from "../lib/resourceConfig";
@@ -80,6 +81,7 @@ export default function CategoryManagementSubView() {
   };
 
   const handleModalConfirm = () => {
+    if (!hasAdminPermission("ab_category_manage")) { showToast("暂无权限"); return; }
     if (!modalType) return;
     if (modalType.startsWith("delete") && targetCategory) {
       const scope = Object.keys(RESOURCE_PARTITIONS).find(key => RESOURCE_PARTITIONS[key] === activeResourceType)!;
@@ -156,6 +158,7 @@ export default function CategoryManagementSubView() {
   };
 
   const handleDuplicateL1 = (name: string, e: React.MouseEvent) => {
+    if (!hasAdminPermission("ab_category_manage")) { showToast("暂无权限"); return; }
     e.stopPropagation();
     let newName = `${name}-副本`;
     let suffix = 2;

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
+
+import { hasAdminPermission } from "../lib/userPermissions";import {
   Plus,
   X,
   Trash2,
@@ -105,12 +106,14 @@ export default function ScriptTemplateManagementView() {
 
   // 打开新增模板 Modal
   const handleOpenAddTemplateModal = () => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     setFormTemplateTitle("");
     setIsAddTemplateModalOpen(true);
   };
 
   // 提交新增模板
   const handleAddTemplateSubmit = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.preventDefault();
     const title = formTemplateTitle.trim();
     if (!title) {
@@ -137,12 +140,14 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleOpenEditTemplateModal = (tpl: ScriptTemplateItem, e?: React.MouseEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e?.stopPropagation();
     setEditingTemplate(tpl);
     setFormEditTemplateTitle(tpl.title);
   };
 
   const handleEditTemplateSubmit = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!editingTemplate) return;
     const title = formEditTemplateTitle.trim();
@@ -161,6 +166,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleOpenEditColumnGroupTitle = (template: ScriptTemplateItem, e: React.MouseEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.stopPropagation();
     setEditingColumnGroupTemplate(template);
     setFormColumnGroupTitle(template.columnGroupTitle);
@@ -168,6 +174,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleEditColumnGroupTitleSubmit = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!editingColumnGroupTemplate) return;
     const columnGroupTitle = formColumnGroupTitle.trim();
@@ -185,6 +192,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleToggleTemplateEnabled = (tplId: string, e: React.MouseEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.stopPropagation();
     const target = templatesRef.current.find((template) => template.id === tplId);
     if (!target) return;
@@ -193,6 +201,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleOpenDeleteTemplateModal = (tpl: ScriptTemplateItem, e: React.MouseEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.stopPropagation();
     if (templatesRef.current.length <= 1) {
       showToast("至少保留一个脚本模板");
@@ -202,6 +211,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleConfirmDeleteTemplate = () => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     if (!deletingTemplate) return;
     const targetTitle = deletingTemplate.title;
     const filtered = templatesRef.current.filter((template) => template.id !== deletingTemplate.id);
@@ -225,6 +235,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleSelectInsertDirection = (position: "left" | "right" | "top" | "bottom") => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     const isColumn = position === "left" || position === "right";
     setInsertConfig({
       targetFieldId: activeMenuFieldId || undefined,
@@ -238,6 +249,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleOpenDirectAddField = (displayMode: "column" | "row") => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     setInsertConfig({
       position: displayMode === "column" ? "right" : "bottom",
       displayMode,
@@ -248,6 +260,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleOpenEditField = (field: TemplateFieldItem, e: React.MouseEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.stopPropagation();
     setEditingField(field);
     setInsertConfig({ displayMode: field.displayMode });
@@ -260,6 +273,7 @@ export default function ScriptTemplateManagementView() {
   const handleRemoveOption = (index: number) => setFormFieldOptions((current) => current.length === 1 ? current : current.filter((_, optionIndex) => optionIndex !== index));
 
   const handleDeleteField = (fieldId: string, fieldTitle: string, e: React.MouseEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.stopPropagation();
     if (!currentTemplate) return;
     commitTemplates((current) => current.map((template) => template.id === currentTemplate.id ? { ...template, fields: template.fields.filter((field) => field.id !== fieldId) } : template));
@@ -267,6 +281,7 @@ export default function ScriptTemplateManagementView() {
   };
 
   const handleAddFieldSubmit = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_script_template_manage")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!currentTemplate) return;
     const errors: { title?: string; options?: string } = {};

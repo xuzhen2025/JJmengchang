@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useScopedTaggedResources, useTagCatalog, useTagFilterSync } from "../lib/useResourceTags";
+import { isSuperAdminAccount } from "../lib/userPermissions";
 import { Search, ChevronDown, Play, Eye, Trash2, X, Sparkles, Film, Volume2, FileText, Headphones, Check, RotateCcw } from "lucide-react";
 import { Pagination } from "./Pagination";
 import FinishedVideoDetailModal, { FinishedVideo } from "./FinishedVideoDetailModal";
@@ -483,6 +484,7 @@ export default function AdminResourceView() {
 
   // 单个删除 -> 移入回收站
   const handleMoveToTrash = (id: string) => {
+    if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
     if (thirdParty.some(item => item.id === id)) {
       changeThirdPartyLifecycle([id], "trash");
       showToast("第三方视频已移入回收站");
@@ -509,6 +511,7 @@ export default function AdminResourceView() {
 
   // 彻底删除确认触发
   const handleRequestPermanentDelete = (item: AdminResourceItem) => {
+    if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
     const currentType = item.tabType === "回收站" ? (item.originalTabType || "视频") : item.tabType;
     setDeleteConfirmModal({
       isOpen: true,
@@ -521,6 +524,7 @@ export default function AdminResourceView() {
 
   // 批量彻底删除确认触发
   const handleRequestBatchDelete = () => {
+    if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
     if (selectedIds.length === 0) {
       showToast("请先勾选需要彻底删除的项目");
       return;
@@ -534,6 +538,7 @@ export default function AdminResourceView() {
 
   // 执行彻底删除 (单项或批量)
   const handleConfirmDelete = () => {
+    if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
     const targetIds = deleteConfirmModal.isBatch ? selectedIds : [deleteConfirmModal.id || ""];
     changeThirdPartyLifecycle(targetIds.filter(id => thirdParty.some(item => item.id === id)), "deleted");
     if (deleteConfirmModal.isBatch) {
@@ -552,6 +557,7 @@ export default function AdminResourceView() {
 
   // 批量恢复
   const handleBatchRestore = () => {
+    if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
     if (selectedIds.length === 0) {
       showToast("请先勾选需要恢复的项目");
       return;
@@ -575,6 +581,7 @@ export default function AdminResourceView() {
 
   // 一键清空回收站 - 打开密码确认弹窗
   const handleOpenClearTrashModal = () => {
+    if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
     const trashItems = resources.filter((r) => r.tabType === "回收站");
     if (trashItems.length === 0) {
       showToast("回收站当前为空");
@@ -587,6 +594,7 @@ export default function AdminResourceView() {
 
   // 执行一键清空 (校验密码)
   const handleConfirmClearTrash = () => {
+    if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
     if (!clearPassword.trim()) {
       setPasswordError("请输入登录密码");
       return;
@@ -1054,7 +1062,10 @@ export default function AdminResourceView() {
                           onClick={(e) => {
                             e.stopPropagation();
                             if (activeTab === "回收站") handleRequestPermanentDelete(item);
-                            else setMoveToTrashItem(item);
+                            else {
+                              if (!isSuperAdminAccount()) { showToast("暂无权限"); return; }
+                              setMoveToTrashItem(item);
+                            }
                           }}
                           className="text-[11px] text-slate-400 hover:text-red-600 font-bold flex items-center gap-1 cursor-pointer shrink-0"
                         >

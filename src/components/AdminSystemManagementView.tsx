@@ -252,17 +252,9 @@ export const ADMIN_BACKEND_PERMISSION_TREE: PermissionNode[] = [
     label: "系统管理",
     children: [
       { id: "ab_dept_view", label: "组织部门架构" },
-      {
-        id: "ab_member_view",
-        label: "人员账号管理",
-        children: [{ id: "ab_member_export", label: "导出人员表" }]
-      },
+      { id: "ab_member_view", label: "人员账号管理" },
       { id: "ab_role_view", label: "角色菜单权限配置" },
-      {
-        id: "ab_audit_view",
-        label: "操作记录",
-        children: [{ id: "ab_audit_export", label: "导出" }]
-      },
+      { id: "ab_audit_view", label: "操作记录" },
       { id: "ab_watermark_manage", label: "水印" },
       { id: "ab_system_setting_manage", label: "系统设置" },
       { id: "ab_auto_tag_manage", label: "系统自动化标签" },
@@ -371,7 +363,7 @@ const DEPT_MANAGER_KEYS = mergePermissionKeys(
 );
 
 const SECURITY_AUDIT_KEYS = [
-  "ab_role_view", "ab_audit_view", "ab_audit_export", "ab_login_log_view"
+  "ab_role_view", "ab_audit_view", "ab_login_log_view"
 ];
 
 export const INITIAL_ROLES: RolePermission[] = [
@@ -685,6 +677,16 @@ export function normalizeSystemRoles(roles: RolePermission[]): RolePermission[] 
 
 export default function AdminSystemManagementView() {
   const [activeTab, setActiveTab] = useState<SystemTabType>("roles");
+  // 管理端当前账号的 ab_* 权限（本地 roles 派生；与用户端 readAdminPermissionKeys 同源口径，避免模块循环依赖）
+  const getCurrentAdminKeys = () => {
+    let session: { username?: string } = {};
+    try { session = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}"); } catch { /* fail closed */ }
+    const roleId = session.username === "chaojiguanliyuan" ? "role_super_admin"
+      : session.username === "guanliyuan" ? "role_dept_head" : "";
+    if (!roleId) return [] as string[];
+    const role = roles.find(r => r.id === roleId);
+    return (role?.checkedKeys || []).filter((k): k is string => typeof k === "string" && k.startsWith("ab_"));
+  };
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -754,6 +756,7 @@ export default function AdminSystemManagementView() {
   });
 
   const handleOpenAddDept = (parentId: string = "dept_root", levelType: "department" | "group" = "department") => {
+    if (!currentAdminHas("ab_dept_view")) { showToast("暂无权限"); return; }
     setDeptForm({
       name: "",
       code: levelType === "group" ? "GRP-NEW" : "DEPT-NEW",
@@ -769,6 +772,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleOpenEditDept = (dept: DeptNode) => {
+    if (!currentAdminHas("ab_dept_view")) { showToast("暂无权限"); return; }
     const rawType = dept.levelType === "company" ? "department" : dept.levelType;
     const resolvedLevelType: "department" | "group" = rawType || (dept.parentId === "dept_root" ? "department" : "group");
 
@@ -787,6 +791,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleSaveDept = (e: React.FormEvent) => {
+    if (!currentAdminHas("ab_dept_view")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!deptForm.name.trim()) {
       showToast("名称不能为空");
@@ -843,6 +848,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleDeleteDept = (id: string) => {
+    if (!currentAdminHas("ab_dept_view")) { showToast("暂无权限"); return; }
     const dept = depts.find(d => d.id === id);
     if (!dept) return;
 
@@ -935,6 +941,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleOpenAddMember = () => {
+    if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
     const nextNo = "ZS-" + Math.floor(100 + Math.random() * 900);
     const firstDept = depts.find(d => d.parentId === "dept_root" && d.id !== "dept_root") || depts.find(d => d.id === "dept_root") || depts[0];
     const selDeptId = firstDept?.id || "dept_root";
@@ -960,6 +967,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleOpenEditMember = (m: AccountMember) => {
+    if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
     const { deptId: selDeptId, groupId: selGroupId } = getDeptAndGroupFromId(m.deptId, depts);
     setMemberForm({
       name: m.name,
@@ -979,6 +987,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleSaveMember = (e: React.FormEvent) => {
+    if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!memberForm.name.trim()) {
       showToast("成员姓名不能为空");
@@ -1055,6 +1064,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleToggleMemberStatus = (m: AccountMember) => {
+    if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
     const nextStatus: AccountMember["status"] = m.status === "normal" ? "disabled" : "normal";
     setMembers(prev => prev.map(item => item.id === m.id ? { ...item, status: nextStatus } : item));
     appendAuditLog("状态变更", m.name, `调整账号【${m.name}】状态为【${nextStatus === "normal" ? "正常启用" : "禁用停用"}】`);
@@ -1062,6 +1072,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleDeleteMember = (id: string) => {
+    if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
     const m = members.find(item => item.id === id);
     if (!m) return;
     if (!confirm(`确定要彻底注销并删除成员【${m.name}】吗？`)) return;
@@ -1073,6 +1084,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleOpenResetPassword = (m: AccountMember) => {
+    if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
     setResetPasswordModal({
       open: true,
       member: m,
@@ -1201,6 +1213,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleExportMembersCsv = () => {
+    if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
     const header = "工号,姓名,手机号,邮箱,部门,角色,数据权限,状态,创建日期\n";
     const body = filteredMembers.map(m => {
       const deptName = depts.find(d => d.id === m.deptId)?.name || "主公司";
@@ -1256,6 +1269,25 @@ export default function AdminSystemManagementView() {
     return next;
   });
 
+  // 管理端菜单权限（AUTH-02）：有菜单权限即有其操作权限，无权限页签隐藏（roles 定义后派生，避免 TDZ）
+  const adminKeys = getCurrentAdminKeys();
+  const hasAdminTab = (key: string) => adminKeys.includes(key);
+  const currentAdminHas = (key: string) => adminKeys.includes(key);
+  const adminTabKeyMap: Record<string, string> = {
+    depts: "ab_dept_view", members: "ab_member_view", roles: "ab_role_view",
+    audit: "ab_audit_view", watermark: "ab_watermark_manage", system_settings: "ab_system_setting_manage",
+    auto_tags: "ab_auto_tag_manage", ad_groups: "ab_ad_group_manage", login_logs: "ab_login_log_view",
+  };
+  const visibleTabs = tabs.filter(t => hasAdminTab(adminTabKeyMap[t.id]));
+  // 当前页签无权限时自动回退到第一个有权限页签
+  React.useEffect(() => {
+    if (!visibleTabs.some(t => t.id === activeTab)) {
+      const first = visibleTabs[0];
+      if (first) setActiveTab(first.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   const [selectedRoleId, setSelectedRoleId] = useState<string>("role_super_admin");
   React.useEffect(() => { window.dispatchEvent(new Event(AD_CHANGE_EVENT)); }, [roles]);
   const selectedRole = roles.find((r) => r.id === selectedRoleId) || roles[0];
@@ -1267,6 +1299,7 @@ export default function AdminSystemManagementView() {
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
 
   const handleOpenAddRole = () => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     setEditingRoleId(null);
     setRoleFormName("");
     setRoleFormDesc("");
@@ -1274,6 +1307,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleOpenEditRole = (role: RolePermission) => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     if (role.id === SUPER_ADMIN_ROLE_ID) return;
     setEditingRoleId(role.id);
     setRoleFormName(role.name);
@@ -1282,6 +1316,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleSaveRole = () => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     if (editingRoleId === SUPER_ADMIN_ROLE_ID) return;
     if (!roleFormName.trim()) {
       showToast("请输入角色名称");
@@ -1323,6 +1358,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleDeleteRole = (id: string) => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     if (id === SUPER_ADMIN_ROLE_ID) return;
     const roleToDelete = roles.find((r) => r.id === id);
     if (roleToDelete?.type === "preset") {
@@ -1343,6 +1379,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleCopyRole = (role: RolePermission, e: React.MouseEvent) => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     e.stopPropagation();
     const newRole: RolePermission = {
       ...role,
@@ -1364,6 +1401,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleToggleRoleEnabled = () => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     if (!selectedRole || isSuperAdminRole) return;
     const nextEnabled = !(selectedRole.enabled ?? true);
     setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, enabled: nextEnabled } : r));
@@ -1376,6 +1414,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleToggleNodeChecked = (nodeId: string, nodeChildrenKeys: string[]) => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     if (!selectedRole || isSuperAdminRole) return;
     const currentKeys = selectedRole.checkedKeys || [];
     
@@ -1412,6 +1451,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleSaveRolePermissions = () => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     if (!selectedRole || isSuperAdminRole) return;
     localStorage.setItem("cloud_video_roles_v2", JSON.stringify(roles));
     window.dispatchEvent(new Event(AD_CHANGE_EVENT));
@@ -1455,6 +1495,7 @@ export default function AdminSystemManagementView() {
   };
 
   const handleToggleNode = (node: PermissionNode) => {
+    if (!currentAdminHas("ab_role_view")) { showToast("暂无权限"); return; }
     if (!selectedRole || isSuperAdminRole) return;
     const currentKeys = selectedRole.checkedKeys || [];
     const leafKeys = getLeafKeysOfNode(node);
@@ -1612,6 +1653,7 @@ export default function AdminSystemManagementView() {
   ]);
 
   const handleExportFile = (fileType: "csv" | "excel") => {
+    if (!currentAdminHas("ab_audit_view")) { showToast("暂无权限"); return; }
     setIsExportDropdownOpen(false);
     showToast(`✅ 已成功导出 ${fileType.toUpperCase()} 文件！`);
   };
@@ -1990,6 +2032,7 @@ export default function AdminSystemManagementView() {
 
   // 打开新增分组模态框
   const handleOpenCreateGroupModal = () => {
+    if (!currentAdminHas("ab_ad_group_manage")) { showToast("暂无权限"); return; }
     if (!checkAdManagement()) return;
     setGroupModalMode("create");
     setEditingGroupId(null);
@@ -2005,6 +2048,7 @@ export default function AdminSystemManagementView() {
 
   // 打开编辑分组模态框
   const handleOpenEditGroupModal = (group: (typeof accountGroups)[0]) => {
+    if (!currentAdminHas("ab_ad_group_manage")) { showToast("暂无权限"); return; }
     setGroupModalMode("edit");
     setEditingGroupId(group.id);
     setGroupFormName(group.name);
@@ -2019,6 +2063,7 @@ export default function AdminSystemManagementView() {
 
   // 保存分组
   const handleSaveGroup = () => {
+    if (!currentAdminHas("ab_ad_group_manage")) { showToast("暂无权限"); return; }
     if (!checkAdManagement()) return;
     if (!groupFormName.trim()) {
       showToast("请输入账户分组名称");
@@ -2196,7 +2241,7 @@ export default function AdminSystemManagementView() {
         <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs relative overflow-visible">
           <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-[inherit] overflow-visible">
             <div className="flex items-center gap-1.5 min-w-max overflow-visible">
-              {tabs.map((t) => {
+              {visibleTabs.map((t) => {
                 const Icon = t.icon;
                 const isActive = activeTab === t.id;
 

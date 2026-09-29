@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useTagCatalog } from "../lib/useResourceTags";
+
+import { hasAdminPermission } from "../lib/userPermissions";import { useTagCatalog } from "../lib/useResourceTags";
 import { resourceTagStore } from "../lib/resourceTags";
 import { useResourceConfig } from "../lib/useResourceConfig";
 import OverlayPortal from "./overlays/OverlayPortal";
@@ -135,6 +136,7 @@ export default function TagGroupManagementView() {
 
   // 1. 点击左上角“添加”或顶部“新增标签组”
   const handleOpenAddGroupModal = (presetName?: string) => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     setGroupModalMode("add");
     setFormGroupName(presetName || topInputGroupName || "");
     setFormSubTagRule("multi");
@@ -148,6 +150,7 @@ export default function TagGroupManagementView() {
 
   // 2. 点击标签组后方的【修改图标】
   const handleOpenEditGroupModal = (group: TagGroupItem) => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     setGroupModalMode("edit");
     setEditingGroupId(group.id);
     setFormGroupName(group.name);
@@ -162,6 +165,7 @@ export default function TagGroupManagementView() {
 
   // 3. 提交标签组 (新增/修改)
   const handleSubmitGroupModal = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!formGroupName.trim()) {
       showToast("请输入标签组名称");
@@ -213,11 +217,13 @@ export default function TagGroupManagementView() {
 
   // 4. 点击标签组后方的【删除图标】
   const handleOpenDeleteGroupModal = (group: TagGroupItem) => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     setDeletingGroupId(group.id);
   };
 
   // 确认删除标签组
   const handleConfirmDeleteGroup = () => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     if (!deletingGroupId) return;
     const target = tagGroups.find((g) => g.id === deletingGroupId);
     setTagGroups((prev) => prev.filter((g) => g.id !== deletingGroupId));
@@ -235,6 +241,7 @@ export default function TagGroupManagementView() {
 
   // 打开【新增二级标签】模态框
   const handleOpenAddSubTagModal = () => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     if (!currentGroup) { showToast("请先创建标签组"); return; }
     setEditingSubTagId(null);
     setFormSubTagNamesText("");
@@ -243,6 +250,7 @@ export default function TagGroupManagementView() {
 
   // 提交新增二级标签
   const handleSubmitAddSubTag = (e: React.FormEvent) => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     e.preventDefault();
     if (!formSubTagNamesText.trim()) {
       showToast("请输入二级标签名称");
@@ -285,6 +293,7 @@ export default function TagGroupManagementView() {
 
   // 删除单项二级标签
   const handleDeleteSubTag = (subTagId: string, subTagName: string) => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     if (!window.confirm(`删除二级标签“${subTagName}”并解除资源关联？资源本身不会删除。`)) return;
     setTagGroups((prev) =>
       prev.map((g) => {
@@ -342,6 +351,7 @@ export default function TagGroupManagementView() {
 
   // 点击【批量删除】按钮
   const handleBatchDeleteClick = () => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     if (selectedSubTagIds.length === 0) {
       showToast("请先选择要删除的二级标签");
       return;
@@ -351,6 +361,7 @@ export default function TagGroupManagementView() {
 
   // 确认批量删除
   const handleConfirmBatchDelete = () => {
+    if (!hasAdminPermission("ab_tag_manage")) { showToast("暂无权限"); return; }
     const count = selectedSubTagIds.length;
     setTagGroups((prev) =>
       prev.map((g) => {
