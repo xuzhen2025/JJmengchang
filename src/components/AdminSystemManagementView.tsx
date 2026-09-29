@@ -1217,7 +1217,11 @@ export default function AdminSystemManagementView() {
     const saved = localStorage.getItem("cloud_video_roles_v2");
     let next = normalizeSystemRoles(INITIAL_ROLES);
     try {
-      if (saved) next = normalizeSystemRoles(JSON.parse(saved));
+      if (saved) {
+        next = normalizeSystemRoles(JSON.parse(saved));
+        // 新版本键升级：以内置默认勾选为基准并集，补齐旧数据缺失的新键（数据分析/操作记录/衍生等）
+        next = next.map(role => { if (role.id === SUPER_ADMIN_ROLE_ID) return role; const defaults = INITIAL_ROLES.find(r => r.id === role.id); if (!defaults) return role; const merged = Array.from(new Set([...(defaults.checkedKeys || []), ...(role.checkedKeys || [])])); return { ...role, checkedKeys: merged }; });
+      }
     } catch {
       // Invalid legacy role data falls back to the built-in catalog.
     }

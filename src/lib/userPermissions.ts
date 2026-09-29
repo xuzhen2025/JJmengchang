@@ -51,7 +51,9 @@ export function readUserPermissionKeys(): string[] {
     const savedRoles = JSON.parse(localStorage.getItem("cloud_video_roles_v2") || "[]");
     if (savedSession && typeof savedSession.username === "string") session = savedSession;
     // 角色目录为空（管理端尚未初始化/未进入过系统管理）时回退到内置默认角色，保证普通用户登录即可获得默认权限
-    roles = (Array.isArray(savedRoles) && savedRoles.length > 0) ? savedRoles.filter((r): r is RoleLike => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys))) : (INITIAL_ROLES as unknown as RoleLike[]);
+    // 旧数据键升级：以内置默认勾选为基准并集，补齐新版本新增键（如数据分析/操作记录/衍生），不丢失用户已保存键
+    const upgradeRoleKeys = (r: RoleLike): RoleLike => { const defaults = INITIAL_ROLES.find(d => d.id === r.id); if (!defaults || r.id === "role_super_admin") return r; return { ...r, checkedKeys: Array.from(new Set([...(defaults.checkedKeys || []), ...(r.checkedKeys || [])])) }; };
+    roles = (Array.isArray(savedRoles) && savedRoles.length > 0) ? savedRoles.filter((r): r is RoleLike => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys))).map(upgradeRoleKeys) : (INITIAL_ROLES as unknown as RoleLike[]);
   } catch { /* fail closed */ }
   const admin = session.username === "chaojiguanliyuan" || session.username === "guanliyuan";
   if (admin) {

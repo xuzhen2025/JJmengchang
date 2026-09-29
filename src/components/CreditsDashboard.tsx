@@ -158,10 +158,8 @@ export default function CreditsDashboard({
             email="xuzhen@dreamchang.com"
             recentLogin="最近登录: 2026-08-05 23:20 (IP: 110.88.24.18 - 本地局域网)"
             company="梦畅AIGC"
-            companyLevel="1级公司 (HQ-001)"
-            parentNode="最高公司节点 (无上级)"
-            structureType="公司 > 部门 > 分组 > 人员"
-            hierarchySummary="电商投放一部 (女装千川放量组、美妆珠宝爆款组)、品牌效果投放部、AIGC爆款内容拆解部 (千川剧本拆解小组)、视频智能剪辑中心"
+            department="视频智能剪辑中心"
+            group="无"
             actions={(
               <>
                   <button

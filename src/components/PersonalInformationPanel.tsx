@@ -9,10 +9,8 @@ interface PersonalInformationPanelProps {
   email: string;
   recentLogin: string;
   company: string;
-  companyLevel: string;
-  parentNode: string;
-  structureType: string;
-  hierarchySummary: string;
+  department: string;
+  group: string;
   actions: React.ReactNode;
 }
 
@@ -26,10 +24,8 @@ export default function PersonalInformationPanel({
   email,
   recentLogin,
   company,
-  companyLevel,
-  parentNode,
-  structureType,
-  hierarchySummary,
+  department,
+  group,
   actions,
 }: PersonalInformationPanelProps) {
   return (
@@ -84,29 +80,18 @@ export default function PersonalInformationPanel({
           <h3 className="text-sm font-extrabold text-slate-800">所属部门与分组架构</h3>
         </div>
 
-        <div className="space-y-3 text-xs">
-          <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-3">
-            <div>
-              <p className="text-[10px] font-medium text-slate-400">所属主体/公司</p>
-              <p className="mt-0.5 text-sm font-bold text-slate-800">{company}</p>
-            </div>
-            <span className="rounded-lg bg-purple-100 px-2.5 py-1 text-[10px] font-bold text-purple-800">{companyLevel}</span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] font-medium text-slate-400">上级节点</p>
-              <p className="mt-0.5 font-semibold text-slate-700">{parentNode}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-              <p className="text-[10px] font-medium text-slate-400">架构类型</p>
-              <p className="mt-0.5 font-semibold text-slate-700">{structureType}</p>
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] font-medium text-slate-400">下辖部门与分组</p>
-            <p className="mt-0.5 font-semibold text-slate-700">{hierarchySummary}</p>
+            <p className="text-[10px] font-medium text-slate-400">所属公司</p>
+            <p className="mt-0.5 text-sm font-bold text-slate-800">{company}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-medium text-slate-400">所属部门</p>
+            <p className="mt-0.5 font-semibold text-slate-700">{department}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-medium text-slate-400">所属分组</p>
+            <p className="mt-0.5 font-semibold text-slate-700">{group}</p>
           </div>
         </div>
       </div>

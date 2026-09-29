@@ -22,6 +22,7 @@ import FinishedVideosView from "./components/FinishedVideosView";
 import AdDeliveryView from "./components/AdDeliveryView";
 import OperationRecordsView from "./components/OperationRecordsView";
 import { recordLogin } from "./lib/operationHistory";
+import { notifyPermissionChange } from "./lib/userPermissions";
 import SameStyleVideoView from "./components/SameStyleVideoView";
 import VideoRemakeView, { type SourceVideo } from "./components/VideoRemakeView";
 import type { TaskItem } from "./components/TaskCollaborationView";
@@ -271,6 +272,7 @@ export default function App() {
     setAppMode(account.defaultMode);
     setScreenHistory(["video_remake"]);
     setAdminActiveScreen("content_management");
+    notifyPermissionChange();
   };
 
   const handleModeChange = (mode: AppMode) => {
@@ -281,6 +283,7 @@ export default function App() {
     setSession(nextSession);
     setAppMode(mode);
     setIsQueueOpen(false);
+    notifyPermissionChange();
   };
 
   const handleConfirmLogout = () => {
@@ -292,6 +295,7 @@ export default function App() {
     setScreenHistory(["video_remake"]);
     setAdminActiveScreen("content_management");
     setIsQueueOpen(false);
+    notifyPermissionChange();
   };
 
   // App core states
