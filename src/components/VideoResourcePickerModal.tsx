@@ -58,7 +58,7 @@ interface VideoResourcePickerModalProps {
   onConfirm: (items: VideoResourcePickerItem[]) => void;
 }
 
-const filterClassName = "h-9 w-[130px] shrink-0 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-600 outline-none focus:border-violet-400";
+const filterClassName = "h-8 w-[130px] shrink-0 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-600 outline-none focus:border-violet-400";
 
 const uniqueValues = (values: string[]) => Array.from(new Set(values)).filter(Boolean);
 
@@ -274,9 +274,9 @@ export default function VideoResourcePickerModal({
             </select>
             <div className="relative min-w-[220px] flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input value={search} onChange={(event) => { setSearch(event.target.value); resetPage(); }} placeholder="搜索文件名称或 ID" className="h-9 w-full rounded-md border border-slate-200 pl-9 pr-3 text-xs outline-none focus:border-violet-400" />
+              <input value={search} onChange={(event) => { setSearch(event.target.value); resetPage(); }} placeholder="搜索文件名称或 ID" className="h-8 w-full rounded-md border border-slate-200 pl-9 pr-3 text-xs outline-none focus:border-violet-400" />
             </div>
-            <label className="flex h-9 shrink-0 items-center gap-2 whitespace-nowrap px-2 text-xs text-slate-600">
+            <label className="flex h-8 shrink-0 items-center gap-2 whitespace-nowrap px-2 text-xs text-slate-600">
               <input type="checkbox" checked={onlyMine} onChange={(event) => { setOnlyMine(event.target.checked); resetPage(); }} className="accent-violet-600" />
               仅看我的
             </label>
@@ -302,7 +302,7 @@ export default function VideoResourcePickerModal({
                   return (
                     <tr key={item.id} onClick={() => toggleItem(item.id)} className={`cursor-pointer border-t border-slate-100 ${selected ? "bg-violet-50" : "hover:bg-slate-50"}`}>
                       <td className="px-4 py-3"><span className={`flex h-4 w-4 items-center justify-center border ${maxSelections === 1 ? "rounded-full" : "rounded"} ${selected ? "border-violet-600 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>{selected && <Check className="h-2.5 w-2.5" />}</span></td>
-                      <td className="px-3 py-2"><img src={item.cover} alt="" className="h-10 w-16 rounded object-cover" referrerPolicy="no-referrer" /></td>
+                      <td className="px-3 py-2"><img src={item.cover} alt="" className="h-8 w-16 rounded object-cover" referrerPolicy="no-referrer" /></td>
                       <td className="px-3 py-3"><p className="truncate font-semibold text-slate-700">{item.name}</p><p className="mt-1 text-[10px] text-slate-400">{item.id}</p></td>
                       <td className="px-3 py-3"><span className="rounded bg-slate-100 px-2 py-1 text-[10px] text-slate-600">{item.status}</span></td>
                       <td className="px-3 py-3"><p className="font-semibold text-slate-700">{section === "图片" ? `${item.primaryCategory} / ${item.secondaryCategory}` : item.section}</p><p className="mt-1 truncate text-[10px] text-slate-400">{section === "图片" ? item.tags.join("、") : `${item.primaryCategory} / ${item.secondaryCategory}`}</p></td>
@@ -328,7 +328,7 @@ export default function VideoResourcePickerModal({
               <input ref={uploadRef} type="file" multiple={maxSelections !== 1} accept={allowImageSelection ? ".jpg,.jpeg,.png,.webp,.bmp,.gif,.tif,.tiff,.mp4,.mpeg,.mov,image/*,video/*" : ".mp4,.mpeg,.mov,video/mp4,video/mpeg,video/quicktime"} className="hidden" onChange={(event) => handleLocalUpload(event.target.files)} />
               <p className="mt-3 text-center text-xs leading-6 text-slate-400">支持 {allowImageSelection ? "图片、" : ""}MP4、MPEG、MOV 格式，单个文件大小需小于 {maxFileSizeMB} MB。<br />请确保上传素材为原创内容或已取得合法授权。</p>
               {uploadError && <p className="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-rose-600"><AlertCircle className="h-3.5 w-3.5" />{uploadError}</p>}
-              {localItems.length > 0 && <div className="mt-4 space-y-2">{localItems.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-md border border-slate-200 p-2.5"><img src={item.cover} alt="" className="h-11 w-16 rounded object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-700">{item.name}</p><p className="mt-1 text-[10px] text-slate-400">{item.size}</p></div><button type="button" onClick={() => { setLocalItems((current) => current.filter((video) => video.id !== item.id)); setSelectedIds((current) => current.filter((id) => id !== item.id)); }} title="删除" className="p-1.5 text-slate-400 hover:text-rose-600"><Trash2 className="h-3.5 w-3.5" /></button></div>)}</div>}
+              {localItems.length > 0 && <div className="mt-4 space-y-2">{localItems.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-md border border-slate-200 p-2.5"><img src={item.cover} alt="" className="h-8 w-16 rounded object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-700">{item.name}</p><p className="mt-1 text-[10px] text-slate-400">{item.size}</p></div><button type="button" onClick={() => { setLocalItems((current) => current.filter((video) => video.id !== item.id)); setSelectedIds((current) => current.filter((id) => id !== item.id)); }} title="删除" className="p-1.5 text-slate-400 hover:text-rose-600"><Trash2 className="h-3.5 w-3.5" /></button></div>)}</div>}
             </div>
           )}
         </div>

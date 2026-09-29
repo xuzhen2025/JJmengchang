@@ -519,7 +519,7 @@ function PlanHistory({ ownerId }: { ownerId: string }) {
 }
 
 function DateRange({ start, end, onStart, onEnd, compact = false }: { start: string; end: string; onStart: (value: string) => void; onEnd: (value: string) => void; compact?: boolean }) {
-  return <div className={`flex h-10 ${compact ? "min-w-0 w-full sm:w-[340px]" : "min-w-[340px]"} max-w-full items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-500`}>
+  return <div className={`flex h-8 ${compact ? "min-w-0 w-full sm:w-[340px]" : "min-w-[340px]"} max-w-full items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-500`}>
     <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
     <input aria-label="开始日期" type="date" value={start} onChange={event => onStart(event.target.value)} className="min-w-0 flex-1 bg-transparent text-center outline-none" />
     <span>至</span>

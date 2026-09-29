@@ -117,7 +117,7 @@ export default function ViralInspirationGallery({ uploadedVideos, onPreview, onR
     <section aria-label="电商爆款灵感画廊" data-testid="viral-inspiration-gallery" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold tracking-wide text-slate-400">电商爆款灵感画廊</h2>
-        <button ref={categoryButtonRef} type="button" aria-label={`爆款分类：${categoryLabel}`} title={categoryLabel} aria-expanded={categoryOpen} aria-haspopup="dialog" onClick={() => setCategoryOpen((open) => !open)} className="flex h-9 w-32 items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:border-purple-300 hover:bg-purple-50">
+        <button ref={categoryButtonRef} type="button" aria-label={`爆款分类：${categoryLabel}`} title={categoryLabel} aria-expanded={categoryOpen} aria-haspopup="dialog" onClick={() => setCategoryOpen((open) => !open)} className="flex h-8 w-32 items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:border-purple-300 hover:bg-purple-50">
           <span className="min-w-0 truncate">{categoryLabel}</span>
           <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${categoryOpen ? "rotate-180" : ""}`} />
         </button>
@@ -130,7 +130,7 @@ export default function ViralInspirationGallery({ uploadedVideos, onPreview, onR
                   setHoveredId(null);
                   setCategoryOpen(false);
                   categoryButtonRef.current?.focus({ preventScroll: true });
-                }} className={`flex min-h-9 w-full items-center break-words rounded-md px-3 py-2 text-left text-xs transition-colors ${activeCategory === category ? "bg-purple-50 font-semibold text-purple-600" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"}`}>
+                }} className={`flex min-h-8 w-full items-center break-words rounded-md px-3 py-2 text-left text-xs transition-colors ${activeCategory === category ? "bg-purple-50 font-semibold text-purple-600" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"}`}>
                   {category ?? "全部爆款"}
                 </button>
               ))}

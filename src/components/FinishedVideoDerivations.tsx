@@ -90,9 +90,9 @@ export default function FinishedVideoDerivations({ source, onDerivePush }: { sou
     </div>
     <div className="flex flex-wrap items-center gap-3">
       <div className="grid min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        {([['asset', '请输入素材ID'], ['title', '请输入衍生视频标题'], ['note', '请输入备注关键词']] as const).map(([key, placeholder]) => <input key={key} aria-label={placeholder} placeholder={placeholder} value={filters[key]} onChange={e => filter(key, e.target.value)} className={`${inputClass} !h-9 !text-xs`} />)}
-        <select aria-label="衍生状态" className={`${inputClass} !h-9 !text-xs`} value={filters.status} onChange={e => filter("status", e.target.value)}><option value="">全部状态</option>{DERIVATION_STATUSES.map(status => <option key={status}>{status}</option>)}</select>
-        <select aria-label="操作人" className={`${inputClass} !h-9 !text-xs`} value={filters.operator} onChange={e => filter("operator", e.target.value)}><option value="">请选择操作人</option>{[...new Map(records.map(record => [record.ownerId, record.ownerName || linked(record.id)[0]?.operator || record.ownerId])).entries()].map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>
+        {([['asset', '请输入素材ID'], ['title', '请输入衍生视频标题'], ['note', '请输入备注关键词']] as const).map(([key, placeholder]) => <input key={key} aria-label={placeholder} placeholder={placeholder} value={filters[key]} onChange={e => filter(key, e.target.value)} className={`${inputClass} !h-8 !text-xs`} />)}
+        <select aria-label="衍生状态" className={`${inputClass} !h-8 !text-xs`} value={filters.status} onChange={e => filter("status", e.target.value)}><option value="">全部状态</option>{DERIVATION_STATUSES.map(status => <option key={status}>{status}</option>)}</select>
+        <select aria-label="操作人" className={`${inputClass} !h-8 !text-xs`} value={filters.operator} onChange={e => filter("operator", e.target.value)}><option value="">请选择操作人</option>{[...new Map(records.map(record => [record.ownerId, record.ownerName || linked(record.id)[0]?.operator || record.ownerId])).entries()].map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>
       </div>
       <div className="flex max-w-full flex-wrap gap-2">
         <button className={primaryClass} disabled={!canBatch} onClick={() => startPush(selected)}>批量推送</button>

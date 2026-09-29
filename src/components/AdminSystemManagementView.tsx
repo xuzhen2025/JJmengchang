@@ -2686,7 +2686,7 @@ export default function AdminSystemManagementView() {
                             <div className="flex items-center gap-3">
                               <img
                                 src={m.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop"}
-                                className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
+                                className="w-9 h-8 rounded-full object-cover border border-slate-200 shrink-0"
                                 referrerPolicy="no-referrer"
                               />
                               <div>
@@ -2785,7 +2785,7 @@ export default function AdminSystemManagementView() {
                     {filteredMembers.length === 0 && (
                       <tr>
                         <td colSpan={8} className="py-12 text-center text-slate-400 bg-white">
-                          <Users className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                          <Users className="w-10 h-8 mx-auto text-slate-300 mb-2" />
                           <p className="text-xs font-bold">未找到符合条件的人员信息</p>
                           <p className="text-[10px] text-slate-400 mt-1">请尝试清空筛选条件或点击右上角“新增人员”</p>
                         </td>
@@ -4408,11 +4408,11 @@ export default function AdminSystemManagementView() {
               {adSubTab === "account" && <AdvertiserAccountFilters accounts={adAccounts.filter(account => account.platform === adPlatform)} filters={adFilters}
                 onChange={next => { setAdFilters(next); setSelectedAdAccountIds([]); }} groups={availableGroupsList}
                 syncControls={<>
-                  <button type="button" onClick={() => handleSyncAdAccounts()} disabled={syncingAdAccounts} className="flex h-9 items-center gap-1.5 rounded-md border border-slate-200 px-3 text-xs text-slate-700 disabled:opacity-50"><RefreshCw className={"h-3.5 w-3.5 " + (syncingAdAccounts ? "animate-spin" : "")} />{syncingAdAccounts ? "同步中" : "手动同步"}</button>
-                  {adPlatform === "巨量千川" && <label className="flex items-center gap-2 text-xs text-slate-500">模拟同步<select aria-label="模拟同步结果" value={syncScenario} disabled={syncingAdAccounts} onChange={e => setSyncScenario(e.target.value as AdSyncScenario)} className="h-9 rounded-md border border-slate-200 bg-white px-2"><option value="normal">正常返回</option><option value="network">请求失败</option><option value="expired">授权失效</option></select></label>}
+                  <button type="button" onClick={() => handleSyncAdAccounts()} disabled={syncingAdAccounts} className="flex h-8 items-center gap-1.5 rounded-md border border-slate-200 px-3 text-xs text-slate-700 disabled:opacity-50"><RefreshCw className={"h-3.5 w-3.5 " + (syncingAdAccounts ? "animate-spin" : "")} />{syncingAdAccounts ? "同步中" : "手动同步"}</button>
+                  {adPlatform === "巨量千川" && <label className="flex items-center gap-2 text-xs text-slate-500">模拟同步<select aria-label="模拟同步结果" value={syncScenario} disabled={syncingAdAccounts} onChange={e => setSyncScenario(e.target.value as AdSyncScenario)} className="h-8 rounded-md border border-slate-200 bg-white px-2"><option value="normal">正常返回</option><option value="network">请求失败</option><option value="expired">授权失效</option></select></label>}
                 </>}>
-                <button type="button" onClick={() => { if (!checkAdManagement()) return; setReauthorizingAccount(undefined); setAuthModalOpen(true); }} className="h-10 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">去授权</button>
-                <div className="flex h-10 overflow-hidden rounded-md border border-slate-200">
+                <button type="button" onClick={() => { if (!checkAdManagement()) return; setReauthorizingAccount(undefined); setAuthModalOpen(true); }} className="h-8 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">去授权</button>
+                <div className="flex h-8 overflow-hidden rounded-md border border-slate-200">
                   {(["authorized", "expired"] as const).map(status => <button key={status} type="button" aria-pressed={adAuthFilter === status} onClick={() => { setAdAuthFilter(status); setSelectedAdAccountIds([]); }} className={"px-4 text-xs " + (adAuthFilter === status ? "bg-purple-600 text-white" : "bg-white text-slate-600")}>{status === "authorized" ? "已授权" : "已失效"}</button>)}
                 </div>
               </AdvertiserAccountFilters>}
@@ -4422,9 +4422,9 @@ export default function AdminSystemManagementView() {
             </div>
             {adSubTab === "account" && <section className="rounded-module bg-white px-5">
               <div className="flex flex-wrap items-center gap-3 py-4">
-                <button type="button" aria-label="批量绑定" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先勾选需要绑定的广告账户"); setBindingTargets({ ids: [...selectedAdAccountIds], editing: false }); }} className="h-9 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量绑定{selectedAdAccountIds.length ? " (" + selectedAdAccountIds.length + ")" : ""}</button>
-                <button type="button" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先勾选需要备注的广告账户"); setBatchRemarkText(""); setBatchRemarkModalOpen(true); }} className="h-9 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量备注</button>
-                <button type="button" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先选择广告账户"); setRevokingAdAccountIds([...selectedAdAccountIds]); setBatchCancelAuthModalOpen(true); }} className="h-9 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量取消授权</button>
+                <button type="button" aria-label="批量绑定" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先勾选需要绑定的广告账户"); setBindingTargets({ ids: [...selectedAdAccountIds], editing: false }); }} className="h-8 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量绑定{selectedAdAccountIds.length ? " (" + selectedAdAccountIds.length + ")" : ""}</button>
+                <button type="button" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先勾选需要备注的广告账户"); setBatchRemarkText(""); setBatchRemarkModalOpen(true); }} className="h-8 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量备注</button>
+                <button type="button" onClick={() => { if (!checkAdManagement()) return; if (!selectedAdAccountIds.length) return showToast("请先选择广告账户"); setRevokingAdAccountIds([...selectedAdAccountIds]); setBatchCancelAuthModalOpen(true); }} className="h-8 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700">批量取消授权</button>
               </div>
               <AdvertiserAccountTable accounts={filteredAdAccounts} platform={adPlatform} selectedIds={selectedAdAccountIds} onSelection={setSelectedAdAccountIds} showToast={showToast}
                 onEdit={account => { if (checkAdManagement()) setBindingTargets({ ids: [account.id], editing: true }); }}
@@ -5174,7 +5174,7 @@ export default function AdminSystemManagementView() {
           <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl">
             <div className="flex items-center justify-between bg-slate-900 px-5 py-4 text-white"><h3 className="flex items-center gap-2 text-sm font-black"><Key className="h-4 w-4 text-amber-400" />重置人员登录密码</h3><button type="button" onClick={() => setResetPasswordModal(null)} title="关闭" className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"><X className="h-5 w-5" /></button></div>
             <div className="space-y-4 p-6 text-xs">
-              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><img src={resetPasswordModal.member.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop"} alt={resetPasswordModal.member.name} className="h-10 w-10 rounded-full object-cover" referrerPolicy="no-referrer" /><div><p className="font-extrabold text-slate-900">{resetPasswordModal.member.name}</p><p className="mt-1 text-[10px] text-slate-500">{resetPasswordModal.member.roleName} · {resetPasswordModal.member.phone}</p></div></div>
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"><img src={resetPasswordModal.member.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop"} alt={resetPasswordModal.member.name} className="h-8 w-10 rounded-full object-cover" referrerPolicy="no-referrer" /><div><p className="font-extrabold text-slate-900">{resetPasswordModal.member.name}</p><p className="mt-1 text-[10px] text-slate-500">{resetPasswordModal.member.roleName} · {resetPasswordModal.member.phone}</p></div></div>
               <div className="space-y-2"><p className="font-bold text-slate-600">选择密码重置模式</p>{([['default', '恢复平台默认初始密码'], ['random', '随机生成 8 位高强度密码'], ['custom', '手动指定新密码']] as const).map(([value, label]) => <label key={value} className={`block cursor-pointer rounded-xl border p-3 ${resetPasswordModal.resetType === value ? "border-purple-300 bg-purple-50 text-purple-900" : "border-slate-200"}`}><span className="flex items-center gap-2 font-bold"><input type="radio" name="resetType" checked={resetPasswordModal.resetType === value} onChange={() => setResetPasswordModal({ ...resetPasswordModal, resetType: value, customPassword: value === "default" ? DEFAULT_PLATFORM_PASSWORD : "" })} className="accent-purple-600" />{label}</span>{value === "custom" && resetPasswordModal.resetType === "custom" && <input value={resetPasswordModal.customPassword} onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, customPassword: e.target.value })} placeholder="请输入 6~20 位新密码" className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono outline-none focus:border-purple-500" />}</label>)}</div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><label className="flex items-center gap-2 font-bold"><input type="checkbox" checked={resetPasswordModal.forceNextChange} onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, forceNextChange: e.target.checked })} className="accent-purple-600" />下次登录强制修改密码</label></div>
               <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setResetPasswordModal(null)} className="px-4 py-2 font-bold text-slate-500">取消</button><button type="button" onClick={handleConfirmResetPassword} className="rounded-xl bg-amber-500 px-5 py-2 font-bold text-white hover:bg-amber-600">确认重置密码</button></div>

@@ -143,21 +143,21 @@ export default function DeliveryStatusReportView({ showToast }: DeliveryStatusRe
     <div className="flex flex-wrap items-center gap-3 px-6 py-5">
       {!advertiser && <ReportMultiSelect key={`${activePlatform}-${activeDimension}`} label={dimensionLabel} levels={levels} options={entityOptions} values={selectedEntities} onChange={setSelectedEntities} />}
       {advertiser && <>
-        <label className="flex h-10 w-[280px] max-w-full items-center gap-2 rounded-lg border border-slate-200 px-3 focus-within:border-purple-500">
+        <label className="flex h-8 w-[280px] max-w-full items-center gap-2 rounded-lg border border-slate-200 px-3 focus-within:border-purple-500">
           <span className="shrink-0 text-sm text-slate-900">广告账户 ID</span>
           <input type="text" aria-label="广告账户 ID" placeholder="请输入广告账户 ID" value={advertiserAccountId} onChange={event => setAdvertiserAccountId(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400" />
         </label>
         <ReportMultiSelect key={activePlatform} label="分类" levels={["一级分类", "二级分类"]} options={categoryOptions} values={selectedCategories} onChange={setSelectedCategories} />
       </>}
-      <div className="flex min-h-10 max-w-full flex-wrap items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900">
+      <div className="flex min-h-8 max-w-full flex-wrap items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900">
         <span className="flex shrink-0 items-center gap-1">计划搭建时间<HelpCircle className="h-3.5 w-3.5 text-slate-400" /></span>
         <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
         <input type="date" aria-label="计划搭建开始时间" value={startDate} onChange={event => setStartDate(event.target.value)} className="w-[118px] min-w-0 bg-transparent text-xs outline-none" />
         <span className="text-slate-500">至</span>
         <input type="date" aria-label="计划搭建结束时间" value={endDate} onChange={event => setEndDate(event.target.value)} className="w-[118px] min-w-0 bg-transparent text-xs outline-none" />
       </div>
-      <button type="button" onClick={handleQuery} className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-purple-600 px-4 text-sm font-semibold text-white hover:bg-purple-700"><Search className="h-4 w-4" />查询</button>
-      <button type="button" onClick={() => { clearCriteria(true); showToast?.("重置成功", "已恢复默认日期并清空查询数据"); }} className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-4 text-sm text-slate-600 hover:bg-slate-50"><RotateCcw className="h-4 w-4" />重置</button>
+      <button type="button" onClick={handleQuery} className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-purple-600 px-4 text-sm font-semibold text-white hover:bg-purple-700"><Search className="h-4 w-4" />查询</button>
+      <button type="button" onClick={() => { clearCriteria(true); showToast?.("重置成功", "已恢复默认日期并清空查询数据"); }} className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-4 text-sm text-slate-600 hover:bg-slate-50"><RotateCcw className="h-4 w-4" />重置</button>
     </div>
 
     <section aria-label="投放分析" className="px-6 pb-6 pt-2">

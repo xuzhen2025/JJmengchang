@@ -56,21 +56,21 @@ export default function FaceSwapComparePlayer({ source, version, analysis, pendi
   return <div ref={rootRef} className="flex h-full min-h-0 min-w-0 flex-col bg-white" data-testid="face-compare-player">
     <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
       <section className="flex min-h-0 min-w-0 flex-col" data-testid="face-source-panel">
-        <div className="mb-2 flex h-9 shrink-0 items-center justify-between"><h3 className="text-sm font-semibold text-slate-700">原视频</h3><span className="text-xs text-slate-400">完整视频</span></div>
+        <div className="mb-2 flex h-8 shrink-0 items-center justify-between"><h3 className="text-sm font-semibold text-slate-700">原视频</h3><span className="text-xs text-slate-400">完整视频</span></div>
         <div className="relative min-h-0 flex-1 overflow-hidden rounded-md bg-black">
           <video ref={sourceRef} src={source.url} muted={Boolean(version) || muted} playsInline preload="metadata" className="absolute inset-0 h-full w-full object-contain" onClick={() => playing ? pause() : void play()} onEnded={() => { if (!version) pause(); }} onTimeUpdate={() => { if (!version) updateTime(); }} onError={() => { pause(); setError("原视频无法读取。"); }} />
           {analysis && <ProgressOverlay {...analysis} />}
         </div>
       </section>
       <section ref={resultPanelRef} tabIndex={-1} aria-label="换脸结果预览" className="flex min-h-0 min-w-0 flex-col outline-none" data-testid="face-result-panel">
-        <div className="mb-2 flex min-h-9 shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-0.5">{resultHeader}</div>
+        <div className="mb-2 flex min-h-8 shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-0.5">{resultHeader}</div>
         <div className={`relative min-h-0 flex-1 overflow-hidden rounded-md ${version ? "bg-black" : "border border-slate-200 bg-slate-50"}`}>
           {version ? <video key={version.id} ref={resultRef} src={version.videoUrl} muted={muted} playsInline preload="metadata" className="absolute inset-0 h-full w-full object-contain" onClick={() => playing ? pause() : void play()} onEnded={pause} onPause={() => { sourceRef.current?.pause(); setPlaying(false); }} onTimeUpdate={updateTime} onError={() => { pause(); setError("结果视频无法读取。"); }} /> : !pending && <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400"><FileVideo2 size={24} strokeWidth={1.4} /><span className="text-xs">暂无换脸结果</span></div>}
           {pending && <ProgressOverlay {...pending} compact={Boolean(version)} />}
         </div>
       </section>
     </div>
-    <div className="mt-2 flex h-10 shrink-0 items-center gap-2 border-t border-slate-200 pt-1">
+    <div className="mt-2 flex h-8 shrink-0 items-center gap-2 border-t border-slate-200 pt-1">
       <button disabled={Boolean(analysis)} title={playing ? "暂停" : "播放"} aria-label={version ? playing ? "暂停对比" : "播放对比" : playing ? "暂停原视频" : "播放原视频"} onClick={() => playing ? pause() : void play()} className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-600 hover:text-violet-600 disabled:opacity-40">{playing ? <Pause size={16} /> : <Play size={16} />}</button>
       <span className="shrink-0 text-[11px] tabular-nums text-slate-500">{faceTime(time)} / {faceTime(source.duration)}</span>
       <input disabled={Boolean(analysis)} aria-label="对比播放进度" type="range" min={0} max={source.duration || 1} step={0.01} value={time} onChange={(event) => seek(Number(event.target.value))} className="min-w-0 flex-1 accent-violet-600" />

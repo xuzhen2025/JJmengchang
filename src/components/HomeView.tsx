@@ -1347,7 +1347,7 @@ export default function HomeView({
                     <div className="aspect-video bg-slate-900 rounded-xl overflow-hidden relative group">
                       <img src={item.cover} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                        <div className="w-9 h-9 rounded-full bg-pink-600 text-white flex items-center justify-center shadow-lg">
+                        <div className="w-9 h-8 rounded-full bg-pink-600 text-white flex items-center justify-center shadow-lg">
                           <Play className="w-4 h-4 fill-white ml-0.5" />
                         </div>
                       </div>
@@ -1380,7 +1380,7 @@ export default function HomeView({
 
             <div className="space-y-3 py-2">
               <div className="w-20 h-20 rounded-2xl bg-emerald-50 border border-emerald-200 mx-auto flex items-center justify-center text-emerald-600">
-                <Headphones className="w-10 h-10" />
+                <Headphones className="w-10 h-8" />
               </div>
               <div>
                 <h4 className="text-sm font-black text-slate-900">在线客服经理：梦畅客服小妹</h4>

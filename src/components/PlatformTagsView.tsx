@@ -28,7 +28,7 @@ interface PlatformTagsViewProps {
 }
 
 const DEFAULT_FILTERS: PlatformTagFilters = { start: REPORT_START, end: REPORT_TODAY, category: "all", department: "", groupKey: "", memberId: "", subject: "" };
-const selectClassName = "h-9 w-[216px] max-w-full pl-3 pr-8 text-xs bg-white border border-slate-200 rounded-md text-slate-700 font-medium focus:outline-none focus:border-purple-500 shadow-2xs cursor-pointer";
+const selectClassName = "h-8 w-[216px] max-w-full pl-3 pr-8 text-xs bg-white border border-slate-200 rounded-md text-slate-700 font-medium focus:outline-none focus:border-purple-500 shadow-2xs cursor-pointer";
 
 // Color palette matching the reference donut chart
 const MATERIAL_TYPE_META = [
@@ -294,7 +294,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
                   key={d.id}
                   onClick={() => changeDimension(d.id)}
                   aria-pressed={isActive}
-                  className={`h-9 shrink-0 px-4 text-xs font-bold transition-colors cursor-pointer border-r last:border-r-0 border-slate-200 ${
+                  className={`h-8 shrink-0 px-4 text-xs font-bold transition-colors cursor-pointer border-r last:border-r-0 border-slate-200 ${
                     isActive
                       ? "bg-[#7C3AED] text-white"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
@@ -344,7 +344,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
                 onChange={category => setFilters(value => ({ ...value, category }))} />
 
               {/* Date Range Selector */}
-              <div className="flex flex-wrap items-center min-h-9 gap-2 bg-white border border-slate-200 rounded-md px-3 py-1.5 shadow-2xs text-xs">
+              <div className="flex flex-wrap items-center min-h-8 gap-2 bg-white border border-slate-200 rounded-md px-3 py-1.5 shadow-2xs text-xs">
                 <span className="text-slate-500 font-medium flex items-center gap-1 shrink-0">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
                   消耗时间:
@@ -369,14 +369,14 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
               {/* Action Buttons */}
               <button
                 onClick={handleQuery}
-                className="h-9 px-5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-md transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                className="h-8 px-5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold rounded-md transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
                 <span>查询</span>
               </button>
 
               <button
                 onClick={handleReset}
-                className="h-9 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-md transition-colors cursor-pointer shadow-2xs flex items-center gap-1"
+                className="h-8 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-md transition-colors cursor-pointer shadow-2xs flex items-center gap-1"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
                 <span>重置</span>
@@ -414,7 +414,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
                     key={item.id}
                     className="p-3.5 bg-slate-50/60 hover:bg-slate-50 border border-slate-100 rounded-xl transition-all flex items-start gap-3 shadow-2xs"
                   >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${item.bgColor} ${item.textColor}`}>
+                    <div className={`w-9 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.bgColor} ${item.textColor}`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="space-y-1.5 flex-1 min-w-0">

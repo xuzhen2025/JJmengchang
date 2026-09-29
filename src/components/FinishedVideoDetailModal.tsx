@@ -1759,7 +1759,7 @@ export default function FinishedVideoDetailModal({
                             onPointerMove={moveClipDrag}
                             onPointerUp={endClipDrag}
                             onPointerCancel={endClipDrag}
-                            className="relative h-9 cursor-pointer touch-none select-none"
+                            className="relative h-8 cursor-pointer touch-none select-none"
                           >
                             <div className="absolute left-0 right-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-slate-200" />
                             <div
@@ -2124,7 +2124,7 @@ export default function FinishedVideoDetailModal({
                               <img
                                 src={video.authorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"}
                                 alt="author"
-                                className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-lg"
+                                className="w-10 h-8 rounded-full border-2 border-white object-cover shadow-lg"
                               />
                               <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-rose-500 text-white rounded-full p-0.5 shadow-md">
                                 <Plus className="w-3 h-3 stroke-[3]" />
@@ -3657,7 +3657,7 @@ export default function FinishedVideoDetailModal({
                       <span className="text-[11px] font-extrabold text-purple-900">消耗曲线</span>
                       <ArrowUpRight className="w-3.5 h-3.5 text-purple-600 group-hover:scale-110 transition-transform" />
                     </div>
-                    <div className="w-full h-9 z-10 flex items-end">
+                    <div className="w-full h-8 z-10 flex items-end">
                       <svg className="w-full h-full text-purple-600" viewBox="0 0 100 30" preserveAspectRatio="none">
                         <path
                           d="M 0 25 Q 15 5, 30 18 T 60 8 T 90 20 L 100 12 L 100 30 L 0 30 Z"
@@ -3850,7 +3850,7 @@ export default function FinishedVideoDetailModal({
                       onClick={() => setShowAddAigcLinkModal(true)}
                       className="reference-video-add border-2 border-dashed border-purple-400 hover:border-purple-600 bg-purple-50/40 hover:bg-purple-50 rounded-lg flex flex-col items-center justify-center p-3 transition-all cursor-pointer group shadow-2xs"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-white border border-purple-200 text-purple-600 flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
+                      <div className="w-10 h-8 rounded-xl bg-white border border-purple-200 text-purple-600 flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
                         <Link2 className="w-5 h-5 text-purple-600" />
                       </div>
                       <span className="text-[11px] font-extrabold text-purple-800 text-center leading-snug">
@@ -4615,7 +4615,7 @@ export default function FinishedVideoDetailModal({
                       : "bg-slate-50 border-slate-200 hover:border-purple-300 text-slate-600"
                   }`}
                 >
-                  <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center mx-auto shadow-2xs">
+                  <div className="w-10 h-8 bg-white rounded-xl border border-slate-200 flex items-center justify-center mx-auto shadow-2xs">
                     <Folder className="w-5 h-5 text-purple-600" />
                   </div>
                   {uploadSelectedFolder ? (

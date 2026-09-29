@@ -149,7 +149,7 @@ export default function AudioDetailView({
           <div className="flex items-start justify-between gap-4 flex-wrap">
             {/* Left: Avatar & Author */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-500 font-bold flex items-center justify-center shrink-0">
+              <div className="w-10 h-8 rounded-full bg-slate-200 text-slate-500 font-bold flex items-center justify-center shrink-0">
                 <User className="w-5 h-5" />
               </div>
               <div>
@@ -173,7 +173,7 @@ export default function AudioDetailView({
 
               <button
                 onClick={() => showToast("已复制在线分享链接")}
-                className="w-9 h-9 border border-purple-200 bg-purple-50 hover:bg-purple-100 rounded-xl text-purple-600 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+                className="w-9 h-8 border border-purple-200 bg-purple-50 hover:bg-purple-100 rounded-xl text-purple-600 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
                 title="分享"
               >
                 <Share2 className="w-4 h-4" />
@@ -366,7 +366,7 @@ export default function AudioDetailView({
             {/* Play / Pause button */}
             <button
               onClick={() => setDetailIsPlaying(!detailIsPlaying)}
-              className={`w-10 h-10 rounded-full border-2 border-purple-600 flex items-center justify-center text-purple-600 hover:scale-105 active:scale-95 transition-transform shrink-0 cursor-pointer shadow-xs ${
+              className={`w-10 h-8 rounded-full border-2 border-purple-600 flex items-center justify-center text-purple-600 hover:scale-105 active:scale-95 transition-transform shrink-0 cursor-pointer shadow-xs ${
                 detailIsPlaying ? "bg-purple-600 text-white" : "bg-white hover:bg-purple-50"
               }`}
             >

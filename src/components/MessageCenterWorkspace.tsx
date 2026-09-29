@@ -131,20 +131,20 @@ export default function MessageCenterWorkspace({
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-module bg-slate-50 text-slate-800">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} title="返回首页" className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"><ArrowLeft className="h-4 w-4" /></button>
+          <button onClick={onBack} title="返回首页" className="flex h-8 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"><ArrowLeft className="h-4 w-4" /></button>
           <div>
             <div className="flex items-center gap-2"><h1 className="text-lg font-black text-slate-900">消息中心</h1>{unreadCount > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white">{unreadCount} 条未读</span>}</div>
             <p className="mt-0.5 text-xs text-slate-400">业务通知、协作消息与管理审计统一入口</p>
           </div>
         </div>
-        <button onClick={markAllRead} disabled={unreadCount === 0} className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-40"><Check className="h-4 w-4" />全部标为已读</button>
+        <button onClick={markAllRead} disabled={unreadCount === 0} className="inline-flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-40"><Check className="h-4 w-4" />全部标为已读</button>
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)]">
         <aside className="border-b border-slate-200 bg-white p-3 lg:border-b-0 lg:border-r">
           <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
             <button onClick={() => { setSelectedCategory("全部消息"); setSelectedType("全部类型"); }} className={`flex min-w-40 items-center gap-3 rounded-lg border px-3 py-3 text-left transition lg:min-w-0 ${selectedCategory === "全部消息" ? "border-purple-200 bg-purple-50 text-purple-800" : "border-transparent text-slate-600 hover:bg-slate-50"}`}>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-700"><Inbox className="h-4 w-4" /></span>
+              <span className="flex h-8 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-700"><Inbox className="h-4 w-4" /></span>
               <span className="min-w-0 flex-1"><span className="block text-sm font-black">全部消息</span><span className="mt-0.5 block text-[11px] text-slate-400">共 {messagesList.length} 条</span></span>
             </button>
             {MESSAGE_CATEGORY_CONFIGS.map((category) => {
@@ -155,7 +155,7 @@ export default function MessageCenterWorkspace({
               const active = selectedCategory === category.name;
               return (
                 <button key={category.id} onClick={() => { setSelectedCategory(category.name); setSelectedType("全部类型"); }} className={`flex min-w-48 items-center gap-3 rounded-lg border px-3 py-3 text-left transition lg:min-w-0 ${active ? meta.active : "border-transparent text-slate-600 hover:bg-slate-50"}`}>
-                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${meta.tone}`}><Icon className="h-4 w-4" /></span>
+                  <span className={`flex h-8 w-9 shrink-0 items-center justify-center rounded-lg ${meta.tone}`}><Icon className="h-4 w-4" /></span>
                   <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2 text-sm font-black"><span>{category.name}</span>{unread > 0 && <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] text-white">{unread}</span>}</span><span className="mt-0.5 block truncate text-[11px] font-normal text-slate-400">{total} 条 · {meta.description}</span></span>
                 </button>
               );
@@ -166,21 +166,21 @@ export default function MessageCenterWorkspace({
         <main className="flex min-h-0 flex-col overflow-hidden">
           <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-5">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative min-w-52 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="搜索标题、人员或业务编号" className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-purple-400 focus:bg-white" /></div>
-              <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none">
+              <div className="relative min-w-52 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="搜索标题、人员或业务编号" className="h-8 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-purple-400 focus:bg-white" /></div>
+              <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)} className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none">
                 <option>全部类型</option>
                 {(currentCategory?.subcategories ?? MESSAGE_CATEGORY_CONFIGS.flatMap((category) => [...category.subcategories])).map((type) => <option key={type}>{type}</option>)}
               </select>
-              <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none"><option>全部状态</option><option>未读</option><option>已读</option></select>
+              <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)} className="h-8 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 outline-none"><option>全部状态</option><option>未读</option><option>已读</option></select>
               <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2"><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} className="h-8 w-28 bg-transparent text-[11px] text-slate-500 outline-none" /><span className="text-slate-300">-</span><input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} className="h-8 w-28 bg-transparent text-[11px] text-slate-500 outline-none" /></div>
-              <button onClick={resetFilters} className="h-9 rounded-lg px-3 text-xs font-bold text-slate-500 hover:bg-slate-100">重置</button>
+              <button onClick={resetFilters} className="h-8 rounded-lg px-3 text-xs font-bold text-slate-500 hover:bg-slate-100">重置</button>
             </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
             <div className="mb-3"><h2 className="text-sm font-black text-slate-900">{selectedCategory}</h2><p className="mt-1 text-xs text-slate-400">当前筛选结果 {filteredMessages.length} 条</p></div>
             {filteredMessages.length === 0 ? (
-              <div className="flex min-h-80 flex-col items-center justify-center rounded-module border border-dashed border-slate-200 bg-white text-center"><Inbox className="h-10 w-10 text-slate-300" /><p className="mt-3 text-sm font-bold text-slate-600">没有符合条件的消息</p><button onClick={resetFilters} className="mt-3 text-xs font-bold text-purple-600">清除筛选条件</button></div>
+              <div className="flex min-h-80 flex-col items-center justify-center rounded-module border border-dashed border-slate-200 bg-white text-center"><Inbox className="h-8 w-10 text-slate-300" /><p className="mt-3 text-sm font-bold text-slate-600">没有符合条件的消息</p><button onClick={resetFilters} className="mt-3 text-xs font-bold text-purple-600">清除筛选条件</button></div>
             ) : (
               <div className="overflow-hidden rounded-module border border-slate-200 bg-white">
                 {filteredMessages.map((message) => {
@@ -189,7 +189,7 @@ export default function MessageCenterWorkspace({
                   const severity = SEVERITY_META[message.severity ?? "info"];
                   return (
                     <button key={message.id} onClick={() => openMessage(message)} className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] gap-3 border-b border-slate-100 px-4 py-4 text-left transition last:border-b-0 hover:bg-slate-50 sm:gap-4 sm:px-5">
-                      <div className="relative"><span className={`flex h-10 w-10 items-center justify-center rounded-lg ${categoryMeta.tone}`}><CategoryIcon className="h-4 w-4" /></span>{message.status === "unread" && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />}</div>
+                      <div className="relative"><span className={`flex h-8 w-10 items-center justify-center rounded-lg ${categoryMeta.tone}`}><CategoryIcon className="h-4 w-4" /></span>{message.status === "unread" && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />}</div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-black text-slate-900">{message.title}</span><span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold ${severity.className}`}>{severity.label}</span><span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">{message.subcategory}</span></div>
                         <p className="mt-1 line-clamp-1 text-xs leading-5 text-slate-500">{message.detail}</p>
@@ -250,7 +250,7 @@ export default function MessageCenterWorkspace({
               {drawerMessage.template === "security" && drawerMessage.severity === "danger" && <div className="mt-5 flex gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" /><div><p className="text-xs font-black text-rose-800">需要关注</p><p className="mt-1 text-xs leading-5 text-rose-700">请核对操作人、发生时间、设备环境与业务范围，并根据审计结果及时处理。</p></div></div>}
               {actionFeedback && <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-700"><CheckCircle2 className="h-4 w-4" />{actionFeedback}</div>}
             </div>
-            <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-4"><span className="hidden items-center gap-1 text-[11px] text-slate-400 sm:inline-flex"><MessageSquare className="h-3 w-3" />事件编号：{drawerMessage.eventCode ?? "MESSAGE_EVENT"}</span><div className="ml-auto flex gap-2"><button onClick={() => setDrawerMessageId(null)} className="h-9 rounded-lg border border-slate-200 px-4 text-xs font-bold text-slate-600 hover:bg-slate-50">关闭</button>{drawerMessage.actionLabel && drawerMessage.approvalStatus !== "pending" && <button onClick={() => handleMessageAction(drawerMessage)} className="inline-flex h-9 items-center gap-2 rounded-lg bg-purple-600 px-4 text-xs font-bold text-white hover:bg-purple-700">{drawerMessage.actionLabel}<ChevronRight className="h-3.5 w-3.5" /></button>}</div></footer>
+            <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-4"><span className="hidden items-center gap-1 text-[11px] text-slate-400 sm:inline-flex"><MessageSquare className="h-3 w-3" />事件编号：{drawerMessage.eventCode ?? "MESSAGE_EVENT"}</span><div className="ml-auto flex gap-2"><button onClick={() => setDrawerMessageId(null)} className="h-8 rounded-lg border border-slate-200 px-4 text-xs font-bold text-slate-600 hover:bg-slate-50">关闭</button>{drawerMessage.actionLabel && drawerMessage.approvalStatus !== "pending" && <button onClick={() => handleMessageAction(drawerMessage)} className="inline-flex h-8 items-center gap-2 rounded-lg bg-purple-600 px-4 text-xs font-bold text-white hover:bg-purple-700">{drawerMessage.actionLabel}<ChevronRight className="h-3.5 w-3.5" /></button>}</div></footer>
           </section>
         </div>
       )}

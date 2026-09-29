@@ -246,7 +246,7 @@ export default function UploadImageModal({
             <span>返回列表</span>
           </button>
 
-          <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+          <div className="w-9 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
             <UploadCloud className="w-5 h-5" />
           </div>
           <div>
@@ -552,7 +552,7 @@ export default function UploadImageModal({
                         我的待办任务
                       </p>
                       <div className="flex flex-col items-center justify-center text-slate-400 py-4 space-y-2">
-                        <Folder className="w-10 h-10 stroke-1 text-slate-300" />
+                        <Folder className="w-10 h-8 stroke-1 text-slate-300" />
                         <span className="text-xs">暂无待办任务</span>
                       </div>
                     </div>

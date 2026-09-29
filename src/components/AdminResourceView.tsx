@@ -329,7 +329,7 @@ export default function AdminResourceView() {
     if (targetType === "音频") {
       return (
         <div className="w-24 h-28 sm:w-28 sm:h-32 shrink-0 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/90 relative group/cover flex flex-col items-center justify-center p-2 shadow-2xs group-hover:border-purple-300 transition-colors">
-          <div className="w-10 h-10 rounded-full border border-slate-300 bg-white shadow-2xs flex items-center justify-center mb-1 group-hover/cover:scale-105 transition-transform">
+          <div className="w-10 h-8 rounded-full border border-slate-300 bg-white shadow-2xs flex items-center justify-center mb-1 group-hover/cover:scale-105 transition-transform">
             <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
               <Volume2 className="w-3.5 h-3.5 text-slate-600" />
             </div>

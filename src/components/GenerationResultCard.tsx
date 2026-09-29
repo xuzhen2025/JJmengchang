@@ -64,7 +64,7 @@ export default function GenerationResultCard<T extends GenerationResultFile>({
     <article id={id} ref={recordRef} data-task-id={task.id} data-status={task.status} onClick={onSelect} className={`@container my-5 min-w-0 rounded-lg border p-4 transition-colors ${selected ? "border-violet-500 bg-violet-50/30 ring-2 ring-violet-100" : "border-slate-200 bg-white hover:border-slate-300"}`}>
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div className="flex min-w-0 flex-1 basis-64 items-start gap-3">
-          <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${task.status === "failed" ? "bg-rose-50 text-rose-600" : task.status === "cancelled" ? "bg-amber-50 text-amber-600" : "bg-slate-950 text-violet-300"}`}>
+          <span className={`mt-0.5 flex h-8 w-9 shrink-0 items-center justify-center rounded-full ${task.status === "failed" ? "bg-rose-50 text-rose-600" : task.status === "cancelled" ? "bg-amber-50 text-amber-600" : "bg-slate-950 text-violet-300"}`}>
             {task.status === "failed" ? <AlertCircle className="h-4 w-4" /> : task.status === "cancelled" ? <Ban className="h-4 w-4" /> : task.status === "generating" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           </span>
           <div className="min-w-0">
@@ -119,7 +119,7 @@ export default function GenerationResultCard<T extends GenerationResultFile>({
                     <button type="button" onClick={(event) => { event.stopPropagation(); onPreview(output); }} title={`预览 ${output.name}`} className="group block h-full w-full text-left">
                       <img src={output.coverUrl} alt={output.name} className={`h-full w-full ${mediaType === "image" ? "object-contain" : "object-cover"}`} referrerPolicy="no-referrer" />
                       <span className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 transition-opacity group-hover:opacity-100">
-                        {mediaType === "video" && <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-violet-700"><Play className="ml-0.5 h-4 w-4 fill-current" /></span>}
+                        {mediaType === "video" && <span className="flex h-8 w-10 items-center justify-center rounded-full bg-white/90 text-violet-700"><Play className="ml-0.5 h-4 w-4 fill-current" /></span>}
                       </span>
                     </button>
                     <button type="button" role="checkbox" aria-checked={checked} aria-label={`选择${output.name}`} onClick={(event) => { event.stopPropagation(); toggleOutput(output.id); }} title={checked ? "取消选择" : `选择${label}`} className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded border shadow-sm ${checked ? "border-violet-600 bg-violet-600 text-white" : "border-white bg-white/90 text-transparent hover:text-slate-300"}`}><Check className="h-3.5 w-3.5" /></button>

@@ -11,8 +11,8 @@ import OverlayPortal from "./overlays/OverlayPortal";
 import AssetPagination from "./AssetPagination";
 import CategoryCascader from "./CategoryCascader";
 
-const fieldClass = "h-10 min-w-0 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none focus:border-purple-500";
-const primaryClass = "h-9 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50";
+const fieldClass = "h-8 min-w-0 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none focus:border-purple-500";
+const primaryClass = "h-8 rounded-md bg-purple-600 px-4 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50";
 
 function useAccountCategories(accounts: AdAccount[]) {
   const { store, revision } = useResourceConfig();
@@ -32,7 +32,7 @@ function AccountCategorySelect({ accounts, value, onChange, label, placeholder, 
   const map = useAccountCategories(accounts);
   const primary = Object.keys(map).find(key => key === value || map[key].some(child => `${key} / ${child}` === value)) || "";
   const secondary = map[primary]?.find(child => `${primary} / ${child}` === value) || "";
-  return <div className="[&>div>div]:h-10 [&>div>div]:rounded-md"><CategoryCascader customCategoryMap={map} primaryCategory={primary} secondaryCategory={secondary} expandTrigger="click"
+  return <div className="[&>div>div]:h-8 [&>div>div]:rounded-md"><CategoryCascader customCategoryMap={map} primaryCategory={primary} secondaryCategory={secondary} expandTrigger="click"
     ariaLabel={label} placeholder={placeholder || "请选择分类"} onSelect={(a, b) => onChange(b ? `${a} / ${b}` : a)} onClear={() => onChange(clearValue)} /></div>;
 }
 
@@ -128,7 +128,7 @@ export function AdAccountBindingDialog({ accounts, platform, targets, editing, o
         <p className="text-center text-xs leading-5 text-slate-400">为广告账户绑定小组/用户或分类，后续新产生的数据将按绑定关系统计</p>
         {error && <p role="alert" className="text-xs text-rose-600">{error}</p>}
       </div>
-      <footer className="flex justify-center gap-3 border-t border-slate-100 px-6 py-4"><button type="button" onClick={onClose} className="h-9 rounded-md border border-slate-200 px-5 text-xs text-slate-600 hover:bg-slate-50">取消</button><button type="button" onClick={submit} className={primaryClass}>确定</button></footer>
+      <footer className="flex justify-center gap-3 border-t border-slate-100 px-6 py-4"><button type="button" onClick={onClose} className="h-8 rounded-md border border-slate-200 px-5 text-xs text-slate-600 hover:bg-slate-50">取消</button><button type="button" onClick={submit} className={primaryClass}>确定</button></footer>
     </div>
   </OverlayPortal>;
 }

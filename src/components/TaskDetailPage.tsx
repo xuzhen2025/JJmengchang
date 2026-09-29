@@ -853,7 +853,7 @@ export const TaskDetailPage: React.FC<TaskDetailPageProps> = ({
           </div>
         ) : (
           <div className="flex min-h-[170px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/40 text-center">
-            <Box className="h-10 w-10 text-slate-300" />
+            <Box className="h-8 w-10 text-slate-300" />
             <p className="mt-2 text-xs font-bold text-slate-500">{tabCounts[activeTab] > 0 ? "当前筛选条件下暂无文件" : `暂无已提交的${activeTab}文件`}</p>
             {tabCounts[activeTab] > 0 ? (
               <button onClick={handleResetFilters} className="mt-3 rounded-md border border-purple-200 bg-white px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-50">重置筛选</button>

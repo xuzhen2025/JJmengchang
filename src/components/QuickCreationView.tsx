@@ -157,7 +157,7 @@ function ReferenceMediaStack({
           layout === "grid"
             ? "flex aspect-square flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 text-slate-400 hover:border-purple-400 hover:text-purple-600"
             : items.length
-            ? "relative z-20 -ml-5 mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-700 text-white shadow-lg transition hover:bg-purple-600"
+            ? "relative z-20 -ml-5 mb-1 flex h-8 w-10 shrink-0 items-center justify-center rounded-full bg-slate-700 text-white shadow-lg transition hover:bg-purple-600"
             : "relative ml-1 flex h-20 w-16 shrink-0 flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 text-slate-400 transition hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600"
         }
       >
@@ -405,7 +405,7 @@ export default function QuickCreationView({
   const generateButton = (
     <button
       type="submit"
-      className={`flex h-9 min-h-9 max-h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-purple-600 px-4 py-0 text-xs font-bold text-white shadow-sm hover:bg-purple-700 ${workspaceOpen ? "w-full" : "ml-auto w-[132px] rounded-lg"}`}
+      className={`flex h-8 min-h-8 max-h-8 shrink-0 items-center justify-center gap-1.5 rounded-md bg-purple-600 px-4 py-0 text-xs font-bold text-white shadow-sm hover:bg-purple-700 ${workspaceOpen ? "w-full" : "ml-auto w-[132px] rounded-lg"}`}
     >
       <Send className="h-4 w-4" />
       生成 <span className="text-purple-200">{currentCost}积分</span>
@@ -488,7 +488,7 @@ export default function QuickCreationView({
             </div>
 
             <div className={workspaceOpen ? "order-1 grid shrink-0 grid-cols-2 gap-2 border-b border-slate-200 p-3" : "mt-4 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pb-1"}>
-              <div className={`flex h-9 shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1 ${workspaceOpen ? "order-1 col-span-2" : ""}`}>
+              <div className={`flex h-8 shrink-0 items-center rounded-lg border border-slate-200 bg-white p-1 ${workspaceOpen ? "order-1 col-span-2" : ""}`}>
                 {(["image", "video"] as const).map((item) => (
                   <button
                     key={item}
@@ -517,7 +517,7 @@ export default function QuickCreationView({
                   setModelOpen(false);
                   setSettingsOpen((open) => !open);
                 }}
-                className={`flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold ${workspaceOpen ? "order-3 justify-between" : ""} ${settingsOpen ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 text-slate-600"}`}
+                className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold ${workspaceOpen ? "order-3 justify-between" : ""} ${settingsOpen ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 text-slate-600"}`}
               >
                 输出参数
                 <ChevronDown className="h-3.5 w-3.5" />
@@ -531,7 +531,7 @@ export default function QuickCreationView({
                   setSettingsOpen(false);
                   setModelOpen((open) => !open);
                 }}
-                className={`flex h-9 min-w-0 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold ${workspaceOpen ? "order-2" : ""} ${modelOpen ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 text-slate-600"}`}
+                className={`flex h-8 min-w-0 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold ${workspaceOpen ? "order-2" : ""} ${modelOpen ? "border-purple-300 bg-purple-50 text-purple-700" : "border-slate-200 text-slate-600"}`}
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 <span className={workspaceOpen ? "min-w-0 flex-1 truncate" : ""}>{model}</span>
@@ -574,7 +574,7 @@ export default function QuickCreationView({
           }
         >
           <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-5 py-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-950 text-purple-300"><Sparkles className="h-5 w-5" /></span>
+            <span className="flex h-8 w-10 shrink-0 items-center justify-center rounded-full bg-slate-950 text-purple-300"><Sparkles className="h-5 w-5" /></span>
             <div><h2 className="text-sm font-bold text-slate-900">生成记录</h2>
             <p className="mt-1 text-[11px] text-slate-400">
               共 {quickTasks.length} 条
@@ -682,7 +682,7 @@ export default function QuickCreationView({
                   >
                     <div>
                       <div
-                        className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${tone}`}
+                        className={`mb-4 flex h-8 w-11 items-center justify-center rounded-xl ${tone}`}
                       >
                         <Icon className="h-5 w-5" />
                       </div>

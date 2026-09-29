@@ -349,7 +349,7 @@ export default function SameStyleVideoView({
                       </div>
 
                       {/* Stacked overlapping images on the right */}
-                      <div className="relative w-16 h-10 flex items-center justify-end overflow-visible shrink-0 select-none">
+                      <div className="relative w-16 h-8 flex items-center justify-end overflow-visible shrink-0 select-none">
                         <img 
                           src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=100&h=100&fit=crop" 
                           alt="backpack" 
@@ -390,7 +390,7 @@ export default function SameStyleVideoView({
 
                       {/* Start / End frame box layout on the right */}
                       <div className="flex items-center gap-1 shrink-0 select-none">
-                        <div className="relative w-7 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50">
+                        <div className="relative w-7 h-8 rounded border border-slate-200 overflow-hidden bg-slate-50">
                           <img 
                             src="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=60&h=80&fit=crop" 
                             alt="first frame" 
@@ -400,7 +400,7 @@ export default function SameStyleVideoView({
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-[7px] text-white font-bold scale-90">首帧</div>
                         </div>
                         <span className="text-slate-300 font-bold text-[8px]">+</span>
-                        <div className="relative w-7 h-9 rounded border border-slate-200 overflow-hidden bg-slate-50">
+                        <div className="relative w-7 h-8 rounded border border-slate-200 overflow-hidden bg-slate-50">
                           <img 
                             src="https://images.unsplash.com/photo-1526947425960-945c6e72858f?w=60&h=80&fit=crop" 
                             alt="last frame" 
@@ -430,7 +430,7 @@ export default function SameStyleVideoView({
                       </div>
 
                       {/* Wide banner anchor image on the right */}
-                      <div className="w-14 h-9 rounded border border-slate-200 overflow-hidden shrink-0 select-none bg-slate-50">
+                      <div className="w-14 h-8 rounded border border-slate-200 overflow-hidden shrink-0 select-none bg-slate-50">
                         <img 
                           src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=60&fit=crop" 
                           alt="anchor presenter" 
@@ -692,7 +692,7 @@ export default function SameStyleVideoView({
                           <img 
                             src={anchor.avatar} 
                             alt={anchor.name} 
-                            className="w-10 h-10 rounded-full mx-auto object-cover border border-slate-100"
+                            className="w-10 h-8 rounded-full mx-auto object-cover border border-slate-100"
                             referrerPolicy="no-referrer"
                           />
                           <div className="mt-1.5 space-y-0.5">
@@ -835,7 +835,7 @@ export default function SameStyleVideoView({
               
               {/* Left welcome text block */}
               <div className="flex items-center gap-3 text-left">
-                <div className="w-10 h-10 bg-purple-50 border border-purple-100 rounded-xl flex items-center justify-center text-purple-600">
+                <div className="w-10 h-8 bg-purple-50 border border-purple-100 rounded-xl flex items-center justify-center text-purple-600">
                   <Video className="w-5 h-5 animate-pulse" />
                 </div>
                 <div>
@@ -915,7 +915,7 @@ export default function SameStyleVideoView({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-4 flex gap-3.5 shadow-xs">
-                      <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center shrink-0 text-lg shadow-xs">
+                      <div className="w-10 h-8 bg-white border border-slate-200 rounded-xl flex items-center justify-center shrink-0 text-lg shadow-xs">
                         🎬
                       </div>
                       <div className="space-y-1">
@@ -927,7 +927,7 @@ export default function SameStyleVideoView({
                     </div>
 
                     <div className="bg-slate-50/50 border border-slate-200 rounded-2xl p-4 flex gap-3.5 shadow-xs">
-                      <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center shrink-0 text-lg shadow-xs">
+                      <div className="w-10 h-8 bg-white border border-slate-200 rounded-xl flex items-center justify-center shrink-0 text-lg shadow-xs">
                         ⚡
                       </div>
                       <div className="space-y-1">
@@ -992,7 +992,7 @@ export default function SameStyleVideoView({
                           ) : (
                             <div className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
                               <div className="flex items-center gap-2.5">
-                                <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 shrink-0">
+                                <div className="w-10 h-8 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 shrink-0">
                                   <FileVideo className="w-5 h-5" />
                                 </div>
                                 <div className="text-left">

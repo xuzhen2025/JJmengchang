@@ -17,7 +17,7 @@ interface QuickCreationOutputSettingsProps {
 
 const IMAGE_RATIOS = ["1:1", "3:4", "9:16", "16:9"] as const;
 const VIDEO_RATIOS = ["9:16", "16:9"] as const;
-const optionClass = "flex min-h-9 items-center justify-center rounded-md border border-slate-200 px-2 text-xs font-semibold text-slate-500 transition peer-checked:border-purple-500 peer-checked:bg-purple-50 peer-checked:text-purple-600 peer-focus-visible:ring-2 peer-focus-visible:ring-purple-500 peer-disabled:opacity-50";
+const optionClass = "flex min-h-8 items-center justify-center rounded-md border border-slate-200 px-2 text-xs font-semibold text-slate-500 transition peer-checked:border-purple-500 peer-checked:bg-purple-50 peer-checked:text-purple-600 peer-focus-visible:ring-2 peer-focus-visible:ring-purple-500 peer-disabled:opacity-50";
 
 export default function QuickCreationOutputSettings({ anchorRef, mode, value, maxSeconds, onClose, onChange }: QuickCreationOutputSettingsProps) {
   const ratios = mode === "image" ? IMAGE_RATIOS : VIDEO_RATIOS;

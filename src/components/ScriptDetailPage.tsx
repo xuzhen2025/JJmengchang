@@ -604,7 +604,7 @@ export default function ScriptDetailPage({
           <div className="space-y-3.5 flex-1 min-w-0">
             {/* Publisher Info Row */}
             <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <div className="w-9 h-9 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-9 h-8 rounded-full bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
                 {currentScript.author?.charAt(0) || "鲁"}
               </div>
               <div>
@@ -1531,7 +1531,7 @@ export default function ScriptDetailPage({
               if (items.length === 0) {
                 return (
                   <div className="py-16 text-center text-slate-400 space-y-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                    <Film className="w-10 h-10 text-slate-300 mx-auto" />
+                    <Film className="w-10 h-8 text-slate-300 mx-auto" />
                     <p className="font-bold text-slate-700 text-sm">暂无关联的{activeWorkType}数据</p>
                     <p className="text-xs text-slate-400">当前脚本尚未关联{activeWorkType}作品，您可以随时上传或绑定</p>
                     <div className="flex items-center justify-center gap-3 pt-2">
@@ -1607,7 +1607,7 @@ export default function ScriptDetailPage({
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
                             <button
                               onClick={() => showToast(`正在查看《${item.name}》`)}
-                              className="w-9 h-9 rounded-full bg-white/90 hover:bg-white text-purple-700 flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                              className="w-9 h-8 rounded-full bg-white/90 hover:bg-white text-purple-700 flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
                               title="预览作品"
                             >
                               <Play className="w-4 h-4 fill-purple-700 ml-0.5" />
@@ -1620,7 +1620,7 @@ export default function ScriptDetailPage({
                                 updateCurrentScript({ associatedWorks: updated });
                                 showToast("已移除关联作品！");
                               }}
-                              className="w-9 h-9 rounded-full bg-rose-600/90 hover:bg-rose-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                              className="w-9 h-8 rounded-full bg-rose-600/90 hover:bg-rose-600 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 cursor-pointer"
                               title="移除关联"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1741,7 +1741,7 @@ export default function ScriptDetailPage({
               <label htmlFor="script-audit-status" className="block font-bold text-slate-700">脚本状态<span className="ml-1 text-rose-500" aria-hidden="true">*</span></label>
               <select id="script-audit-status" autoFocus required value={auditStatusValid ? auditStatusInput : ""}
                 onChange={event => setAuditStatusInput(event.target.value)}
-                className="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                className="w-full h-8 px-3 bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
                 <option value="" disabled>请选择状态</option>
                 {scriptStatuses.map(status => <option key={status.id} value={status.name}>{status.name}</option>)}
               </select>
@@ -2169,7 +2169,7 @@ export default function ScriptDetailPage({
             <form onSubmit={handleUploadVideoSubmit} className="p-6 space-y-4 text-xs">
               {/* Drag & Drop Zone */}
               <div className="border-2 border-dashed border-purple-300 bg-purple-50/40 rounded-2xl p-6 text-center space-y-2 cursor-pointer hover:bg-purple-50/80 transition-colors">
-                <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-10 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
                   <Upload className="w-5 h-5" />
                 </div>
                 <div className="font-bold text-slate-800">点击或将视频文件拖拽至此处上传</div>

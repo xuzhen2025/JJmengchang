@@ -913,7 +913,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
                         e.stopPropagation();
                         togglePlay(item.id);
                       }}
-                      className={`w-9 h-9 rounded-full border-2 border-purple-600 flex items-center justify-center text-purple-600 hover:scale-105 active:scale-95 transition-transform shrink-0 cursor-pointer shadow-xs ${
+                      className={`w-9 h-8 rounded-full border-2 border-purple-600 flex items-center justify-center text-purple-600 hover:scale-105 active:scale-95 transition-transform shrink-0 cursor-pointer shadow-xs ${
                         isPlaying ? "bg-purple-600 text-white" : "bg-white hover:bg-purple-50"
                       }`}
                       title={isPlaying ? "暂停" : "播放"}

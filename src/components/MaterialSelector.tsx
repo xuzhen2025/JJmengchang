@@ -169,7 +169,7 @@ export default function MaterialSelector({
         <div className="flex-1 overflow-y-auto p-3 bg-slate-50/50">
           {filteredAssets.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2 border border-slate-200">
+              <div className="w-10 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2 border border-slate-200">
                 <FolderHeart className="w-5 h-5 text-purple-600" />
               </div>
               <p className="text-slate-500 text-xs">暂无可用资产，点击本地上传添加素材</p>

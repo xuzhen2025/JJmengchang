@@ -185,7 +185,7 @@ export default function UploadGenericResourcePage({
             <span>返回列表</span>
           </button>
           
-          <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+          <div className="w-9 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
             <UploadCloud className="w-5 h-5" />
           </div>
           <div>
@@ -349,7 +349,7 @@ export default function UploadGenericResourcePage({
                     <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-2xl p-6 w-80 animate-in fade-in duration-100">
                       <p className="font-bold text-xs text-slate-700 mb-4">我的待办任务</p>
                       <div className="flex flex-col items-center justify-center text-slate-400 py-4 space-y-2">
-                        <Folder className="w-10 h-10 stroke-1 text-slate-300" />
+                        <Folder className="w-10 h-8 stroke-1 text-slate-300" />
                         <span className="text-xs">暂无待办任务</span>
                       </div>
                     </div>

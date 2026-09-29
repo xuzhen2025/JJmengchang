@@ -826,7 +826,7 @@ export default function ImageManagementView({ onTriggerTask, onDetailStateChange
                     </td>
                     <td className="p-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center">
+                        <div className="w-10 h-8 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center">
                           {item.isFolder ? (
                             <Folder className="w-5 h-5 text-slate-400" />
                           ) : (

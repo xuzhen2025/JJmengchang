@@ -41,7 +41,7 @@ export default function ReportMultiSelect({ label, levels, options, values, onCh
     setOpen(true);
   };
 
-  return <div ref={anchorRef} className={`relative flex h-10 w-[270px] max-w-full shrink-0 items-center gap-2 rounded-lg border bg-white px-3 text-sm ${open ? "border-purple-500 ring-2 ring-purple-100" : "border-slate-200 hover:border-purple-300"}`}>
+  return <div ref={anchorRef} className={`relative flex h-8 w-[270px] max-w-full shrink-0 items-center gap-2 rounded-lg border bg-white px-3 text-sm ${open ? "border-purple-500 ring-2 ring-purple-100" : "border-slate-200 hover:border-purple-300"}`}>
     <button type="button" aria-label={`${label}筛选`} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? popupId : undefined} onClick={toggleOpen}
       className="absolute inset-0 rounded-lg focus-visible:outline-2 focus-visible:outline-purple-500" />
     <span className="pointer-events-none relative shrink-0 text-slate-900">{label}</span>
@@ -63,7 +63,7 @@ export default function ReportMultiSelect({ label, levels, options, values, onCh
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input autoFocus type="search" aria-label={`搜索${label}`} placeholder={`搜索${label}`} value={query}
             onChange={event => { setQuery(event.target.value); setActivePath(reportSelectPath(filterReportOptions(options, event.target.value)).slice(0, -1)); }}
-            className="h-9 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none focus:border-purple-500" />
+            className="h-8 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none focus:border-purple-500" />
         </div>
       </div>
       <div className="grid divide-x divide-slate-100" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
@@ -75,7 +75,7 @@ export default function ReportMultiSelect({ label, levels, options, values, onCh
               const state = reportSelectState(original, values);
               const branch = Boolean(option.children);
               const active = activePath[level] === option.value;
-              return <div key={option.value} className={`flex min-h-10 items-center gap-2 rounded-md px-2 py-1 text-sm ${active || state.checked ? "bg-purple-50 text-purple-600" : "text-slate-700 hover:bg-slate-50"}`}>
+              return <div key={option.value} className={`flex min-h-8 items-center gap-2 rounded-md px-2 py-1 text-sm ${active || state.checked ? "bg-purple-50 text-purple-600" : "text-slate-700 hover:bg-slate-50"}`}>
                 <input type="checkbox" aria-label={option.label} checked={state.checked} aria-checked={state.mixed ? "mixed" : state.checked} disabled={state.disabled}
                   ref={element => { if (element) element.indeterminate = state.mixed; }}
                   onChange={() => onChange(toggleReportSelection(original, values))} className="h-4 w-4 shrink-0 accent-purple-600 disabled:opacity-40" />

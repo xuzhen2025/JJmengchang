@@ -20,11 +20,11 @@ import {
 export type { AdPushRecord } from "../lib/adPush";
 
 export const inputClass =
-  "h-10 w-full min-w-0 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-violet-500 disabled:bg-slate-50 disabled:text-slate-400";
+  "h-8 w-full min-w-0 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-violet-500 disabled:bg-slate-50 disabled:text-slate-400";
 export const buttonClass =
-  "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40";
 export const primaryClass =
-  "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-violet-600 px-4 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-40";
+  "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md bg-violet-600 px-4 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-40";
 export const iconClass =
   "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100";
 
@@ -169,7 +169,7 @@ function Options({
               disabled={disabled.includes(v)}
               onChange={() => onChange(v)}
             />
-            <span className="flex min-h-10 min-w-24 items-center justify-center rounded-md border border-slate-200 px-4 text-xs font-semibold text-slate-600 peer-checked:border-violet-500 peer-checked:text-violet-600 peer-focus-visible:ring-2 peer-focus-visible:ring-violet-300 peer-disabled:cursor-not-allowed peer-disabled:opacity-40">
+            <span className="flex min-h-8 min-w-24 items-center justify-center rounded-md border border-slate-200 px-4 text-xs font-semibold text-slate-600 peer-checked:border-violet-500 peer-checked:text-violet-600 peer-focus-visible:ring-2 peer-focus-visible:ring-violet-300 peer-disabled:cursor-not-allowed peer-disabled:opacity-40">
               {v}
             </span>
           </label>

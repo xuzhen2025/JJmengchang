@@ -119,13 +119,13 @@ function PresetControl<T extends FilterValues>({
         try { setPresets(load()); setOpen(true); }
         catch { setNotice("预设读取失败，请检查登录状态及浏览器存储"); }
       }}
-      className={`flex h-9 w-60 max-w-[calc(100vw-140px)] items-center justify-between gap-3 rounded-xl border bg-white px-3 text-xs outline-none focus-visible:ring-2 focus-visible:ring-purple-300 ${open ? "border-purple-500" : "border-slate-200 hover:border-purple-400"}`}>
+      className={`flex h-8 w-60 max-w-[calc(100vw-140px)] items-center justify-between gap-3 rounded-xl border bg-white px-3 text-xs outline-none focus-visible:ring-2 focus-visible:ring-purple-300 ${open ? "border-purple-500" : "border-slate-200 hover:border-purple-400"}`}>
       <span title={selectedName || undefined} className={`min-w-0 truncate ${selectedName ? "text-slate-700" : "text-slate-400"}`}>{selectedName || "选择常用筛选预设"}</span>
       <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
     </button>
     <button type="button" aria-label="保存常用筛选预设" onClick={() => {
       setOpen(false); setName(""); setError(""); setDraftFilters(normalizePresetFilters(value, defaults)); setDialog({ kind: "save" });
-    }} className="h-9 shrink-0 rounded-md bg-purple-600 px-5 text-sm font-semibold text-white hover:bg-purple-700 focus-visible:outline-2 focus-visible:outline-purple-400">保存</button>
+    }} className="h-8 shrink-0 rounded-md bg-purple-600 px-5 text-sm font-semibold text-white hover:bg-purple-700 focus-visible:outline-2 focus-visible:outline-purple-400">保存</button>
 
     {open && <AnchoredPopover anchorRef={anchorRef} onClose={closeMenu} matchAnchorWidth gap={8} maxHeight={320}
       className="rounded-xl border border-slate-100 bg-white p-1.5 shadow-xl">
@@ -216,8 +216,8 @@ function PresetDialog({ title, compact, onClose, onCancel, onSubmit, confirmLabe
       </div>
       <div className={compact ? "p-6" : "px-5 py-10 sm:px-12 sm:py-12"}>{children}</div>
       <div className="flex justify-center gap-4 border-t border-slate-50 px-6 py-6">
-        <button type="button" data-cancel onClick={onCancel} className="h-11 rounded-xl border border-slate-200 bg-white px-6 text-base text-slate-600 hover:bg-slate-50">取消</button>
-        <button type="submit" className={`h-11 rounded-xl px-6 text-base font-semibold text-white ${danger ? "bg-rose-600 hover:bg-rose-700" : "bg-purple-600 hover:bg-purple-700"}`}>{confirmLabel}</button>
+        <button type="button" data-cancel onClick={onCancel} className="h-8 rounded-xl border border-slate-200 bg-white px-6 text-base text-slate-600 hover:bg-slate-50">取消</button>
+        <button type="submit" className={`h-8 rounded-xl px-6 text-base font-semibold text-white ${danger ? "bg-rose-600 hover:bg-rose-700" : "bg-purple-600 hover:bg-purple-700"}`}>{confirmLabel}</button>
       </div>
     </form>
   </OverlayPortal>;

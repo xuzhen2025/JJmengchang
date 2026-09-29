@@ -1610,7 +1610,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-10 bg-slate-900 rounded overflow-hidden relative shrink-0">
+                      <div className="w-16 h-8 bg-slate-900 rounded overflow-hidden relative shrink-0">
                         <img src={video.coverUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 text-white">
                           <Play className="w-3.5 h-3.5 fill-white" />

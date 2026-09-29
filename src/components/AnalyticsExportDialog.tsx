@@ -91,7 +91,7 @@ export default function AnalyticsExportDialog({
             <span className="h-5 w-1 rounded-full bg-violet-600" />
             <h2 className="text-lg font-bold text-slate-900">导出</h2>
           </div>
-          <button type="button" title="关闭导出" disabled={exporting} onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40">
+          <button type="button" title="关闭导出" disabled={exporting} onClick={onClose} className="flex h-8 w-9 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40">
             <X className="h-5 w-5" />
           </button>
         </header>
@@ -116,13 +116,13 @@ export default function AnalyticsExportDialog({
               value={name}
               onChange={(event) => { setName(event.target.value); setNameEdited(true); setError(""); }}
               aria-label="导出名称"
-              className="h-10 min-w-0 rounded-md border border-slate-300 px-3 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+              className="h-8 min-w-0 rounded-md border border-slate-300 px-3 text-sm text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
             />
           </label>
 
           <div className="grid gap-3 sm:grid-cols-[108px_1fr] sm:items-center">
             <span className="text-sm font-bold text-slate-600">导出时间范围</span>
-            <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-md border border-slate-300 px-3 text-sm text-slate-700 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100">
+            <div className="flex min-h-8 flex-wrap items-center gap-2 rounded-md border border-slate-300 px-3 text-sm text-slate-700 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100">
               <CalendarDays className="h-4 w-4 shrink-0 text-slate-400" />
               <input type="date" aria-label="导出开始日期" value={rangeStart} onChange={(event) => updateRange(event.target.value, rangeEnd)} className="min-w-[130px] flex-1 bg-transparent outline-none" />
               <span className="text-slate-500">至</span>
@@ -134,8 +134,8 @@ export default function AnalyticsExportDialog({
         </div>
 
         <footer className="flex shrink-0 items-center justify-center gap-3 border-t border-slate-200 bg-slate-50/50 px-5 py-4">
-          <button type="button" disabled={exporting} onClick={onClose} className="h-10 rounded-md border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40">取消</button>
-          <button type="submit" disabled={exporting} className="flex h-10 min-w-24 items-center justify-center gap-2 rounded-md bg-violet-600 px-6 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-60">
+          <button type="button" disabled={exporting} onClick={onClose} className="h-8 rounded-md border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40">取消</button>
+          <button type="submit" disabled={exporting} className="flex h-8 min-w-24 items-center justify-center gap-2 rounded-md bg-violet-600 px-6 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-60">
             {exporting && <Loader2 className="h-4 w-4 animate-spin" />}
             {exporting ? "导出中" : "确定"}
           </button>
