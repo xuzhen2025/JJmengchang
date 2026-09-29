@@ -285,11 +285,38 @@ const getLeafKeysFromNodes = (nodes: PermissionNode[]): string[] => {
   return keys;
 };
 
+// 收集树中全部节点 id（含父级菜单节点：菜单权限与按钮权限均纳入权限集合）
+const getAllNodeIds = (nodes: PermissionNode[]): string[] => {
+  let ids: string[] = [];
+  for (const n of nodes) {
+    ids.push(n.id);
+    if (n.children && n.children.length > 0) ids = ids.concat(getAllNodeIds(n.children));
+  }
+  return ids;
+};
+
+// 父级菜单键同步：某父节点子树存在任一选中叶子 → 父键保留，否则移除。
+// 保证"菜单权限缺→隐藏、恢复权限→立即显示"与叶子按钮权限始终一致。
+const syncParentKeys = (keys: string[], trees: PermissionNode[][]): string[] => {
+  const set = new Set(keys);
+  const walk = (nodes: PermissionNode[]) => {
+    for (const n of nodes) {
+      if (n.children && n.children.length > 0) {
+        const leafKeys = getLeafKeysFromNodes([n]);
+        if (leafKeys.some(l => set.has(l))) set.add(n.id); else set.delete(n.id);
+        walk(n.children);
+      }
+    }
+  };
+  trees.forEach(t => walk(t));
+  return Array.from(set);
+};
+
 export const USER_PERMISSION_KEYS = getLeafKeysFromNodes(USER_CLIENT_PERMISSION_TREE);
 export const ADMIN_PERMISSION_KEYS = getLeafKeysFromNodes(ADMIN_BACKEND_PERMISSION_TREE);
 // 管理投放计划为内部能力权限：不在权限树展示（非按钮权限），保留供投放流程校验
 export const INTERNAL_HIDDEN_KEYS = ["uc_ad_plan_manage"];
-export const ALL_PERMISSION_KEYS = [...USER_PERMISSION_KEYS, ...INTERNAL_HIDDEN_KEYS, ...ADMIN_PERMISSION_KEYS];
+export const ALL_PERMISSION_KEYS = [...getAllNodeIds(USER_CLIENT_PERMISSION_TREE), ...INTERNAL_HIDDEN_KEYS, ...getAllNodeIds(ADMIN_BACKEND_PERMISSION_TREE)];
 
 // 衍生视频并推送 ↔ 推送广告账户 勾选联动（勾选其一则另一自动勾选）
 const applyPermissionLinkage = (keys: string[]): string[] => {
@@ -1369,7 +1396,7 @@ export default function AdminSystemManagementView() {
       }
     }
 
-    setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, checkedKeys: applyPermissionLinkage(nextKeys) } : r));
+    setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, checkedKeys: applyPermissionLinkage(syncParentKeys(nextKeys, [USER_CLIENT_PERMISSION_TREE, ADMIN_BACKEND_PERMISSION_TREE])) } : r));
   };
 
   const handleSelectAllTree = () => {

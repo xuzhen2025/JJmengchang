@@ -11,6 +11,11 @@ function stored<T>(key: string, fallback: T[]): T[] {
 export function readReportOrganization(): ReportOrganization {
   const depts = stored<DeptNode>("cloud_video_depts", INITIAL_DEPTS);
   let members = stored<AccountMember>("cloud_video_members", INITIAL_MEMBERS);
+  // 超管身份版本迁移：旧数据中"张总"超管统一更名为"徐振"（与登录侧边栏/个人中心一致），并持久化
+  try {
+    const renamed = members.map(m => (m.name === "张总" && Array.isArray(m.roleIds) && m.roleIds.includes("role_super_admin")) ? { ...m, name: "徐振", email: "zhen@dreamchang.com" } : m);
+    if (renamed.some((m, i) => m !== members[i])) { members = renamed; localStorage.setItem("cloud_video_members", JSON.stringify(members)); }
+  } catch { /* Storage is optional for this prototype. */ }
   // Add only the approved examples once, preserving edits and intentional later deletions.
   try {
     if (!localStorage.getItem(MIGRATION_KEY)) {
