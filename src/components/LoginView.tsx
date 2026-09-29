@@ -20,6 +20,8 @@ export interface PrototypeAccount {
   description: string;
   allowedModes: AppMode[];
   defaultMode: AppMode;
+  /** AUTH-04：成员账号被禁用时标记，登录拒绝 */
+  disabled?: boolean;
 }
 
 interface LoginViewProps {
@@ -53,6 +55,11 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
     const account = accounts.find((item) => item.username === username.trim());
     if (!account) {
       setError("账号不存在");
+      return;
+    }
+    if (account.disabled) {
+      recordLogin(account.username, false, "账号已禁用");
+      setError("该账号已被禁用，请联系管理员");
       return;
     }
     if (password !== account.password) {

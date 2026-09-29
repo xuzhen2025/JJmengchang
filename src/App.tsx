@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAdStore } from "./lib/useAdStore";
+import { readReportOrganization, ORGANIZATION_CHANGE } from "./lib/analyticsOrganization";
 import { getAdActor } from "./lib/adPush";
 import { derivationOutput } from "./lib/videoDerivation";
 import { canUseDerivations } from "./lib/derivationPermissions";
@@ -99,6 +100,42 @@ const PROTOTYPE_ACCOUNTS: PrototypeAccount[] = [
   },
 ];
 
+// AUTH-04：管理端新增/导入的成员成为可登录账号（账号=工号，密码默认 123456；
+// 超级管理员角色成员可进双端，其余仅用户端；禁用/删除成员禁止登录）
+const MEMBER_DEFAULT_PASSWORD = "123456";
+function buildMemberAccounts(): PrototypeAccount[] {
+  let members: Array<{
+    id?: string;
+    employeeNo?: string;
+    name?: string;
+    roleIds?: string[];
+    status?: string;
+  }> = [];
+  try {
+    members = readReportOrganization().members as any;
+  } catch {
+    members = [];
+  }
+  const fixedNames = new Set(PROTOTYPE_ACCOUNTS.map((a) => a.username));
+  return members
+    .filter((m) => m && m.employeeNo && !fixedNames.has(m.employeeNo) && !fixedNames.has(m.id || ""))
+    .map((m) => ({
+      username: (m.employeeNo || "").trim(),
+      password: MEMBER_DEFAULT_PASSWORD,
+      label: m.name || m.employeeNo || m.id || "",
+      description: m.status === "normal" ? "成员账号（用户端）" : "成员账号（已禁用）",
+      allowedModes: (m.roleIds || []).includes("role_super_admin")
+        ? (["user", "admin"] as AppMode[])
+        : (["user"] as AppMode[]),
+      defaultMode: "user" as AppMode,
+      disabled: m.status !== "normal",
+    }))
+    .filter((a) => a.username.length > 0);
+}
+function buildLoginAccounts(): PrototypeAccount[] {
+  return [...PROTOTYPE_ACCOUNTS, ...buildMemberAccounts()];
+}
+
 interface PersistedSession {
   username: string;
   mode: AppMode;
@@ -109,10 +146,10 @@ const readPersistedSession = (): PersistedSession | null => {
     const stored = window.localStorage.getItem(AUTH_STORAGE_KEY);
     if (!stored) return null;
     const parsed = JSON.parse(stored) as PersistedSession;
-    const account = PROTOTYPE_ACCOUNTS.find(
+    const account = buildLoginAccounts().find(
       (item) => item.username === parsed.username,
     );
-    if (!account) return null;
+    if (!account || account.disabled) return null;
     return {
       username: account.username,
       mode: account.allowedModes.includes(parsed.mode)
@@ -128,6 +165,36 @@ import { FINISHED_LIBRARY_EVENT } from "./lib/resourceNavigation";
 
 export default function App() {
   useAdStore();
+  // AUTH-04：成员增删改（新增可登录/禁用删除即时生效）后重算登录账号，并使被禁用/删除账号的会话失效
+  const [loginAccountsVersion, setLoginAccountsVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => {
+      setLoginAccountsVersion((v) => v + 1);
+      try {
+        const stored = JSON.parse(window.localStorage.getItem(AUTH_STORAGE_KEY) || "{}");
+        if (stored.username) {
+          const all = buildLoginAccounts();
+          const acc = all.find((a) => a.username === stored.username);
+          if (!acc || acc.disabled) {
+            window.localStorage.removeItem(AUTH_STORAGE_KEY);
+            setSession(null);
+            setAppMode("user");
+            setScreenHistory(["video_remake"]);
+            notifyPermissionChange();
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener(ORGANIZATION_CHANGE, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(ORGANIZATION_CHANGE, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  const loginAccounts = useMemo(() => buildLoginAccounts(), [loginAccountsVersion]);
   const initialSession = readPersistedSession();
   const [session, setSession] = useState<PersistedSession | null>(
     initialSession,
@@ -256,7 +323,7 @@ export default function App() {
     useState<string>("content_management");
 
   const currentAccount = session
-    ? (PROTOTYPE_ACCOUNTS.find(
+    ? (loginAccounts.find(
         (account) => account.username === session.username,
       ) ?? null)
     : null;
@@ -1686,7 +1753,7 @@ export default function App() {
   };
 
   if (!session || !currentAccount) {
-    return <LoginView accounts={PROTOTYPE_ACCOUNTS} onLogin={handleLogin} />;
+    return <LoginView accounts={loginAccounts} onLogin={handleLogin} />;
   }
 
   return (
