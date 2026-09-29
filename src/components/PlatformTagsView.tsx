@@ -4,6 +4,7 @@ import ReportCategoryFilter from "./ReportCategoryFilter";
 import { REPORT_START, REPORT_TODAY, fmt, reportTotals, qualityReport } from "../lib/reportDemoData";
 import { PLATFORM_TAG_DIMENSIONS, platformTagGroupKey, platformTagTable, selectPlatformTagFacts, type PlatformTagDimension, type PlatformTagFilters } from "../lib/platformTagAnalytics";
 import { exportAnalyticsRows } from "../lib/analyticsExport";
+import { hasUserPermission } from "../lib/userPermissions";
 import AnalyticsExportDialog from "./AnalyticsExportDialog";
 import {
   HelpCircle,
@@ -527,7 +528,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
           </div>
 
           <button
-            onClick={() => setExportOpen(true)}
+            onClick={() => { if (!hasUserPermission("uc_analysis_platform_tags_export")) { showToast?.("暂无权限", ""); return; } setExportOpen(true); }}
             aria-haspopup="dialog"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer"
           >

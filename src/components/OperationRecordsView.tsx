@@ -44,6 +44,7 @@ import {
   type OperationRecord,
 } from "../lib/operationHistory";
 import type { ResourceSearchType } from "../types";
+import { hasUserPermission, useUserPermissions, OPERATION_RECORDS_EXPORT_KEY } from "../lib/userPermissions";
 
 const tabs = [
   { id: "derivation", name: "衍生视频记录", icon: Film },
@@ -79,6 +80,18 @@ export default function OperationRecordsView({ onOpenResource }: OperationRecord
 function OperationRecords({ ownerId, ownerName, onOpenResource }: { ownerId: string; ownerName: string; onOpenResource?: OperationRecordsViewProps["onOpenResource"] }) {
   useAdStore();
   const allowed = canUseDerivations(getAdActor());
+  const { has } = useUserPermissions();
+  const tabPermissionMap: Record<Tab, string> = {
+    derivation: "uc_operation_records_derivation",
+    push: "uc_operation_records_push",
+    plan: "uc_operation_records_plan",
+    upload: "uc_operation_records_upload",
+    export: "uc_operation_records_export",
+    download: "uc_operation_records_download",
+    login: "uc_operation_records_login",
+  };
+  // 菜单权限过滤：缺失即隐藏对应子页入口
+  const visibleTabs = tabs.filter(t => has(tabPermissionMap[t.id]));
   const [tab, setTab] = useState<Tab>("derivation");
 
   useEffect(() => {
@@ -92,7 +105,7 @@ function OperationRecords({ ownerId, ownerName, onOpenResource }: { ownerId: str
   return <div data-testid="operation-records" className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50 text-slate-800">
     <div className="shrink-0 px-5 pb-1 pt-4">
       <div className="flex gap-2 overflow-x-auto rounded-module border border-slate-200 bg-slate-50 p-1.5" role="tablist" aria-label="操作记录分类">
-        {tabs.map(({ id, name, icon: Icon }) => <button
+        {visibleTabs.map(({ id, name, icon: Icon }) => <button
           role="tab"
           aria-selected={tab === id}
           key={id}
@@ -102,7 +115,7 @@ function OperationRecords({ ownerId, ownerName, onOpenResource }: { ownerId: str
       </div>
     </div>
     <main className="min-h-0 min-w-0 flex-1 overflow-y-auto rounded-module bg-white" role="tabpanel">
-      {tab === "derivation"
+      {!has(tabPermissionMap[tab]) ? <p role="status" className="py-16 text-center text-sm text-slate-400">暂无权限</p> : tab === "derivation"
         ? allowed
           ? <DerivationHistory ownerId={ownerId} ownerName={ownerName} />
           : <p role="status" className="py-16 text-center text-sm text-slate-400">暂无衍生视频查看权限</p>
@@ -203,7 +216,7 @@ function DerivationHistory({ ownerId, ownerName }: { ownerId: string; ownerName:
         <button type="button" className={primaryClass} disabled={!everySelected("成功")} onClick={() => startPush(selected)}>批量推送</button>
         <button type="button" className={primaryClass} disabled={!everySelected("成功") || busy} onClick={() => void download(selected)}>批量下载</button>
         <button type="button" className={primaryClass} disabled={!selected.length} onClick={() => editNotes(selected)}>批量备注</button>
-        <button type="button" ref={exportAnchor} className={primaryClass} disabled={!filtered.length || busy} aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => setExportOpen(value => !value)}>导出<ChevronDown size={14} /></button>
+        <button type="button" ref={exportAnchor} className={primaryClass} disabled={!filtered.length || busy} aria-haspopup="menu" aria-expanded={exportOpen} onClick={() => { if (!hasUserPermission(OPERATION_RECORDS_EXPORT_KEY)) { setError("暂无权限"); setNotice(""); return; } setExportOpen(value => !value); }}>导出<ChevronDown size={14} /></button>
       </div>
     </form>
     {error && <p role="alert" className="mb-3 text-sm text-rose-600">{error}</p>}

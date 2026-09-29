@@ -4,12 +4,14 @@ import { ResourceCategoryModal } from "./ResourceEditDialog";
 import ResourceTagModal from "./ResourceTagModal";
 import { useResourceTagState } from "../lib/useResourceTags";
 import AnchoredPopover from "./overlays/AnchoredPopover";
+import { hasUserPermission } from "../lib/userPermissions";
 import {
   ArrowLeft,
   X,
   User,
   Share2,
   ChevronDown,
+  Edit2,
   Edit3,
   Play,
   Pause,
@@ -87,6 +89,11 @@ export default function AudioDetailView({
   const [publicPresetTab, setPublicPresetTab] = useState<string>("我的预设");
   const [personalPresetTab, setPersonalPresetTab] = useState<string>("我的预设");
 
+  // 音频备注（可编辑，与图片备注一致）
+  const [audioNoteText, setAudioNoteText] = useState<string>("");
+  const [audioNoteDraft, setAudioNoteDraft] = useState<string>("");
+  const [isEditingAudioNote, setIsEditingAudioNote] = useState<boolean>(false);
+
   // Timer loop for playback
   useEffect(() => {
     if (!detailIsPlaying) return;
@@ -158,7 +165,7 @@ export default function AudioDetailView({
             {/* Right: Action Buttons */}
             <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={() => showToast(`已开始下载: ${item.title}.mp3`)}
+                onClick={() => { if (!hasUserPermission("uc_audio_download")) { showToast("暂无权限"); return; } showToast(`已开始下载: ${item.title}.mp3`); }}
                 className="bg-[#7C3AED] hover:bg-purple-700 text-white font-bold px-6 py-2 rounded-xl text-xs transition-colors shadow-xs cursor-pointer"
               >
                 下载
@@ -179,7 +186,7 @@ export default function AudioDetailView({
                   onClick={() => setShowDetailMoreMenu(!showDetailMoreMenu)}
                   className="border border-purple-300 text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1 transition-colors cursor-pointer"
                 >
-                  <span>更多操作</span>
+                  <span>更多</span>
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
 
@@ -188,6 +195,7 @@ export default function AudioDetailView({
                     <button
                       onClick={() => {
                         setShowDetailMoreMenu(false);
+                        if (!hasUserPermission("uc_audio_delete")) { showToast("暂无权限"); return; }
                         if (!window.confirm("删除后将移入管理端集中回收站，当前用户将无法继续查看；如需恢复请联系管理员。确认继续吗？")) return;
                         if (onDelete) onDelete(item.id);
                         showToast("已移入管理端集中回收站");
@@ -195,7 +203,7 @@ export default function AudioDetailView({
                       }}
                       className="w-full text-left px-3.5 py-2 hover:bg-rose-50 text-rose-600 cursor-pointer"
                     >
-                      放入回收站
+                      删除
                     </button>
                   </AnchoredPopover>
                 )}
@@ -213,6 +221,7 @@ export default function AudioDetailView({
                   <span>{audioCategoryText}</span>
                   <button
                     onClick={() => {
+                      if (!hasUserPermission("uc_audio_edit")) { showToast("暂无权限"); return; }
                       setTempCategoryPath(audioCategoryText);
                       setSelectedPrimaryCat(audioCategoryText.split(" / ")[0] || "美容美体");
                       setIsCategoryDropdownOpen(true);
@@ -236,6 +245,7 @@ export default function AudioDetailView({
                   <span>{audioTitleText}</span>
                   <button
                     onClick={() => {
+                      if (!hasUserPermission("uc_audio_edit")) { showToast("暂无权限"); return; }
                       setTempTitleText(audioTitleText);
                       setShowModifyTitleModal(true);
                     }}
@@ -259,6 +269,7 @@ export default function AudioDetailView({
                 ))}
                 <button
                   onClick={() => {
+                    if (!hasUserPermission("uc_audio_edit")) { showToast("暂无权限"); return; }
                     setTempAddedPublicTags([...audioPublicTags]);
                     setShowPublicTagModal(true);
                   }}
@@ -297,9 +308,49 @@ export default function AudioDetailView({
               </div>
             </div>
 
-            {/* Row 6: 音频备注 */}
+            {/* Row 6: 音频备注（可编辑，与图片备注一致） */}
             <div className="text-xs pt-1">
-              <span className="text-slate-400 font-medium">音频备注</span>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 font-medium">音频备注</span>
+                <button
+                  onClick={() => {
+                    if (!hasUserPermission("uc_audio_edit")) { showToast("暂无权限"); return; }
+                    setAudioNoteDraft(audioNoteText);
+                    setIsEditingAudioNote(!isEditingAudioNote);
+                  }}
+                  className="text-slate-400 hover:text-purple-600 transition-colors cursor-pointer"
+                  title="编辑音频备注"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {isEditingAudioNote ? (
+                <div className="space-y-2 mt-1.5">
+                  <textarea
+                    value={audioNoteDraft}
+                    onChange={(e) => setAudioNoteDraft(e.target.value)}
+                    className="w-full border border-purple-300 rounded-xl p-2 text-xs text-slate-800 focus:outline-none bg-white min-h-[60px]"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setIsEditingAudioNote(false)}
+                      className="px-2.5 py-1 text-slate-500 hover:bg-slate-100 rounded-lg text-xs"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={() => { setAudioNoteText(audioNoteDraft); setIsEditingAudioNote(false); showToast("✅ 音频备注已更新"); }}
+                      className="px-3 py-1 bg-purple-600 text-white font-bold rounded-lg text-xs shadow-xs"
+                    >
+                      保存备注
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-slate-700 font-medium mt-1 pl-1 italic bg-white/60 p-2 rounded-xl border border-slate-100">
+                  {audioNoteText || "暂无备注"}
+                </p>
+              )}
             </div>
           </div>
         </div>

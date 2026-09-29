@@ -15,6 +15,7 @@ import {
   ResourceStatusBadge,
 } from "./ResourceConfigControls";
 import AudioDetailView from "./AudioDetailView";
+import { hasUserPermission } from "../lib/userPermissions";
 import { Pagination } from "./Pagination";
 import { ResourceSearchIntent } from "../types";
 import ResourceSearchCondition from "./ResourceSearchCondition";
@@ -680,7 +681,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
             </span>
 
             <button
-              onClick={() => showToast(`已打包下载 ${selectedIds.length} 个音频文件`)}
+              onClick={() => { if (!hasUserPermission("uc_audio_download")) { showToast("暂无权限"); return; } showToast(`已打包下载 ${selectedIds.length} 个音频文件`); }}
               className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-3 py-1.5 rounded-xl font-medium cursor-pointer transition-colors shadow-2xs"
             >
               下载
@@ -725,6 +726,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
                   <button
                     onClick={() => {
                       setShowMoreActionsMenu(false);
+                      if (!hasUserPermission("uc_audio_delete")) { showToast("暂无权限"); return; }
                       if (!window.confirm(`删除后将把选中的 ${selectedIds.length} 个音频移入管理端集中回收站，当前用户将无法继续查看；如需恢复请联系管理员。确认继续吗？`)) return;
                       setAudioList((prev) => prev.filter((a) => !selectedIds.includes(a.id)));
                       setSelectedIds([]);

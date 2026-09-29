@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useResourceConfig, useResourceConfigState } from "../lib/useResourceConfig";
+import { hasUserPermission } from "../lib/userPermissions";
 import { ResourceCategoryModal } from "./ResourceEditDialog";
 import ResourceTagModal from "./ResourceTagModal";
 import { useResourceTagState } from "../lib/useResourceTags";
@@ -277,6 +278,7 @@ export default function ImageDetailView({
                 <span className="font-bold text-slate-800">{categoryText}</span>
                 <button
                   onClick={() => {
+                    if (!hasUserPermission("uc_image_edit")) { showToast("暂无权限"); return; }
                     setTempCategoryPath(categoryText);
                     setSelectedPrimaryCat(categoryText.split(" / ")[0] || "资质 / a店铺");
                     setIsCategoryDropdownOpen(true);
@@ -296,6 +298,7 @@ export default function ImageDetailView({
                 <span className="font-bold text-slate-900 text-sm">{titleText}</span>
                 <button
                   onClick={() => {
+                    if (!hasUserPermission("uc_image_edit")) { showToast("暂无权限"); return; }
                     setTempTitleText(titleText);
                     setShowModifyTitleModal(true);
                   }}
@@ -316,6 +319,7 @@ export default function ImageDetailView({
                 ))}
                 <button
                   onClick={() => {
+                    if (!hasUserPermission("uc_image_edit")) { showToast("暂无权限"); return; }
                     setTempAddedPublicTags([...publicTags]);
                     setShowPublicTagModal(true);
                   }}
@@ -397,6 +401,7 @@ export default function ImageDetailView({
                     <button
                       onClick={() => {
                         setShowMoreMenu(false);
+                        if (!hasUserPermission("uc_image_delete")) { showToast("暂无权限"); return; }
                         showToast("已删除该图片资源");
                       }}
                       className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600 rounded-xl font-medium"
@@ -411,7 +416,7 @@ export default function ImageDetailView({
             {/* 4. Primary Solid Action Buttons */}
             <div className="grid grid-cols-1 gap-3 pt-1">
               <button
-                onClick={() => showToast(`正在下载无水印原图: ${titleText}`)}
+                onClick={() => { if (!hasUserPermission("uc_image_download")) { showToast("暂无权限"); return; } showToast(`正在下载无水印原图: ${titleText}`); }}
                 className="bg-[#7C3AED] hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-center shadow-xs cursor-pointer transition-colors text-xs active:scale-95"
               >
                 下载无水印图片
@@ -433,6 +438,7 @@ export default function ImageDetailView({
                   <span className="text-slate-400">图片备注:</span>
                   <button
                     onClick={() => {
+                      if (!hasUserPermission("uc_image_edit")) { showToast("暂无权限"); return; }
                       setTempNoteText(noteText);
                       setIsEditingNote(!isEditingNote);
                     }}

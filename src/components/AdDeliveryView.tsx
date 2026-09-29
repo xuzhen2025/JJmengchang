@@ -4,6 +4,7 @@ import TagAnalyticsView from "./TagAnalyticsView";
 import AdAccountDataView from "./AdAccountDataView";
 import DeliveryStatusReportView from "./DeliveryStatusReportView";
 import AdPlatformAnalysisView from "./AdPlatformAnalysisView";
+import { useUserPermissions } from "../lib/userPermissions";
 import { 
   BarChart3, Video, Activity, Tag, Tv, FileText, 
   DollarSign, PieChart, ShieldCheck, ShoppingBag, Brain, 
@@ -21,6 +22,14 @@ export type SubTabMap = {
 };
 
 export default function AdDeliveryView({ initialDerivativeId }: { initialDerivativeId?: string }) {
+  const { has } = useUserPermissions();
+  const subTabPermissionMap: Record<string, string> = {
+    ad_platform_analysis: "uc_analysis_ad_platform",
+    platform_tags: "uc_analysis_platform_tags",
+    tag_analytics: "uc_analysis_tag_analytics",
+    account_data: "uc_analysis_account_data",
+    status_report: "uc_analysis_status_report",
+  };
   const [activeCategory, setActiveCategory] = useState<MainCategory>("video_analytics");
   const [activeSubTab, setActiveSubTab] = useState<string>("ad_platform_analysis");
   useEffect(() => {
@@ -61,16 +70,21 @@ export default function AdDeliveryView({ initialDerivativeId }: { initialDerivat
     }
   ];
 
+  // 菜单权限过滤：缺失子页权限即隐藏对应子页/类别
+  const visibleCategories = categories
+    .map(cat => ({ ...cat, subTabs: cat.subTabs.filter(s => has(subTabPermissionMap[s.id])) }))
+    .filter(cat => cat.subTabs.length > 0);
+
   // Handle Category Switch
   const handleCategoryChange = (catId: MainCategory) => {
     setActiveCategory(catId);
-    const catObj = categories.find(c => c.id === catId);
+    const catObj = visibleCategories.find(c => c.id === catId);
     if (catObj && catObj.subTabs.length > 0) {
       setActiveSubTab(catObj.subTabs[0].id);
     }
   };
 
-  const currentCategoryObj = categories.find(c => c.id === activeCategory);
+  const currentCategoryObj = visibleCategories.find(c => c.id === activeCategory);
 
   return (
     <div className="min-h-full bg-slate-50/50 p-6 font-sans text-slate-800 space-y-6 pb-20">
@@ -91,7 +105,7 @@ export default function AdDeliveryView({ initialDerivativeId }: { initialDerivat
       <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs overflow-hidden">
         {/* Level 1 Categories (一级目录) */}
         <div className="flex items-center gap-1.5 p-1.5 bg-slate-50/70 border-b border-slate-100 overflow-x-auto">
-          {categories.map((cat) => {
+          {visibleCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
             return (
@@ -136,6 +150,9 @@ export default function AdDeliveryView({ initialDerivativeId }: { initialDerivat
 
       {/* Sub-Tab Content View Router */}
       <div className="space-y-6">
+        {!has(subTabPermissionMap[activeSubTab]) ? (
+          <div className="flex items-center justify-center h-full text-slate-400 text-sm py-20">暂无权限</div>
+        ) : (<>
         {/* ================= 视频数据分析 (Video Analytics) ================= */}
         {activeCategory === "video_analytics" && (
           <>
@@ -171,6 +188,7 @@ export default function AdDeliveryView({ initialDerivativeId }: { initialDerivat
           </>
         )}
 
+        </>)}
       </div>
     </div>
   );

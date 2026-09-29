@@ -16,6 +16,7 @@ import {
   ResourceStatusBadge,
 } from "./ResourceConfigControls";
 import FinishedVideoDetailModal from "./FinishedVideoDetailModal";
+import { hasUserPermission } from "../lib/userPermissions";
 import { Pagination } from "./Pagination";
 import { Asset, ResourceSearchIntent } from "../types";
 import { toPublishedVideo } from "../lib/publishedVideo";
@@ -1747,6 +1748,7 @@ export default function MaterialsView({ uploadedVideos = [], resourceScope = "ma
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (!hasUserPermission(resourceScope === "thirdParty" ? "uc_third_party_download" : "uc_material_download")) { showToast("暂无权限"); return; }
                               setActiveCardMenu(
                                 activeCardMenu?.videoId === video.id && activeCardMenu?.type === "download"
                                   ? null

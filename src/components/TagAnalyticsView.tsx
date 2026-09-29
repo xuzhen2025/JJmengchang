@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useReportData } from "../lib/useReportData";
 import ReportCategoryFilter from "./ReportCategoryFilter";
 import ColumnSettingsControl from "./ColumnSettingsControl";
+import { hasUserPermission } from "../lib/userPermissions";
 import AnalyticsExportDialog from "./AnalyticsExportDialog";
 import { grouped, ratio } from "../lib/analyticsData";
 import { applicablePublicTagGroups } from "../lib/resourceTags";
@@ -437,7 +438,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setExportOpen(true)}
+              onClick={() => { if (!hasUserPermission("uc_analysis_tag_analytics_export")) { showToast?.("暂无权限", ""); return; } setExportOpen(true); }}
               aria-haspopup="dialog"
               className="px-3.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
             >

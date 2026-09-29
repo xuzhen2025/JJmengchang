@@ -1,0 +1,93 @@
+import { useSyncExternalStore } from "react";
+import { INITIAL_ROLES } from "../components/AdminSystemManagementView";
+import { PROTOTYPE_OPERATOR } from "../data/adminAccounts";
+import { ORGANIZATION_CHANGE, readReportOrganization } from "./analyticsOrganization";
+import { AD_CHANGE_EVENT } from "./adPush";
+
+export const PERMISSION_CHANGE_EVENT = "mengchang_permission_change";
+
+// ---------------------------------------------------------------------------
+// 菜单级权限常量（与权限树保持一致）
+// ---------------------------------------------------------------------------
+export const RESOURCE_VIEW_KEYS = [
+  "uc_resource_view_finished", "uc_resource_view_material", "uc_resource_view_third_party",
+  "uc_resource_view_image", "uc_resource_view_audio", "uc_resource_view_script"
+] as const;
+
+export const UPLOAD_KEYS = ["uc_upload_video", "uc_upload_image", "uc_upload_script", "uc_upload_audio"] as const;
+
+// 操作记录菜单及其 7 个子页（菜单权限，缺失即隐藏对应入口）
+export const OPERATION_RECORDS_KEYS = [
+  "uc_operation_records",
+  "uc_operation_records_derivation", "uc_operation_records_push", "uc_operation_records_plan",
+  "uc_operation_records_upload", "uc_operation_records_export", "uc_operation_records_download",
+  "uc_operation_records_login"
+] as const;
+
+export const OPERATION_RECORDS_EXPORT_KEY = "uc_operation_records_export_btn";
+
+// 数据分析各子页菜单（不含导出按钮权限）
+export const DATA_ANALYSIS_MENU_KEYS = [
+  "uc_analysis_video", "uc_analysis_ad_platform", "uc_analysis_platform_tags",
+  "uc_analysis_tag_analytics", "uc_analysis_account", "uc_analysis_account_data", "uc_analysis_status_report"
+] as const;
+
+export const DERIVATION_PUSH_KEY = "uc_derivation_push";
+export const DERIVATION_NEW_KEY = "uc_derivation_new";
+
+export function notifyPermissionChange() {
+  window.dispatchEvent(new Event(PERMISSION_CHANGE_EVENT));
+}
+
+interface SessionLike { username?: string }
+interface RoleLike { id: string; enabled?: boolean; checkedKeys?: string[] }
+
+// 读取当前登录用户在用户端的全部 uc_* 权限（与 getAdActor 同源的角色矩阵）
+export function readUserPermissionKeys(): string[] {
+  let session: SessionLike = {};
+  let roles: RoleLike[] = [];
+  try {
+    const savedSession = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
+    const savedRoles = JSON.parse(localStorage.getItem("cloud_video_roles_v2") || "[]");
+    if (savedSession && typeof savedSession.username === "string") session = savedSession;
+    // 角色目录为空（管理端尚未初始化/未进入过系统管理）时回退到内置默认角色，保证普通用户登录即可获得默认权限
+    roles = (Array.isArray(savedRoles) && savedRoles.length > 0) ? savedRoles.filter((r): r is RoleLike => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys))) : (INITIAL_ROLES as unknown as RoleLike[]);
+  } catch { /* fail closed */ }
+  const admin = session.username === "chaojiguanliyuan" || session.username === "guanliyuan";
+  if (admin) {
+    const role = roles.find(r => r.id === "role_super_admin");
+    return (role?.checkedKeys || []).filter(k => typeof k === "string" && k.startsWith("uc_"));
+  }
+  let org;
+  try { org = readReportOrganization(); } catch { return []; }
+  const member = org.members.find(m => m.id === (session.username === "putongyonghu" ? PROTOTYPE_OPERATOR.id : session.username));
+  const enabled = member && ["normal", "bound"].includes(member.status);
+  if (!enabled) return [];
+  return roles.filter(r => r.enabled !== false && member.roleIds.includes(r.id))
+    .flatMap(r => r.checkedKeys || [])
+    .filter(k => typeof k === "string" && k.startsWith("uc_"));
+}
+
+const LISTEN_EVENTS = [AD_CHANGE_EVENT, ORGANIZATION_CHANGE, PERMISSION_CHANGE_EVENT, "storage"];
+
+let cachedKeys: string[] = readUserPermissionKeys();
+
+function subscribe(cb: () => void) {
+  const handler = () => { cachedKeys = readUserPermissionKeys(); cb(); };
+  LISTEN_EVENTS.forEach(ev => window.addEventListener(ev, handler));
+  return () => LISTEN_EVENTS.forEach(ev => window.removeEventListener(ev, handler));
+}
+const snapshot = () => cachedKeys;
+
+// 响应式权限（菜单隐藏/页签过滤使用，权限变更自动刷新）
+export function useUserPermissions() {
+  const keys = useSyncExternalStore(subscribe, snapshot, snapshot);
+  const has = (key: string) => keys.includes(key);
+  const hasAny = (required: readonly string[]) => required.some(k => keys.includes(k));
+  return { keys, has, hasAny };
+}
+
+// 即时权限（按钮点击校验使用，每次点击读取最新配置，恢复权限立即生效）
+export function hasUserPermission(key: string): boolean {
+  return readUserPermissionKeys().includes(key);
+}

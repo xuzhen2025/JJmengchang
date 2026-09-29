@@ -6,6 +6,7 @@ import { canUseDerivations } from "../lib/derivationPermissions";
 import { useReportOrganization } from "../lib/analyticsOrganization";
 import { derivativeAnalyticsRows } from "../lib/derivationAnalytics";
 import { AdDialog } from "./AdPushDialogs";
+import { hasUserPermission } from "../lib/userPermissions";
 import AnalyticsExportDialog from "./AnalyticsExportDialog";
 import CategoryCascader from "./CategoryCascader";
 import ColumnSettingsControl from "./ColumnSettingsControl";
@@ -598,7 +599,7 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
 
           {/* 右组：导出 + 列设置 */}
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setExportOpen(true)} aria-haspopup="dialog" className="border border-slate-200 text-slate-600 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 flex items-center gap-1 shadow-2xs bg-white">
+            <button type="button" onClick={() => { if (!hasUserPermission("uc_analysis_ad_platform_export")) { showToast?.("暂无权限", ""); return; } setExportOpen(true); }} aria-haspopup="dialog" className="border border-slate-200 text-slate-600 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 flex items-center gap-1 shadow-2xs bg-white">
               导出 <ChevronDown className="w-3.5 h-3.5" />
             </button>
             <ColumnSettingsControl

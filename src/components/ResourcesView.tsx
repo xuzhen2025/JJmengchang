@@ -9,6 +9,7 @@ import UploadImageModal from "./UploadImageModal";
 import UploadGenericResourcePage from "./UploadGenericResourcePage";
 import { TaskItem } from "./TaskCollaborationView";
 import { Asset, ResourceSearchIntent } from "../types";
+import { useUserPermissions } from "../lib/userPermissions";
 import {
   ShoppingBag,
   Film,
@@ -67,6 +68,22 @@ export default function ResourcesView({
     图片: "images",
     音频: "audio",
   } as const;
+
+  const { has } = useUserPermissions();
+  const tabPermissionMap: Record<string, string> = {
+    finished_videos: "uc_resource_view_finished",
+    materials: "uc_resource_view_material",
+    third_party: "uc_resource_view_third_party",
+    scripts: "uc_resource_view_script",
+    images: "uc_resource_view_image",
+    audio: "uc_resource_view_audio",
+  };
+  const uploadPermissionMap: Partial<Record<UploadFileType, string>> = {
+    成片: "uc_upload_video",
+    脚本: "uc_upload_script",
+    图片: "uc_upload_image",
+    音频: "uc_upload_audio",
+  };
   const [activeTab, setActiveTab] = useState<
     "finished_videos" | "materials" | "third_party" | "scripts" | "images" | "audio"
   >(initialSearch ? tabByType[initialSearch.type] : initialTab);
@@ -173,6 +190,9 @@ export default function ResourcesView({
     },
   ];
 
+  // 菜单权限过滤：缺失即隐藏对应页签
+  const visibleTabs = tabs.filter(tab => has(tabPermissionMap[tab.id]));
+
   const uploadOptions: {
     type: UploadFileType;
     label: string;
@@ -215,8 +235,16 @@ export default function ResourcesView({
     },
   ];
 
+  // 上传按钮权限过滤：缺失即隐藏对应上传项
+  const visibleUploadOptions = uploadOptions.filter(opt => has(uploadPermissionMap[opt.type] as string));
+
   const handleOpenUploadModal = (type: UploadFileType) => {
     setShowUploadDropdown(false);
+    const needUploadPerm = uploadPermissionMap[type];
+    if (needUploadPerm && !has(needUploadPerm)) {
+      showToast("暂无权限");
+      return;
+    }
     if (type === "成片" && activeTab === "third_party") {
       setUploadPageView("第三方");
       return;
@@ -245,7 +273,7 @@ export default function ResourcesView({
             <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-[inherit]">
               {/* Left side: Category Tabs */}
               <div className="flex items-center gap-2 overflow-x-auto">
-                {tabs.map((tab) => {
+                {visibleTabs.map((tab) => {
                   const Icon = tab.icon;
                   const isActive =
                     activeTab === tab.id &&
@@ -277,6 +305,7 @@ export default function ResourcesView({
 
               {/* Right side: 右上角“上传文件”按钮 + 下拉菜单 */}
               <div className="relative shrink-0 ml-3" ref={dropdownRef}>
+                {visibleUploadOptions.length > 0 && (
                 <button
                   onClick={() => setShowUploadDropdown(!showUploadDropdown)}
                   className="bg-[#7C3AED] hover:bg-purple-700 active:scale-95 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center gap-2 shadow-xs cursor-pointer transition-all border border-purple-500/20"
@@ -288,6 +317,7 @@ export default function ResourcesView({
                     className={`w-3.5 h-3.5 transition-transform duration-200 ${showUploadDropdown ? "rotate-180" : ""}`}
                   />
                 </button>
+                )}
 
                 {/* 下拉菜单 (Dropdown Menu) */}
                 {showUploadDropdown && (
@@ -296,7 +326,7 @@ export default function ResourcesView({
                       选择上传资源类型
                     </div>
                     <div className="py-1">
-                      {uploadOptions.map((opt) => {
+                      {visibleUploadOptions.map((opt) => {
                         const Icon = opt.icon;
                         return (
                           <button
@@ -331,7 +361,9 @@ export default function ResourcesView({
 
       {/* 对应的内容视图/上传页面渲染区 */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        {uploadPageView === "图片" ? (
+        {!has(tabPermissionMap[activeTab]) ? (
+          <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无权限</div>
+        ) : uploadPageView === "图片" ? (
           <UploadImageModal
             isOpen={true}
             isPage={true}

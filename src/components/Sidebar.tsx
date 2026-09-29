@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ActiveScreen } from "../types";
 import AnchoredPopover from "./overlays/AnchoredPopover";
+import { useUserPermissions, RESOURCE_VIEW_KEYS, OPERATION_RECORDS_KEYS, DATA_ANALYSIS_MENU_KEYS } from "../lib/userPermissions";
 
 interface SidebarProps {
   activeScreen: ActiveScreen;
@@ -52,6 +53,7 @@ export default function Sidebar({
   const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
   const modeButtonRef = useRef<HTMLButtonElement | null>(null);
   const canSwitchModes = allowedModes.length > 1;
+  const { has, hasAny } = useUserPermissions();
 
   const userMenuItems: { id: string; label: string; icon: any; badge?: string }[] = [
     { id: "video_remake", label: "爆款复刻", icon: RefreshCw },
@@ -66,7 +68,14 @@ export default function Sidebar({
     { id: "credits_management", label: "积分管理", icon: Coins },
   ];
 
-  const currentMenuItems = appMode === "admin" ? adminMenuItems : userMenuItems;
+  // 菜单权限过滤：缺失即隐藏对应菜单
+  const currentMenuItems = appMode === "admin" ? adminMenuItems : userMenuItems.filter(item => {
+    if (item.id === "video_remake") return has("uc_remake_run");
+    if (item.id === "resources") return hasAny(RESOURCE_VIEW_KEYS);
+    if (item.id === "ad_delivery") return hasAny(DATA_ANALYSIS_MENU_KEYS);
+    if (item.id === "operation_records") return hasAny(OPERATION_RECORDS_KEYS);
+    return true;
+  });
 
   return (
     <aside 

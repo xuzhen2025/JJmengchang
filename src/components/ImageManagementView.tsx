@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useTaggedResources, useTagCatalog } from "../lib/useResourceTags";
+import { hasUserPermission } from "../lib/userPermissions";
 import { resourceTagStore } from "../lib/resourceTags";
 import { resourceConfigStore } from "../lib/resourceConfig";
 import { useResourceConfig, useConfigFilter } from "../lib/useResourceConfig";
@@ -565,14 +566,14 @@ export default function ImageManagementView({ onTriggerTask, onDetailStateChange
 
               {/* Action dropdowns */}
               <button
-                onClick={() => showToast(`正在批量下载 ${selectedImageIds.length} 个图片文件`)}
+                onClick={() => { if (!hasUserPermission("uc_image_download")) { showToast("暂无权限"); return; } showToast(`正在批量下载 ${selectedImageIds.length} 个图片文件`); }}
                 className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer shadow-2xs"
               >
                 下载
               </button>
 
               <ResourceActionMenu label="修改" options={["修改一级分类", "修改二级分类"]}
-                onSelect={option => showToast(`批量操作: ${option}`)} />
+                onSelect={option => { if (!hasUserPermission("uc_image_edit")) { showToast("暂无权限"); return; } showToast(`批量操作: ${option}`); }} />
               <ResourceActionMenu label="添加标签" options={["添加公共标签", "添加个人标签"]}
                 onSelect={option => showToast(`批量操作: ${option}`)} />
             </>
@@ -856,7 +857,7 @@ export default function ImageManagementView({ onTriggerTask, onDetailStateChange
                           查看
                         </button>
                         <button
-                          onClick={() => showToast(`下载: ${item.title}`)}
+                          onClick={() => { if (!hasUserPermission("uc_image_download")) { showToast("暂无权限"); return; } showToast(`下载: ${item.title}`); }}
                           className="text-slate-600 hover:text-purple-600 font-medium cursor-pointer"
                         >
                           下载

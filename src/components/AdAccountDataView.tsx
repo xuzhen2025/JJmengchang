@@ -20,6 +20,7 @@ import {
 } from "../lib/reportDemoData";
 import { useReportData } from "../lib/useReportData";
 import ColumnSettingsControl from "./ColumnSettingsControl";
+import { hasUserPermission } from "../lib/userPermissions";
 import AnalyticsExportDialog from "./AnalyticsExportDialog";
 import ReportCategoryFilter from "./ReportCategoryFilter";
 
@@ -682,7 +683,7 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
 
             <div className="flex items-center gap-2">
               <div>
-                <button type="button" onClick={() => setExportOpen(true)} className="flex shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-2xs hover:bg-slate-50" aria-haspopup="dialog">
+                <button type="button" onClick={() => { if (!hasUserPermission("uc_analysis_account_data_export")) { showToast?.("暂无权限", ""); return; } setExportOpen(true); }} className="flex shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-2xs hover:bg-slate-50" aria-haspopup="dialog">
                   导出 <ChevronDown className="h-3.5 w-3.5" />
                 </button>
               </div>

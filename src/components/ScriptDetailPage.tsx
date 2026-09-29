@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useResourceConfig } from "../lib/useResourceConfig";
+import { hasUserPermission } from "../lib/userPermissions";
 import { ResourceCategoryModal, ResourceEditDialog } from "./ResourceEditDialog";
 import { ResourceStatusBadge } from "./ResourceConfigControls";
 import { useTaggedResources } from "../lib/useResourceTags";
@@ -625,6 +626,7 @@ export default function ScriptDetailPage({
                   <span className="text-slate-800 font-bold">{currentScript.basicType}</span>
                   <button
                     onClick={() => {
+                      if (!hasUserPermission("uc_script_edit")) { showToast("暂无权限"); return; }
                       const currentCat = currentScript.basicType || "演示分类 / 卸妆油";
                       setEditCategoryInput(currentCat);
                       setTempCategoryPath(currentCat);
@@ -647,6 +649,7 @@ export default function ScriptDetailPage({
                   <span>{currentScript.title}</span>
                   <button
                     onClick={() => {
+                      if (!hasUserPermission("uc_script_edit")) { showToast("暂无权限"); return; }
                       setEditTitleInput(currentScript.title);
                       setShowEditTitleModal(true);
                     }}
@@ -669,6 +672,7 @@ export default function ScriptDetailPage({
                   ))}
                   <button
                     onClick={() => {
+                      if (!hasUserPermission("uc_script_edit")) { showToast("暂无权限"); return; }
                       setTempAddedPublicTags(currentScript.publicTags || []);
                       setShowPublicTagModal(true);
                     }}
@@ -683,6 +687,7 @@ export default function ScriptDetailPage({
                 <span className="w-20 text-slate-500 font-medium shrink-0">脚本状态</span>
                 <ResourceStatusBadge scope="scripts" status={currentScript.status} />
                 <button type="button" onClick={() => {
+                  if (!hasUserPermission("uc_script_status")) { showToast("暂无权限"); return; }
                   setAuditStatusInput(currentScript.status);
                   setAuditNotesInput(currentScript.auditNotes ?? "");
                   setShowAuditStatusModal(true);
@@ -812,13 +817,14 @@ export default function ScriptDetailPage({
                       查看关联任务
                     </button>
                     <button
-                      onClick={() => setShowOpLogsModal(true)}
+                      onClick={() => { if (!hasUserPermission("uc_script_logs")) { showToast("暂无权限"); return; } setShowOpLogsModal(true); }}
                       className="w-full text-left px-3 py-2 hover:bg-purple-50 hover:text-purple-600 rounded-xl transition-colors cursor-pointer block"
                     >
                       操作记录
                     </button>
                     <button
                       onClick={() => {
+                        if (!hasUserPermission("uc_script_delete")) { showToast("暂无权限"); return; }
                         if (confirm(`确定要删除脚本《${currentScript.title}》吗？`)) {
                           if (onDeleteScript) onDeleteScript(currentScript.id);
                           onBack();

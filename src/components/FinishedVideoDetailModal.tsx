@@ -3,6 +3,7 @@ import { activeDerivationCount, derivationOutput, derivationVideo, submitDerivat
 import DeriveVideoDialog from "./DeriveVideoDialog";
 import FinishedVideoDerivations from "./FinishedVideoDerivations";
 import { canUseDerivations } from "../lib/derivationPermissions";
+import { hasUserPermission } from "../lib/userPermissions";
 import { useAdStore } from "../lib/useAdStore";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import VideoInteractionSelectors from "./VideoInteractionSelectors";
@@ -637,6 +638,9 @@ export default function FinishedVideoDetailModal({
   backLabel
 }: FinishedVideoDetailModalProps) {
   const resourceName = resourceScope === "thirdParty" ? "第三方" : isMaterialMode ? "素材" : "成片";
+  // 按钮权限前缀：成片 uc_finished_* / 素材 uc_material_* / 第三方 uc_third_party_*
+  const permPrefix = isMaterialMode ? (resourceScope === "thirdParty" ? "uc_third_party_" : "uc_material_") : "uc_finished_";
+  const hasPerm = (suffix: string) => hasUserPermission(`${permPrefix}${suffix}`);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Playback States
@@ -1328,7 +1332,7 @@ export default function FinishedVideoDetailModal({
 
                     <button
                       type="button"
-                      onClick={() => showToast("📤 已打开新版本视频上传与替换通道")}
+                      onClick={() => { if (!hasPerm("new_version")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; } showToast("📤 已打开新版本视频上传与替换通道"); }}
                       className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
                     >
                       <Upload className="w-3.5 h-3.5" />
@@ -2463,6 +2467,7 @@ export default function FinishedVideoDetailModal({
                           <span>{categoryText}</span>
                           <button
                             onClick={() => {
+                              if (!hasPerm("edit")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; }
                               setShowModifyCategoryModal(true);
                             }}
                             className="text-slate-400 hover:text-purple-600 cursor-pointer transition-colors p-0.5 flex items-center gap-1 text-xs font-normal"
@@ -2483,6 +2488,7 @@ export default function FinishedVideoDetailModal({
                           <span>{titleText}</span>
                           <button
                             onClick={() => {
+                              if (!hasPerm("edit")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; }
                               setTempTitleText(titleText);
                               setShowModifyTitleModal(true);
                             }}
@@ -2507,6 +2513,7 @@ export default function FinishedVideoDetailModal({
 
                         <button
                           onClick={() => {
+                            if (!hasPerm("edit")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; }
                             setShowPublicTagModal(true);
                           }}
                           className="text-purple-600 hover:text-purple-700 font-bold text-xs flex items-center gap-1 cursor-pointer py-1 hover:underline"
@@ -2584,7 +2591,7 @@ export default function FinishedVideoDetailModal({
                             <div className="flex items-center gap-2">
                               <ResourceStatusBadge scope={resourceScope} status={videoStatus} className="px-2.5 py-1 font-extrabold text-xs rounded-md shadow-2xs" />
                               <button
-                                onClick={() => setIsChangingStatus(true)}
+                                onClick={() => { if (!hasPerm("status")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; } setIsChangingStatus(true); }}
                                 className="text-purple-600 hover:text-purple-700 font-medium text-xs cursor-pointer hover:underline"
                               >
                                 修改状态
@@ -2629,7 +2636,7 @@ export default function FinishedVideoDetailModal({
                         aria-label="编辑视频备注"
                         aria-haspopup="dialog"
                         aria-expanded={showNotesModal}
-                        onClick={() => openNotesEditor(videoNotes)}
+                        onClick={() => { if (!hasPerm("edit")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; } openNotesEditor(videoNotes); }}
                         className={`block min-w-0 flex-1 h-[150px] overflow-y-auto whitespace-pre-wrap break-words p-3 bg-slate-50/80 hover:bg-slate-50 border border-slate-200/80 rounded-2xl text-left text-xs leading-5 focus:outline-none focus:border-purple-400 transition-colors font-sans ${videoNotes ? "text-slate-800" : "text-slate-400"}`}
                       >
                         <span className="block min-h-full">{videoNotes || "暂无备注"}</span>
@@ -2647,6 +2654,7 @@ export default function FinishedVideoDetailModal({
                         ))}
                         <button
                           onClick={() => {
+                            if (!hasPerm("edit")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; }
                             setAttachments([...attachments, `附件_${attachments.length + 1}.pdf`]);
                             showToast("📎 附件添加成功");
                           }}
@@ -2711,7 +2719,7 @@ export default function FinishedVideoDetailModal({
                           <div className="inline-flex items-stretch rounded-xl border border-purple-300 bg-white text-purple-700 shadow-2xs">
                             <button
                               type="button"
-                              onClick={() => { if (!getAdActor().permissions.includes("uc_ad_push")) { setToastMsg("暂无推送权限"); window.setTimeout(() => setToastMsg(null), 4000); return; } setDerivePush(false); setAdDraft(undefined); setShowAdPushWorkspace(true); }}
+                              onClick={() => { if (!hasPerm("ad_push")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; } setDerivePush(false); setAdDraft(undefined); setShowAdPushWorkspace(true); }}
                               className="flex items-center gap-1.5 rounded-l-[11px] px-3 py-2 text-xs font-bold transition-colors hover:bg-purple-50"
                             >
                               <Send className="h-3.5 w-3.5" />
@@ -2720,7 +2728,7 @@ export default function FinishedVideoDetailModal({
                             <div className="group relative border-l border-purple-200">
                               <button
                                 type="button"
-                                onClick={() => setShowPushRecordsModal(true)}
+                                onClick={() => { if (!hasPerm("ad_records")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; } setShowPushRecordsModal(true); }}
                                 className="flex h-full min-w-10 items-center justify-center rounded-r-[11px] px-2.5 transition-colors hover:bg-purple-50"
                                 aria-label="查看推送记录"
                               >
@@ -2736,7 +2744,7 @@ export default function FinishedVideoDetailModal({
 
                         {/* 操作记录 */}
                         <button
-                          onClick={() => setShowOperationLogsModal(true)}
+                          onClick={() => { if (!hasPerm("logs")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; } setShowOperationLogsModal(true); }}
                           className="px-3 py-2 border border-purple-300 hover:bg-purple-50 text-purple-700 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
                         >
                           <FileText className="w-3.5 h-3.5 text-purple-600" />
@@ -2759,19 +2767,19 @@ export default function FinishedVideoDetailModal({
                                 {!isMaterialMode && !isAdminMode && canUseDerivations(getAdActor()) && <>
                                   <button className="w-full rounded-xl px-3 py-2 text-slate-600 hover:bg-purple-50 hover:text-purple-700" onClick={() => {
                                     setShowMoreMenu(false);
-                                    const actor = getAdActor();
-                                    if (!canUseDerivations(actor)) return setToastMsg("暂无衍生视频权限");
+                                    if (!hasUserPermission("uc_derivation_push")) return setToastMsg("暂无权限");
                                     setAdDraft(undefined); setDerivePush(true); setShowAdPushWorkspace(true);
                                   }}>衍生视频并推送</button>
                                   <button className="w-full rounded-xl px-3 py-2 text-slate-600 hover:bg-purple-50 hover:text-purple-700" onClick={() => {
                                     setShowMoreMenu(false);
-                                    if (!canUseDerivations(getAdActor())) return setToastMsg("暂无衍生视频权限");
+                                    if (!hasUserPermission("uc_derivation_new")) return setToastMsg("暂无权限");
                                     setShowDeriveDialog(true);
                                   }}>衍生新视频</button>
                                 </>}
                                 <button
                                   onClick={() => {
                                     setShowMoreMenu(false);
+                                    if (!hasPerm("download")) return setToastMsg("暂无权限");
                                     showToast("📥 开始下载无水印原片...");
                                   }}
                                   className="w-full py-2 px-3 text-slate-600 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-colors cursor-pointer text-center font-medium"
@@ -2782,6 +2790,7 @@ export default function FinishedVideoDetailModal({
                                 <button
                                   onClick={() => {
                                     setShowMoreMenu(false);
+                                    if (!hasPerm("logs")) return setToastMsg("暂无权限");
                                     setShowOperationLogsModal(true);
                                   }}
                                   className="w-full py-2 px-3 text-slate-600 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-colors cursor-pointer text-center font-medium"
@@ -2792,6 +2801,7 @@ export default function FinishedVideoDetailModal({
                                 {(resourceScope !== "thirdParty" || onDelete) && <button
                                   onClick={() => {
                                     setShowMoreMenu(false);
+                                    if (!hasPerm("delete")) return setToastMsg("暂无权限");
                                     if (window.confirm("删除后将移入回收站，可在回收站恢复。确认继续吗？")) {
                                       if (onDelete) onDelete();
                                       else showToast("视频已移至回收站");
@@ -3423,6 +3433,7 @@ export default function FinishedVideoDetailModal({
                       {/* Left: Upload Project File Button (Outlined Purple Style) */}
                       <button
                         onClick={() => {
+                          if (!hasPerm("project_upload")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; }
                           setUploadProjectName(video.title || "10.6子涵酒吧1");
                           setShowUploadProjectModal(true);
                         }}
@@ -3481,6 +3492,7 @@ export default function FinishedVideoDetailModal({
                             {/* Download Button (Exact purple pill button from screenshot) */}
                             <button
                               onClick={() => {
+                                if (!hasPerm("project_download")) { setToastMsg("暂无权限"); window.setTimeout(() => setToastMsg(null), 4000); return; }
                                 showToast(`🚀 正在开始下载【${pf.name}】工程文件，导入剪映即可恢复完整剪辑轨道！`);
                               }}
                               className="px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs"

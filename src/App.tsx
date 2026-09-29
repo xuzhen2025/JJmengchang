@@ -4,6 +4,12 @@ import { getAdActor } from "./lib/adPush";
 import { derivationOutput } from "./lib/videoDerivation";
 import { canUseDerivations } from "./lib/derivationPermissions";
 import { DERIVATIVE_ANALYTICS_EVENT } from "./lib/analyticsNavigation";
+import {
+  useUserPermissions,
+  RESOURCE_VIEW_KEYS,
+  OPERATION_RECORDS_KEYS,
+  DATA_ANALYSIS_MENU_KEYS,
+} from "./lib/userPermissions";
 import Sidebar from "./components/Sidebar";
 import RightQueue, { type TaskQueueUploadRequest } from "./components/TaskQueuePanel";
 import UploadFinishedVideoModal from "./components/UploadFinishedVideoModal";
@@ -166,7 +172,37 @@ export default function App() {
   } | null>(null);
   const [queueUploadRequest, setQueueUploadRequest] = useState<TaskQueueUploadRequest | null>(null);
 
+  const { has, hasAny } = useUserPermissions();
+
+  const screenPermissionKeys = (screen: ActiveScreen): string[] | null => {
+    switch (screen) {
+      case "resources":
+      case "materials":
+      case "finished_videos":
+      case "scripts":
+        return [...RESOURCE_VIEW_KEYS];
+      case "ad_delivery":
+        return [...DATA_ANALYSIS_MENU_KEYS];
+      case "operation_records":
+        return [...OPERATION_RECORDS_KEYS];
+      case "video_remake":
+        return ["uc_remake_run"];
+      default:
+        return null;
+    }
+  };
+
+  const guardScreenPermission = (screen: ActiveScreen): boolean => {
+    const need = screenPermissionKeys(screen);
+    if (need && !need.some(k => has(k))) {
+      alert("暂无权限");
+      return false;
+    }
+    return true;
+  };
+
   const handleNavigate = (screen: ActiveScreen) => {
+    if (!guardScreenPermission(screen)) return;
     if (screen === "ad_delivery") setAnalyticsDerivativeId(undefined);
     setQueueUploadRequest(null);
     setScreenHistory((prev) => {
@@ -186,6 +222,7 @@ export default function App() {
   };
 
   const handleSidebarNavigate = (screen: ActiveScreen) => {
+    if (!guardScreenPermission(screen)) return;
     if (screen === "ad_delivery") setAnalyticsDerivativeId(undefined);
     setQueueUploadRequest(null);
     if (screen === "resources") {
@@ -1558,6 +1595,7 @@ export default function App() {
       case "materials":
       case "finished_videos":
       case "scripts":
+        if (!hasAny(RESOURCE_VIEW_KEYS)) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无权限</div>;
         return (
           <ResourcesView
             key={resourceNavigationVersion}
@@ -1583,8 +1621,10 @@ export default function App() {
         );
 
       case "ad_delivery":
+        if (!hasAny(DATA_ANALYSIS_MENU_KEYS)) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无权限</div>;
         return <AdDeliveryView initialDerivativeId={analyticsDerivativeId} />;
       case "operation_records":
+        if (!hasAny(OPERATION_RECORDS_KEYS)) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无权限</div>;
         return <OperationRecordsView onOpenResource={(record) => {
           setResourceSearchIntent({
             type: record.type,
@@ -1611,6 +1651,7 @@ export default function App() {
         );
 
       case "video_remake":
+        if (!has("uc_remake_run")) return <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无权限</div>;
         return (
           <VideoRemakeView
             key={activeRemakeSessionId || "latest-remake"}

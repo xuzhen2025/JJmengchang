@@ -133,16 +133,12 @@ export const USER_CLIENT_PERMISSION_TREE: PermissionNode[] = [
           { id: "uc_finished_download", label: "下载原片" },
           { id: "uc_finished_logs", label: "查看操作记录" },
           { id: "uc_finished_ad_push", label: "推送广告账户" },
-          { id: "uc_ad_plan_manage", label: "管理投放计划" },
           { id: "uc_finished_ad_records", label: "查看推送记录" },
-          { id: "uc_derivation", label: "衍生视频" },
-          { id: "uc_finished_interaction", label: "查看互动数据" },
+          { id: "uc_derivation_push", label: "衍生视频并推送" },
+          { id: "uc_derivation_new", label: "衍生新视频" },
           { id: "uc_finished_project_upload", label: "上传工程文件" },
           { id: "uc_finished_project_download", label: "下载工程文件" },
-          { id: "uc_finished_project_visibility", label: "修改工程文件访问权限" },
           { id: "uc_finished_delete", label: "删除" },
-          { id: "uc_finished_asset_data", label: "查看素材数据" },
-          { id: "uc_finished_reference_data", label: "查看引用数据" },
           { id: "uc_finished_new_version", label: "上传新版" },
         ]
       },
@@ -155,7 +151,6 @@ export const USER_CLIENT_PERMISSION_TREE: PermissionNode[] = [
           { id: "uc_material_download", label: "下载原片" },
           { id: "uc_material_logs", label: "查看操作记录" },
           { id: "uc_material_delete", label: "删除" },
-          { id: "uc_material_reference_data", label: "查看引用数据" },
           { id: "uc_material_new_version", label: "上传新版" },
         ]
       },
@@ -168,7 +163,6 @@ export const USER_CLIENT_PERMISSION_TREE: PermissionNode[] = [
           { id: "uc_third_party_download", label: "下载原片" },
           { id: "uc_third_party_logs", label: "查看操作记录" },
           { id: "uc_third_party_delete", label: "删除" },
-          { id: "uc_third_party_reference_data", label: "查看引用数据" },
           { id: "uc_third_party_new_version", label: "上传新版" },
         ]
       },
@@ -202,7 +196,43 @@ export const USER_CLIENT_PERMISSION_TREE: PermissionNode[] = [
       },
     ]
   },
-  { id: "uc_data_analysis", label: "数据分析" },
+  {
+    id: "uc_data_analysis",
+    label: "数据分析",
+    children: [
+      {
+        id: "uc_analysis_video",
+        label: "视频数据分析",
+        children: [
+          { id: "uc_analysis_ad_platform", label: "广告平台分析", children: [{ id: "uc_analysis_ad_platform_export", label: "导出" }] },
+          { id: "uc_analysis_platform_tags", label: "广告平台标签", children: [{ id: "uc_analysis_platform_tags_export", label: "导出" }] },
+          { id: "uc_analysis_tag_analytics", label: "标签分析", children: [{ id: "uc_analysis_tag_analytics_export", label: "导出" }] },
+        ]
+      },
+      {
+        id: "uc_analysis_account",
+        label: "广告账户分析",
+        children: [
+          { id: "uc_analysis_account_data", label: "广告账户数据", children: [{ id: "uc_analysis_account_data_export", label: "导出" }] },
+          { id: "uc_analysis_status_report", label: "投放状态报表" },
+        ]
+      },
+      {
+        id: "uc_operation_records",
+        label: "操作记录",
+        children: [
+          { id: "uc_operation_records_derivation", label: "衍生视频记录" },
+          { id: "uc_operation_records_push", label: "推送视频记录" },
+          { id: "uc_operation_records_plan", label: "创建计划队列" },
+          { id: "uc_operation_records_upload", label: "上传文件记录" },
+          { id: "uc_operation_records_export", label: "导出记录" },
+          { id: "uc_operation_records_download", label: "下载记录" },
+          { id: "uc_operation_records_login", label: "登录记录" },
+          { id: "uc_operation_records_export_btn", label: "导出" },
+        ]
+      },
+    ]
+  },
 ];
 
 export const ADMIN_BACKEND_PERMISSION_TREE: PermissionNode[] = [
@@ -257,18 +287,48 @@ const getLeafKeysFromNodes = (nodes: PermissionNode[]): string[] => {
 
 export const USER_PERMISSION_KEYS = getLeafKeysFromNodes(USER_CLIENT_PERMISSION_TREE);
 export const ADMIN_PERMISSION_KEYS = getLeafKeysFromNodes(ADMIN_BACKEND_PERMISSION_TREE);
-export const ALL_PERMISSION_KEYS = [...USER_PERMISSION_KEYS, ...ADMIN_PERMISSION_KEYS];
+// 管理投放计划为内部能力权限：不在权限树展示（非按钮权限），保留供投放流程校验
+export const INTERNAL_HIDDEN_KEYS = ["uc_ad_plan_manage"];
+export const ALL_PERMISSION_KEYS = [...USER_PERMISSION_KEYS, ...INTERNAL_HIDDEN_KEYS, ...ADMIN_PERMISSION_KEYS];
 
-const BASIC_USER_KEYS = [
+// 衍生视频并推送 ↔ 推送广告账户 勾选联动（勾选其一则另一自动勾选）
+const applyPermissionLinkage = (keys: string[]): string[] => {
+  const set = new Set(keys);
+  if (set.has("uc_derivation_push")) set.add("uc_finished_ad_push");
+  if (set.has("uc_finished_ad_push")) set.add("uc_derivation_push");
+  return Array.from(set);
+};
+
+const RESOURCE_VIEW_KEYS = [
   "uc_resource_view_finished", "uc_resource_view_material", "uc_resource_view_third_party", "uc_resource_view_image",
-  "uc_resource_view_audio", "uc_resource_view_script", "uc_remake_run"
+  "uc_resource_view_audio", "uc_resource_view_script"
 ];
+
+// 操作记录菜单及其 7 个子页（菜单权限，缺失即隐藏对应入口）
+const OPERATION_RECORDS_KEYS = [
+  "uc_operation_records",
+  "uc_operation_records_derivation", "uc_operation_records_push", "uc_operation_records_plan",
+  "uc_operation_records_upload", "uc_operation_records_export", "uc_operation_records_download", "uc_operation_records_login"
+];
+
+// 数据分析系（视频数据分析/广告账户分析及其导出）——默认仅超级管理员
+const DATA_ANALYSIS_KEYS = [
+  "uc_analysis_video", "uc_analysis_ad_platform", "uc_analysis_ad_platform_export",
+  "uc_analysis_platform_tags", "uc_analysis_platform_tags_export",
+  "uc_analysis_tag_analytics", "uc_analysis_tag_analytics_export",
+  "uc_analysis_account", "uc_analysis_account_data", "uc_analysis_account_data_export",
+  "uc_analysis_status_report"
+];
+
+const OPERATION_RECORDS_EXPORT_KEY = "uc_operation_records_export_btn";
+
+const BASIC_USER_KEYS = [...RESOURCE_VIEW_KEYS, "uc_remake_run", ...OPERATION_RECORDS_KEYS];
 
 const mergePermissionKeys = (...groups: string[][]): string[] => Array.from(new Set(groups.flat()));
 
-const CONTENT_CREATOR_KEYS = USER_PERMISSION_KEYS.filter(key => key !== "uc_ad_plan_manage");
+const CONTENT_CREATOR_KEYS = USER_PERMISSION_KEYS.filter(key => !DATA_ANALYSIS_KEYS.includes(key) && key !== OPERATION_RECORDS_EXPORT_KEY);
 
-const AD_OPERATOR_KEYS = [...BASIC_USER_KEYS, "uc_finished_ad_push", "uc_ad_plan_manage", "uc_finished_ad_records"];
+const AD_OPERATOR_KEYS = [...BASIC_USER_KEYS, "uc_finished_ad_push", "uc_derivation_push", "uc_finished_ad_records"];
 
 const ADMIN_CONTENT_KEYS = [
   "ab_resource_view", "ab_video_status_manage", "ab_tag_manage",
@@ -287,7 +347,7 @@ const SECURITY_AUDIT_KEYS = [
   "ab_role_view", "ab_audit_view", "ab_audit_export", "ab_login_log_view"
 ];
 
-const INITIAL_ROLES: RolePermission[] = [
+export const INITIAL_ROLES: RolePermission[] = [
   {
     id: "role_staff",
     name: "普通员工",
@@ -570,7 +630,7 @@ const INITIAL_ROLES: RolePermission[] = [
   }
 ] as RolePermission[];
 
-const SUPER_ADMIN_ROLE_ID = "role_super_admin";
+export const SUPER_ADMIN_ROLE_ID = "role_super_admin";
 const legacyRoleDescriptions: Record<string, string> = {
   role_staff: "基础工作台、本人资源与被分配任务的最小可用权限",
   role_dept_head: "管理本部门及下级分组的任务、内容、数据与积分审批",
@@ -1305,7 +1365,7 @@ export default function AdminSystemManagementView() {
       }
     }
 
-    setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, checkedKeys: nextKeys } : r));
+    setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, checkedKeys: applyPermissionLinkage(nextKeys) } : r));
   };
 
   const handleSelectAllTree = () => {
@@ -1331,6 +1391,7 @@ export default function AdminSystemManagementView() {
   const [expandedNodeIds, setExpandedNodeIds] = useState<string[]>([
     "uc_resource_library", "uc_resource_upload", "uc_finished_management", "uc_material_management",
     "uc_third_party_management", "uc_script_management", "uc_image_management", "uc_audio_management",
+    "uc_data_analysis", "uc_analysis_video", "uc_analysis_account", "uc_operation_records",
     "ab_content_management", "ab_system_management", "ab_member_view", "ab_audit_view"
   ]);
 
@@ -1376,7 +1437,7 @@ export default function AdminSystemManagementView() {
       nextKeys = Array.from(setObj);
     }
 
-    setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, checkedKeys: nextKeys } : r));
+    setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, checkedKeys: applyPermissionLinkage(nextKeys) } : r));
   };
 
   // Helper to render Tree Nodes for Roles matching screenshot style
