@@ -11,13 +11,17 @@ import AnchoredPopover from "./overlays/AnchoredPopover";
 
 interface ViralInspirationGalleryProps {
   uploadedVideos: Asset[];
+  /** 直接传入的爆款成片（第三方管理视频），优先于 uploadedVideos */
+  videos?: FinishedVideo[];
+  /** 复刻来源所属区块，默认"成片"；爆款成片来自第三方管理时传"第三方" */
+  remakeSection?: SourceVideo["section"];
   onPreview: (video: FinishedVideo) => void;
   onRemake: (source: SourceVideo) => void;
 }
 
 function ViralInspirationCard({ video, heat, active, onEnter, onLeave, onPreview, onRemake }: {
   video: FinishedVideo;
-  heat: number | null;
+  heat: number | null | undefined;
   active: boolean;
   onEnter: () => void;
   onLeave: () => void;
@@ -78,10 +82,7 @@ function ViralInspirationCard({ video, heat, active, onEnter, onLeave, onPreview
           {(video.tags || []).map((tag) => <span key={tag} className="max-w-full truncate rounded bg-white/20 px-1.5 py-0.5 text-[10px] leading-4">{tag}</span>)}
         </div>
         <div className="relative mt-2 h-8">
-          <span data-testid="viral-inspiration-heat" className="pointer-events-auto absolute inset-y-0 right-0 flex items-center gap-1 whitespace-nowrap text-[10px] font-semibold tabular-nums">
-            <Flame className="h-3.5 w-3.5 shrink-0 text-orange-400" />{heat === null ? "暂无热度" : `热度 ${heat.toLocaleString("zh-CN")}`}
-          </span>
-          <button type="button" onClick={onRemake} className="pointer-events-none absolute inset-0 flex w-full items-center justify-center gap-1 rounded-md bg-violet-600 px-1 text-[11px] font-semibold text-white opacity-0 transition-opacity hover:bg-violet-700 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100">
+          <button type="button" onClick={onRemake} style={{ opacity: active ? 1 : 0, pointerEvents: active ? "auto" : "none" }} className="absolute inset-0 flex w-full items-center justify-center gap-1 rounded-md bg-violet-600 px-1 text-[11px] font-semibold text-white hover:bg-violet-700">
             <Copy className="h-3.5 w-3.5 shrink-0" />一键复刻
           </button>
         </div>
@@ -90,14 +91,16 @@ function ViralInspirationCard({ video, heat, active, onEnter, onLeave, onPreview
   );
 }
 
-export default function ViralInspirationGallery({ uploadedVideos, onPreview, onRemake }: ViralInspirationGalleryProps) {
+export default function ViralInspirationGallery({ uploadedVideos, videos: additionalVideos, remakeSection = "成片", onPreview, onRemake }: ViralInspirationGalleryProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const categoryButtonRef = useRef<HTMLButtonElement>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const { videos } = useFinishedVideos(uploadedVideos);
+  const { videos: uploadedVideosResolved } = useFinishedVideos(uploadedVideos);
   const { rule, month } = useViralVideoRule();
-  const viralVideos = useMemo(() => videos.filter((video) => isViralVideo(video, rule, month)), [videos, rule, month]);
+  const usingAdditional = Boolean(additionalVideos && additionalVideos.length > 0);
+  const pool = useMemo(() => (usingAdditional ? additionalVideos : uploadedVideosResolved), [usingAdditional, additionalVideos, uploadedVideosResolved]);
+  const viralVideos = useMemo(() => (usingAdditional ? pool : pool.filter((video) => isViralVideo(video, rule, month))), [usingAdditional, pool, rule, month]);
   const categories = useMemo(() => getVideoSecondaryCategories(viralVideos), [viralVideos]);
   const activeCategory = selectedCategory && categories.includes(selectedCategory) ? selectedCategory : null;
   const categoryLabel = activeCategory ?? "全部爆款";
@@ -108,10 +111,10 @@ export default function ViralInspirationGallery({ uploadedVideos, onPreview, onR
 
   const items = useMemo(() => viralVideos
     .filter((video) => activeCategory === null || parseVideoCategory(video.category).secondary === activeCategory)
-    .map((video) => ({ video, heat: getViralVideoHeat(video, month) }))
+    .map((video) => ({ video, heat: usingAdditional ? undefined : getViralVideoHeat(video, month) }))
     .sort((left, right) => (right.heat ?? -1) - (left.heat ?? -1)
       || right.video.createdAt.localeCompare(left.video.createdAt)
-      || left.video.id.localeCompare(right.video.id)), [viralVideos, month, activeCategory]);
+      || left.video.id.localeCompare(right.video.id)), [viralVideos, month, usingAdditional, activeCategory]);
 
   return (
     <section aria-label="电商爆款灵感画廊" data-testid="viral-inspiration-gallery" className="space-y-3">
@@ -150,7 +153,7 @@ export default function ViralInspirationGallery({ uploadedVideos, onPreview, onR
                 onEnter={() => setHoveredId(video.id)}
                 onLeave={() => setHoveredId((current) => current === video.id ? null : current)}
                 onPreview={() => { setHoveredId(null); onPreview(video); }}
-                onRemake={() => { setHoveredId(null); onRemake({ id: video.id, name: video.title, url: video.videoUrl, cover: video.coverUrl, duration: video.duration, size: video.size, section: "成片" }); }}
+                onRemake={() => { setHoveredId(null); onRemake({ id: video.id, name: video.title, url: video.videoUrl, cover: video.coverUrl, duration: video.duration, size: video.size, section: remakeSection }); }}
               />
             ))}
           </div>

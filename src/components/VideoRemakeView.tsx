@@ -1126,7 +1126,19 @@ function SourceStep({ assets, source, language, videoRatio, resolution, operatio
   const previewCloseRef = useRef<HTMLButtonElement>(null);
   const [preview, setPreview] = useState<{ url: string; title: string } | null>(null);
   const [previewError, setPreviewError] = useState(false);
-  const uploadedVideos = useMemo(() => assets.filter((asset) => asset.id.startsWith("face-published-") && asset.resourceCategory === "成片"), [assets]);
+  const uploaded = useUploadedResources();
+  const lifecycle = useThirdPartyLifecycle();
+  const { edits: thirdPartyEdits } = useResourceEdits<FinishedVideo & { deleted?: boolean }>("thirdParty");
+  const thirdPartyBase = useMemo(() => {
+    const uniqueVideos = new Map<string, FinishedVideo>();
+    for (const video of [...uploaded.filter((item) => item.resourceCategory === "第三方").map(toPublishedVideo), ...assets.filter((item) => item.type === "video" && item.resourceCategory === "第三方").map(toPublishedVideo), ...INITIAL_THIRD_PARTY]) {
+      if (!uniqueVideos.has(video.id)) uniqueVideos.set(video.id, video);
+    }
+    return [...uniqueVideos.values()]
+      .filter((video) => (!lifecycle[video.id] || lifecycle[video.id].state === "active") && !thirdPartyEdits[video.id]?.deleted)
+      .map((video) => ({ ...video, ...thirdPartyEdits[video.id] }));
+  }, [assets, uploaded, lifecycle, thirdPartyEdits]);
+  const thirdPartyVideos = useTaggedResources("thirdParty", thirdPartyBase);
 
   useEffect(() => {
     if (!preview) return;
@@ -1152,7 +1164,9 @@ function SourceStep({ assets, source, language, videoRatio, resolution, operatio
     <div className="mt-6 flex justify-center"><PrimaryGenerationButton disabled={!source || !!operation} onClick={onAnalyze}>开始解析</PrimaryGenerationButton></div>
   </div>
     <ViralInspirationGallery
-      uploadedVideos={uploadedVideos}
+      uploadedVideos={[]}
+      videos={thirdPartyVideos}
+      remakeSection="第三方"
       onPreview={(video) => {
         setPreviewError(false);
         setPreview({ url: video.videoUrl, title: video.title });
