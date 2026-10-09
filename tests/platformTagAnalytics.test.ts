@@ -12,8 +12,8 @@ const currencyNumber = (value: string | number) => Number(String(value).replace(
 
 test("five dimensions expose the reference columns on both platforms", () => {
   const identities = {
-    team: ["部门"], group: ["部门", "分组"], user: ["部门", "分组", "用户"],
-    account: ["广告账户", "主体", "部门", "分组", "用户", "一级分类", "二级分类"],
+    team: ["团队"], group: ["团队", "分组"], user: ["团队", "分组", "用户"],
+    account: ["广告账户", "主体", "团队", "分组", "用户", "一级分类", "二级分类"],
   };
   for (const platform of ["巨量千川", "巨量广告"]) {
     const selected = selectPlatformTagFacts(facts, platform, "summary", {});
@@ -23,15 +23,15 @@ test("five dimensions expose the reference columns on both platforms", () => {
       const headers = table.columns.map(column => column.label);
       if (id === "summary") {
         assert.deepEqual(headers, ["广告标签", "素材数量", "数量占比", "消耗", "消耗占比"]);
-        assert.equal(table.rows.length, 6);
+        assert.deepEqual(table.rows.map(row => row.values.label), ["首发素材", "优质素材", "低效素材", "低质素材"]);
         assert.equal(table.total.values.count, reportTotals(selected).materials);
         assert.equal(table.rows.reduce((sum, row) => sum + Number(row.values.count), 0), reportTotals(selected).materials);
         assert.ok(Math.abs(table.rows.reduce((sum, row) => sum + currencyNumber(row.values.spend), 0) - reportTotals(selected).spend) < 0.001);
       } else {
         assert.deepEqual(headers.slice(0, identities[id].length), identities[id]);
-        assert.equal(headers.length, identities[id].length + 9);
+        assert.equal(headers.length, identities[id].length + 7);
         const total = qualityReport(selected);
-        for (const key of ["totalMaterials", "firstRelease", "highQuality", "lowEfficiency", "lowQuality", "homogeneitySevere", "homogeneityRisk"] as const) {
+        for (const key of ["totalMaterials", "firstRelease", "highQuality", "lowEfficiency", "lowQuality"] as const) {
           assert.equal(table.total.values[key], total[key]);
           assert.equal(table.rows.reduce((sum, row) => sum + Number(row.values[key]), 0), total[key]);
         }
@@ -64,7 +64,7 @@ test("filters combine by dimension without hidden conditions leaking into other 
   const row = facts[0];
   const result = selectPlatformTagFacts(facts, row.platform, "account", {
     groupKey: platformTagGroupKey(row.department, row.group), subject: " 梦畅 ", category: row.category,
-    department: "隐藏部门", memberId: "hidden-member", start: row.date, end: row.date,
+    department: "隐藏团队", memberId: "hidden-member", start: row.date, end: row.date,
   });
   assert.ok(result.length > 0);
   assert.ok(result.every(item => item.platform === row.platform && item.date === row.date && item.department === row.department && item.group === row.group));

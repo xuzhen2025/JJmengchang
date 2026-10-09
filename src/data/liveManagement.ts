@@ -1,4 +1,4 @@
-export type LiveRole = "主播" | "助播" | "场控" | "中控" | "投手" | "部门管理员";
+export type LiveRole = "主播" | "助播" | "场控" | "中控" | "投手" | "团队管理员";
 export type AccountStatus = "已绑定" | "首次同步中" | "授权即将到期" | "已解绑";
 export type SessionStatus = "直播中" | "已结束" | "数据同步中" | "数据异常";
 export type EmployeeStatus = "在职" | "已停用" | "已离职";
@@ -148,7 +148,7 @@ export const INITIAL_EMPLOYEES: LiveEmployee[] = [
   { id: "emp-4", name: "谭明珠", login: "tanmingzhu", phone: "136****4310", employment: "全职", joinDate: "2025-11-02", status: "在职", nightShift: true, assignments: [{ accountId: "acc-1", role: "助播" }, { accountId: "acc-2", role: "中控" }] },
   { id: "emp-5", name: "冯浩伦", login: "fenghaolun", phone: "135****2266", employment: "全职", joinDate: "2026-01-08", status: "在职", nightShift: true, assignments: [{ accountId: "acc-1", role: "场控" }, { accountId: "acc-3", role: "场控" }] },
   { id: "emp-6", name: "刘弯", login: "liuwan", phone: "133****9072", employment: "兼职", joinDate: "2026-02-18", status: "在职", nightShift: false, assignments: [{ accountId: "acc-2", role: "投手" }] },
-  { id: "emp-7", name: "梁浩然", login: "lianghaoran", phone: "132****6348", employment: "全职", joinDate: "2025-09-21", status: "在职", nightShift: true, assignments: [{ accountId: "acc-3", role: "部门管理员" }, { accountId: "acc-1", role: "投手" }] },
+  { id: "emp-7", name: "梁浩然", login: "lianghaoran", phone: "132****6348", employment: "全职", joinDate: "2025-09-21", status: "在职", nightShift: true, assignments: [{ accountId: "acc-3", role: "团队管理员" }, { accountId: "acc-1", role: "投手" }] },
   { id: "emp-8", name: "霍小棠", login: "huoxiaotang", phone: "131****1850", employment: "兼职", joinDate: "2026-07-12", status: "已停用", nightShift: false, assignments: [{ accountId: "acc-2", role: "助播" }] },
   { id: "former-1", name: "周可欣", login: "zhoukexin", phone: "130****5294", employment: "全职", joinDate: "2025-06-12", status: "已离职", nightShift: false, assignments: [{ accountId: "acc-2", role: "助播" }] },
 ];
@@ -200,7 +200,7 @@ export const INITIAL_REDUCTION_RECORDS: ReductionRecord[] = [
   { id: "reduce-2", employeeId: "former-2", employeeName: "陈一诺", roles: "梦畅美妆旗舰店-场控", joinDate: "2025-09-03", reducedAt: "2026-07-18", reason: "合同到期", lastWorkDate: "2026-07-22", operator: "徐振", note: "账号权限已回收" },
 ];
 
-export const LIVE_ROLES: LiveRole[] = ["主播", "助播", "场控", "中控", "投手", "部门管理员"];
+export const LIVE_ROLES: LiveRole[] = ["主播", "助播", "场控", "中控", "投手", "团队管理员"];
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<LiveRole, string[]> = {
   主播: ["查看我的直播号", "查看直播记录", "查看主播数据", "查看直播排班"],
@@ -208,5 +208,5 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<LiveRole, string[]> = {
   场控: ["查看运营控制台", "查看直播记录", "查看直播排班"],
   中控: ["查看运营控制台", "查看直播商品", "查看直播记录", "查看直播排班"],
   投手: ["查看投放数据", "查看直播记录", "查看主播数据"],
-  部门管理员: ["直播管理全部功能", "部门配置", "店铺授权", "排班管理"],
+  团队管理员: ["直播管理全部功能", "团队配置", "店铺授权", "排班管理"],
 };

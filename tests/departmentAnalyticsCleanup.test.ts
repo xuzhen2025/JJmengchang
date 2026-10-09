@@ -5,7 +5,7 @@ import test from "node:test";
 test("department analytics pages and exclusive dependencies are removed without removing shared reports", () => {
   const src = new URL("../src/", import.meta.url);
   const router = readFileSync(new URL("components/AdDeliveryView.tsx", src), "utf8");
-  assert.doesNotMatch(router, /team_analytics|data_insights|creation_analytics|task_analytics|部门分析/);
+  assert.doesNotMatch(router, /team_analytics|data_insights|creation_analytics|task_analytics|团队分析/);
   assert.match(router, /MainCategory = "video_analytics" \| "account_analytics"/);
   for (const file of [
     "components/DataInsightsView.tsx",

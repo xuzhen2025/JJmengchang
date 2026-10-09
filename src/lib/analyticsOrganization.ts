@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ANALYTICS_DEMO_MEMBERS, INITIAL_DEPTS, INITIAL_MEMBERS, PROTOTYPE_OPERATOR, type DeptNode, type AccountMember } from "../data/adminAccounts";
+import { teamTerminology } from "./organizationTerminology";
 
 export const ORGANIZATION_CHANGE = "mengchang-organization-change";
 export interface ReportOrganization { depts: DeptNode[]; members: AccountMember[] }
@@ -13,7 +14,12 @@ export function readReportOrganization(): ReportOrganization {
   let members = stored<AccountMember>("cloud_video_members", INITIAL_MEMBERS);
   // 超管身份版本迁移：旧数据中"张总"超管统一更名为"徐振"（与登录侧边栏/个人中心一致），并持久化
   try {
-    const renamed = members.map(m => (m.name === "张总" && Array.isArray(m.roleIds) && m.roleIds.includes("role_super_admin")) ? { ...m, name: "徐振", email: "zhen@dreamchang.com" } : m);
+    const renamed = members.map(m => {
+      const member = m.name === "张总" && Array.isArray(m.roleIds) && m.roleIds.includes("role_super_admin")
+        ? { ...m, name: "徐振", email: "zhen@dreamchang.com" } : m;
+      const roleName = teamTerminology(member.roleName || "");
+      return roleName !== member.roleName ? { ...member, roleName } : member;
+    });
     if (renamed.some((m, i) => m !== members[i])) { members = renamed; localStorage.setItem("cloud_video_members", JSON.stringify(members)); }
   } catch { /* Storage is optional for this prototype. */ }
   // Add only the approved examples once, preserving edits and intentional later deletions.
@@ -50,7 +56,7 @@ export function memberOrganization(org: ReportOrganization, name: string) {
   const node = org.depts.find(row => row.id === member?.deptId);
   const isGroup = node?.levelType === "group" || (node?.parentId && node.parentId !== "dept_root");
   const department = isGroup ? org.depts.find(row => row.id === node.parentId) : node;
-  return { person: member?.name || "未关联员工", department: department?.name || "未归属部门", group: isGroup ? node!.name : "未归属分组", memberId: member?.id || "" };
+  return { person: member?.name || "未关联员工", department: department?.name || "未归属团队", group: isGroup ? node!.name : "未归属分组", memberId: member?.id || "" };
 }
 export function organizationTree(org: ReportOrganization) {
   return org.depts.filter(row => row.levelType !== "group" && (row.parentId === "dept_root" || row.id === "dept_root")).map(dept => ({

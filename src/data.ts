@@ -1,106 +1,7 @@
 import { GalleryItem, Asset, Task, CreditTransaction, AppMessage, AiVideoMediaItem, WatermarkTaskSnapshot, EnhanceTaskSnapshot } from "./types";
-
-export const MESSAGE_CATEGORY_CONFIGS = [
-  { id: "approval", name: "审批待办", subcategories: ["积分申请"] },
-  { id: "resource", name: "内容资源", subcategories: ["上传成功", "上传失败", "AI生成完成", "状态修改", "批注与@提醒"] },
-  { id: "security", name: "安全与系统", subcategories: ["异常登录", "账号锁定", "权限变更", "数据导出记录", "系统公告"] },
-] as const;
+export { MESSAGE_CATEGORY_CONFIGS } from "./lib/notificationSettings";
 
 export const INITIAL_MESSAGES: AppMessage[] = [
-  {
-    id: "msg_init_credits_1",
-    category: "审批待办",
-    subcategory: "积分申请",
-    type: "积分申请",
-    title: "梁靖淇申请 500 积分，等待你的审批",
-    detail: "申请人【梁靖淇】发起【500 积分】算力补给申请，请审批。关联项目：千川服装爆款视频批量生成。",
-    status: "unread",
-    time: "2026-08-19 10:15:20",
-    isRedDot: true,
-    summary: "申请人: 梁靖淇 | 申请积分: 500 | 审批部长: 张总 (品牌一部部长)",
-    eventCode: "CREDIT_APPLICATION_SUBMITTED",
-    template: "approval",
-    severity: "warning",
-    actorName: "梁靖淇",
-    recipientNames: ["徐振"],
-    sourceType: "积分申请单",
-    sourceId: "CA-20260819-001",
-    businessStatus: "待审批",
-    approvalType: "credits",
-    approvalStatus: "pending",
-    applicantName: "梁靖淇",
-    managerName: "张总 (品牌一部部长)",
-    creditsAmount: 500,
-    reason: "千川服装爆款视频批量生成与4K画质增强渲染",
-    details: [
-      { label: "申请人", value: "梁靖淇" },
-      { label: "所属部门", value: "AIGC爆款内容拆解部" },
-      { label: "申请积分数量", value: "500 积分" },
-      { label: "审批部长/主管", value: "张总 (品牌一部部长)" },
-      { label: "关联业务项目", value: "千川服装爆款视频批量生成" },
-      { label: "申请原因用途", value: "千川服装爆款视频批量生成与4K画质增强渲染" },
-      { label: "提交时间", value: "2026-08-19 10:15:20" },
-      { label: "当前审核状态", value: "待审批" }
-    ]
-  },
-  {
-    id: "msg_task_new", category: "任务协作", subcategory: "新任务", type: "新任务",
-    title: "王经理向你指派了新任务", detail: "任务《七夕美妆礼盒短视频》需要产出 3 条成片，请在 8 月 22 日前完成。",
-    status: "unread", time: "2026-08-19 09:42:10", eventCode: "TASK_ASSIGNED", template: "task", severity: "info",
-    actorName: "王经理（发布人）", recipientNames: ["徐振（执行人）"], sourceType: "任务", sourceId: "TASK-20260819-018", businessStatus: "待完成",
-    actionLabel: "查看任务", actionScreen: "task_collaboration",
-    details: [{ label: "任务名称", value: "七夕美妆礼盒短视频" }, { label: "任务要求", value: "3 条成片，比例 9:16，单条 20-30 秒" }, { label: "出片日期", value: "2026-08-22" }, { label: "优先级", value: "高" }]
-  },
-  {
-    id: "msg_task_rescheduled", category: "任务协作", subcategory: "任务改期", type: "任务改期",
-    title: "任务出片日期由 8 月 22 日调整为 8 月 21 日", detail: "王经理修改了《七夕美妆礼盒短视频》的出片日期，请重新安排制作计划。",
-    status: "unread", time: "2026-08-19 09:18:32", eventCode: "TASK_DUE_DATE_CHANGED", template: "task", severity: "warning",
-    actorName: "王经理（发布人）", recipientNames: ["徐振（执行人）"], sourceType: "任务", sourceId: "TASK-20260819-018", businessStatus: "制作中",
-    actionLabel: "查看变更", actionScreen: "task_collaboration",
-    details: [{ label: "任务名称", value: "七夕美妆礼盒短视频" }, { label: "原出片日期", value: "2026-08-22" }, { label: "新出片日期", value: "2026-08-21" }, { label: "改期说明", value: "直播预热计划提前一天" }]
-  },
-  {
-    id: "msg_task_work_linked", category: "任务协作", subcategory: "关联作品", type: "关联作品",
-    title: "徐振为任务关联了 2 条新成片", detail: "任务《七夕美妆礼盒短视频》当前已关联 2/3 条所需作品。",
-    status: "unread", time: "2026-08-19 08:56:05", eventCode: "TASK_WORK_LINKED", template: "task", severity: "success",
-    actorName: "徐振（执行人）", recipientNames: ["王经理（发布人）"], sourceType: "任务", sourceId: "TASK-20260819-018", businessStatus: "2/3 条已完成",
-    actionLabel: "查看关联作品", actionScreen: "task_collaboration",
-    details: [{ label: "关联作品", value: "水光针去黄测评、复古耳环动态奢感视频" }, { label: "作品数量", value: "新增 2 条，累计 2/3 条" }, { label: "执行人", value: "徐振" }],
-    relatedResources: [
-      { id: "110332275", name: "0730-8836-水光针去黄测评-爆款对比.mp4", type: "成片" },
-      { id: "110332274", name: "0730-8835-鲁月园-复古耳环动态奢感视频.mp4", type: "成片" }
-    ]
-  },
-  {
-    id: "msg_task_script_linked", category: "任务协作", subcategory: "关联脚本", type: "关联脚本",
-    title: "徐振为任务关联了脚本", detail: "任务《七夕美妆礼盒短视频》已关联脚本《脚本 1 - 口播温和洁面破圈案》。",
-    status: "read", time: "2026-08-18 18:24:46", eventCode: "TASK_SCRIPT_LINKED", template: "task", severity: "info",
-    actorName: "徐振（执行人）", recipientNames: ["王经理（发布人）"], sourceType: "任务", sourceId: "TASK-20260819-018", businessStatus: "制作中",
-    actionLabel: "查看关联脚本", actionScreen: "task_collaboration",
-    details: [{ label: "脚本名称", value: "脚本 1 - 口播温和洁面破圈案" }, { label: "脚本编号", value: "SCRIPT-88216" }, { label: "关联人", value: "徐振" }],
-    relatedResources: [{ id: "SCRIPT-88216", name: "脚本 1 - 口播温和洁面破圈案", type: "脚本" }]
-  },
-  {
-    id: "msg_task_completed", category: "任务协作", subcategory: "任务完成", type: "任务完成",
-    title: "任务所需 3 条作品已全部上传", detail: "徐振已完成《夏季防晒返场素材》的全部作品上传，任务自动标记为已达标。",
-    status: "unread", time: "2026-08-18 16:35:18", eventCode: "TASK_TARGET_REACHED", template: "task", severity: "success",
-    actorName: "徐振（执行人）", recipientNames: ["王经理（发布人）"], sourceType: "任务", sourceId: "TASK-20260816-009", businessStatus: "已达标",
-    actionLabel: "验收任务", actionScreen: "task_collaboration",
-    details: [{ label: "任务名称", value: "夏季防晒返场素材" }, { label: "完成情况", value: "3/3 条作品" }, { label: "完成时间", value: "2026-08-18 16:35:18" }],
-    relatedResources: [
-      { id: "110332276", name: "0730-8837-防晒冰丝T恤冷感微距分镜.mp4", type: "成片" },
-      { id: "110332277", name: "0730-8838-不粘锅真实口播展示.mp4", type: "成片" },
-      { id: "IMG-42029245", name: "防晒植物提取精华液展图.jpg", type: "图片" }
-    ]
-  },
-  {
-    id: "msg_task_overdue", category: "任务协作", subcategory: "任务逾期", type: "任务逾期",
-    title: "任务已逾期 18 小时", detail: "《家居收纳直播切片》应于 8 月 18 日 18:00 完成，目前仅上传 1/4 条作品。",
-    status: "unread", time: "2026-08-19 12:00:00", eventCode: "TASK_OVERDUE", template: "task", severity: "danger",
-    actorName: "系统", recipientNames: ["陈主管（发布人）", "李剪辑（执行人）"], sourceType: "任务", sourceId: "TASK-20260815-006", businessStatus: "已逾期",
-    actionLabel: "查看任务", actionScreen: "task_collaboration",
-    details: [{ label: "计划出片时间", value: "2026-08-18 18:00" }, { label: "当前进度", value: "1/4 条作品" }, { label: "逾期时长", value: "18 小时" }]
-  },
   {
     id: "msg_upload_success", category: "内容资源", subcategory: "上传成功", type: "上传成功",
     title: "成片《0730-8839-高弹透气提臀内裤走秀实拍.mp4》上传成功", detail: "文件已完成上传与转码，可在成片区查看和继续编辑。",
@@ -120,11 +21,11 @@ export const INITIAL_MESSAGES: AppMessage[] = [
   },
   {
     id: "msg_ai_completed", category: "内容资源", subcategory: "AI生成完成", type: "AI生成完成",
-    title: "AI 视频任务已生成 6 条结果", detail: "《玫瑰精华七夕氛围视频》生成完成，结果已保存到资源库。",
+    title: "爆款复刻任务已生成 6 条结果", detail: "《玫瑰精华七夕氛围视频》生成完成，结果已保存到资源库。",
     status: "unread", time: "2026-08-19 10:46:20", eventCode: "AI_GENERATION_COMPLETED", template: "resource", severity: "success",
     actorName: "AI生成服务", recipientNames: ["徐振（发起人）"], sourceType: "AI生成任务", sourceId: "AI-VIDEO-20260819-026", businessStatus: "已完成",
-    actionLabel: "查看生成结果", actionScreen: "ai_video",
-    details: [{ label: "任务名称", value: "玫瑰精华七夕氛围视频" }, { label: "生成结果", value: "成功 6 条，失败 0 条" }, { label: "积分消耗", value: "60 积分" }, { label: "保存位置", value: "资源库 / 成片 / AI生成结果" }],
+    actionLabel: "查看生成结果", actionScreen: "resources",
+    details: [{ label: "任务名称", value: "玫瑰精华七夕氛围视频" }, { label: "生成类型", value: "爆款复刻" }, { label: "生成结果", value: "成功 6 条，失败 0 条" }, { label: "保存位置", value: "资源库 / 成片 / AI生成结果" }],
     relatedResources: [
       { id: "110332274", name: "0730-8835-鲁月园-复古耳环动态奢感视频.mp4", type: "成片" },
       { id: "110332275", name: "0730-8836-水光针去黄测评-爆款对比.mp4", type: "成片" },
@@ -153,38 +54,6 @@ export const INITIAL_MESSAGES: AppMessage[] = [
     relatedResources: [{ id: "110332281", name: "0730-8842-秒缇8024前扣内衣搭扣方便性演示.mp4", type: "成片" }]
   },
   {
-    id: "msg_live_schedule", category: "直播", subcategory: "新增排班", type: "新增排班",
-    title: "你被安排参加 8 月 20 日直播", detail: "梦畅美妆主直播间新增 09:00-13:00 场次，你的岗位为主播。",
-    status: "unread", time: "2026-08-19 09:36:00", eventCode: "LIVE_SHIFT_CREATED", template: "live", severity: "info",
-    actorName: "徐振（排班人）", recipientNames: ["徐云卿", "谭明珠", "冯浩伦"], sourceType: "直播场次", sourceId: "SHIFT-20260820-001", businessStatus: "待开播",
-    actionLabel: "查看排班", actionScreen: "live_management",
-    details: [{ label: "直播间", value: "梦畅美妆主直播间" }, { label: "直播时间", value: "2026-08-20 09:00-13:00" }, { label: "参与人员", value: "徐云卿（主播）、谭明珠（助播）、冯浩伦（场控）" }]
-  },
-  {
-    id: "msg_live_changed", category: "直播", subcategory: "排班调整", type: "排班调整",
-    title: "直播开始时间调整为 10:00", detail: "8 月 20 日梦畅美妆主直播间的开播时间由 09:00 调整为 10:00。",
-    status: "unread", time: "2026-08-19 09:40:26", eventCode: "LIVE_SHIFT_CHANGED", template: "live", severity: "warning",
-    actorName: "徐振（排班人）", recipientNames: ["徐云卿", "谭明珠", "冯浩伦"], sourceType: "直播场次", sourceId: "SHIFT-20260820-001", businessStatus: "已调整",
-    actionLabel: "查看新排班", actionScreen: "live_management",
-    details: [{ label: "调整内容", value: "09:00-13:00 -> 10:00-14:00" }, { label: "调整原因", value: "商品样品到场时间延迟" }, { label: "受影响人员", value: "徐云卿、谭明珠、冯浩伦" }]
-  },
-  {
-    id: "msg_live_cancelled", category: "直播", subcategory: "取消场次", type: "取消场次",
-    title: "8 月 19 日晚间返场直播已取消", detail: "梦畅服饰主直播间 20:00-23:00 场次已取消，相关人员无需到场。",
-    status: "read", time: "2026-08-18 17:12:02", eventCode: "LIVE_SHIFT_CANCELLED", template: "live", severity: "danger",
-    actorName: "梁主管（排班人）", recipientNames: ["梁清淇", "李助播", "周场控"], sourceType: "直播场次", sourceId: "SHIFT-20260819-008", businessStatus: "已取消",
-    actionLabel: "查看排班记录", actionScreen: "live_management",
-    details: [{ label: "原直播时间", value: "2026-08-19 20:00-23:00" }, { label: "取消原因", value: "主推商品临时下架" }, { label: "受影响人员", value: "梁清淇、李助播、周场控" }]
-  },
-  {
-    id: "msg_live_reminder", category: "直播", subcategory: "开播提醒", type: "开播提醒",
-    title: "距离开播还有 30 分钟", detail: "七夕美妆礼盒专场将在 09:30 开播，请相关人员完成设备与商品检查。",
-    status: "unread", time: "2026-08-19 09:00:00", eventCode: "LIVE_START_REMINDER", template: "live", severity: "warning",
-    actorName: "系统", recipientNames: ["徐云卿", "谭明珠", "冯浩伦"], sourceType: "直播场次", sourceId: "LIVE-10086", businessStatus: "即将开播",
-    actionLabel: "进入直播管理", actionScreen: "live_management",
-    details: [{ label: "直播间", value: "梦畅美妆主直播间" }, { label: "直播主题", value: "七夕美妆礼盒专场" }, { label: "计划开播", value: "2026-08-19 09:30" }, { label: "准备事项", value: "设备检查、商品上架、直播脚本确认" }]
-  },
-  {
     id: "msg_login_risk", category: "安全与系统", subcategory: "异常登录", type: "异常登录",
     title: "检测到新的异地登录", detail: "你的账号于北京市通过一台新设备登录，如非本人操作请立即处理。",
     status: "unread", time: "2026-08-19 07:42:36", eventCode: "SECURITY_ABNORMAL_LOGIN", template: "security", severity: "danger",
@@ -210,17 +79,17 @@ export const INITIAL_MESSAGES: AppMessage[] = [
   },
   {
     id: "msg_export_audit_normal", category: "安全与系统", subcategory: "数据导出记录", type: "数据导出记录",
-    title: "张小梅导出了任务进度报表", detail: "张小梅导出电商事业部近 30 天任务进度数据，共 286 条，系统已留存审计记录。",
+    title: "张小梅导出了广告平台分析报表", detail: "张小梅导出电商事业部近 30 天广告平台分析数据，共 286 条，系统已留存审计记录。",
     status: "read", time: "2026-08-19 08:26:18", eventCode: "DATA_EXPORT_AUDIT_RECORDED", template: "security", severity: "info",
     actorName: "张小梅（剪辑组长）", recipientNames: ["徐振（超级管理员）", "王敏（安全审计员）"], sourceType: "导出审计", sourceId: "EXPORT-20260819-032", businessStatus: "正常",
     actionLabel: "查看审计记录",
     details: [
       { label: "导出人员", value: "张小梅 / 电商事业部 / 剪辑组长" },
       { label: "导出时间", value: "2026-08-19 08:26:18" },
-      { label: "导出数据", value: "任务协作 - 任务进度报表" },
-      { label: "筛选范围", value: "电商事业部；2026-07-20 至 2026-08-18；全部任务状态" },
+      { label: "导出数据", value: "数据分析 - 广告平台分析" },
+      { label: "筛选范围", value: "电商事业部；2026-07-20 至 2026-08-18；巨量千川" },
       { label: "数据量与格式", value: "286 条 / XLSX / 1.8 MB" },
-      { label: "导出用途", value: "部门周会任务复盘" },
+      { label: "导出用途", value: "团队投放数据复盘" },
       { label: "操作环境", value: "IP 10.16.8.24 / Microsoft Edge 140 / Windows 11" },
       { label: "风险等级", value: "普通；未包含手机号、财务金额等敏感字段" }
     ]
@@ -239,7 +108,7 @@ export const INITIAL_MESSAGES: AppMessage[] = [
       { label: "数据量与格式", value: "48,632 条 / CSV / 36.7 MB" },
       { label: "导出用途", value: "未填写" },
       { label: "操作环境", value: "IP 183.6.102.41（深圳市）/ Chrome 139 / macOS" },
-      { label: "风险等级", value: "高；跨部门、全量、包含财务字段，需管理员核查" },
+      { label: "风险等级", value: "高；跨团队、全量、包含财务字段，需管理员核查" },
       { label: "建议处理", value: "确认业务用途；必要时冻结下载链接并复核该用户数据权限" }
     ]
   },
@@ -248,16 +117,9 @@ export const INITIAL_MESSAGES: AppMessage[] = [
     title: "8 月 21 日凌晨进行系统维护", detail: "平台将在 02:00-03:00 进行存储升级，期间上传与AI生成任务将暂停提交。",
     status: "read", time: "2026-08-18 10:00:00", eventCode: "SYSTEM_MAINTENANCE_NOTICE", template: "security", severity: "warning",
     actorName: "平台运营", recipientNames: ["全体用户"], sourceType: "系统公告", sourceId: "NOTICE-20260818-001", businessStatus: "待执行",
-    details: [{ label: "维护时间", value: "2026-08-21 02:00-03:00" }, { label: "影响功能", value: "资源上传、AI视频、爆款复刻" }, { label: "不受影响", value: "资源浏览、任务查看、直播数据查看" }]
+    details: [{ label: "维护时间", value: "2026-08-21 02:00-03:00" }, { label: "影响功能", value: "资源上传、AI生成、爆款复刻" }, { label: "不受影响", value: "资源浏览、数据分析、操作记录查看" }]
   }
-].filter(
-  (message) =>
-    message.category !== "任务协作" &&
-    message.category !== "直播" &&
-    message.actionScreen !== "task_collaboration" &&
-    message.actionScreen !== "live_management" &&
-    message.actionScreen !== "ai_video",
-) as AppMessage[];
+];
 
 export const INITIAL_GALLERY: GalleryItem[] = [
   {

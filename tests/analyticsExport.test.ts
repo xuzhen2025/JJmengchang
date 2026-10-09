@@ -9,7 +9,7 @@ test("analytics export name contains page, local timestamp and only active filte
     filters: [
       { label: "平台", value: "巨量千川" },
       { label: "分类", value: "美妆护肤 / 护肤精华" },
-      { label: "部门", value: "" },
+      { label: "团队", value: "" },
       { label: "范围", value: "全部" },
     ],
     startDate: "2026-09-09",

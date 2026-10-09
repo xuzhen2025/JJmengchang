@@ -15,7 +15,7 @@ try {
     ["视频数据分析", ["广告平台分析", "广告平台标签", "标签分析"]],
     ["广告账户分析", ["广告账户数据", "投放状态报表"]],
   ];
-  for (const removed of ["部门分析", "数据洞察", "创作分析", "任务分析", "领导力洞察"]) {
+  for (const removed of ["团队分析", "数据洞察", "创作分析", "任务分析", "领导力洞察"]) {
     await expect(page.getByRole("button", { name: removed, exact: true })).toHaveCount(0);
   }
   await expect(page.getByRole("button", { name: "腾讯投放报表", exact: true })).toHaveCount(0);
@@ -53,7 +53,7 @@ try {
         await expect(page.getByRole("button", { name: "巨量广告", exact: true })).toBeVisible();
         await expect(page.getByRole("button", { name: "巨量千川", exact: true })).toBeVisible();
         await expect(deliveryTable).toContainText("暂无数据");
-        await page.getByRole("button", { name: "部门筛选", exact: true }).click();
+        await page.getByRole("button", { name: "团队筛选", exact: true }).click();
         await page.getByRole("checkbox", { name: "电商投放一部", exact: true }).check();
         await page.getByRole("checkbox", { name: "AIGC爆款内容拆解部", exact: true }).check();
         await expect(deliveryTable).toContainText("暂无数据");
@@ -66,7 +66,7 @@ try {
         await expect(page.getByRole("button", { name: "分类筛选", exact: true })).toBeVisible();
         for (const platform of ["巨量广告", "巨量千川"]) {
           await page.getByRole("button", { name: platform, exact: true }).click();
-          for (const dimension of ["部门数据", "分组数据", "个人数据", "广告主明细数据"]) {
+          for (const dimension of ["团队数据", "分组数据", "个人数据", "广告主明细数据"]) {
             await page.getByRole("button", { name: dimension, exact: true }).click();
             const help = page.getByRole("button", { name: "查看未投放状态说明", exact: true });
             const tooltip = page.getByRole("tooltip");
@@ -96,7 +96,9 @@ try {
         await expect(page.getByRole("heading", { name: "占比分析", exact: true })).toBeVisible();
         await expect(page.getByRole("heading", { name: "详细数据", exact: true })).toBeVisible();
         await expect(page.getByRole("combobox")).toHaveCount(2);
+        await expect(page.getByText("请选择标签组后查询", { exact: true })).toHaveCount(1);
         await page.getByRole("button", { name: "查询", exact: true }).click();
+        await expect(page.getByText("请先选择标签组", { exact: true })).toBeVisible();
         await page.getByRole("button", { name: "重置", exact: true }).click();
       }
       await expect(page.locator("main")).not.toContainText("NaN");
@@ -123,10 +125,10 @@ try {
   await page.evaluate(async () => {
     const { INITIAL_DEPTS } = await import("/src/data/adminAccounts.ts");
     const departments = JSON.parse(localStorage.getItem("cloud_video_depts") || "null") || INITIAL_DEPTS;
-    localStorage.setItem("cloud_video_depts", JSON.stringify(departments.map(dept => dept.id === "dept_3" ? { ...dept, name: "内容部门联动测试" } : dept)));
+    localStorage.setItem("cloud_video_depts", JSON.stringify(departments.map(dept => dept.id === "dept_3" ? { ...dept, name: "内容团队联动测试" } : dept)));
     window.dispatchEvent(new Event("mengchang-organization-change"));
   });
-  await expect(page.locator("tbody")).toContainText("内容部门联动测试");
+  await expect(page.locator("tbody")).toContainText("内容团队联动测试");
   await page.locator('input[type="date"]').first().fill("2000-01-01");
   await page.locator('input[type="date"]').last().fill("2000-01-02");
   await page.getByRole("button", { name: "查询", exact: true }).click();

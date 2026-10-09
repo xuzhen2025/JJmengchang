@@ -285,15 +285,8 @@ export default function AudioDetailView({
               <span className="w-20 text-slate-500 font-medium shrink-0 pt-1">个人标签</span>
               <div className="flex flex-wrap items-center gap-2">
                 {audioPersonalTags.map((tag, idx) => (
-                  <span key={idx} className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium border border-purple-100 flex items-center gap-1">
+                  <span key={idx} className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium border border-purple-100 flex items-center">
                     <span>{tag}</span>
-                    <button
-                      onClick={() => setAudioPersonalTags(audioPersonalTags.filter((_, i) => i !== idx))}
-                      className="text-purple-400 hover:text-rose-500 ml-0.5 cursor-pointer text-xs"
-                      title="删除标签"
-                    >
-                      ×
-                    </button>
                   </span>
                 ))}
                 <button

@@ -4,17 +4,16 @@ import ReportCategoryFilter from "./ReportCategoryFilter";
 import ColumnSettingsControl from "./ColumnSettingsControl";
 import { hasUserPermission } from "../lib/userPermissions";
 import AnalyticsExportDialog from "./AnalyticsExportDialog";
-import { grouped, ratio } from "../lib/analyticsData";
+import { ratio } from "../lib/analyticsData";
 import { applicablePublicTagGroups } from "../lib/resourceTags";
 import { exportAnalyticsRows } from "../lib/analyticsExport";
-import { REPORT_START, REPORT_TODAY, REPORT_COLORS, fmt, money, percent, selectReportFacts, reportTotals, tagReportRow } from "../lib/reportDemoData";
+import { REPORT_START, REPORT_TODAY, REPORT_COLORS, percent, selectReportFacts, reportTotals, tagReportRow, type ReportFact } from "../lib/reportDemoData";
 import {
   Calendar,
   ChevronDown,
   HelpCircle,
   ArrowUpDown,
   RotateCcw,
-  Search,
   PieChart as PieChartIcon
 } from "lucide-react";
 
@@ -67,7 +66,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
 
   // Dropdown Selectors
   const [selectCategory, setSelectCategory] = useState("");
-  const [selectTag, setSelectTag] = useState("");
+  const [selectTagGroup, setSelectTagGroup] = useState("");
   const [uploadStartDate, setUploadStartDate] = useState("");
   const [uploadEndDate, setUploadEndDate] = useState("");
   const [spendStartDate, setSpendStartDate] = useState(REPORT_START);
@@ -77,9 +76,9 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
   const [hoveredSlice, setHoveredSlice] = useState<number | null>(null);
 
   // Sorting state for Table
-  const [sortField, setSortField] = useState<string>("spend");
+  const [sortField, setSortField] = useState<TagDetailKey | "">("");
   const [sortAsc, setSortAsc] = useState<boolean>(false);
-  const handleSort = (field: string) => { setSortAsc(sortField === field ? !sortAsc : false); setSortField(field); };
+  const handleSort = (field: TagDetailKey) => { setSortAsc(sortField === field ? !sortAsc : false); setSortField(field); };
   const [hiddenDetailCols, setHiddenDetailCols] = useState<Set<string>>(new Set());
   const [detailColOrder, setDetailColOrder] = useState(() => TAG_DETAIL_COLUMNS.map(column => column.key));
   const [exportOpen, setExportOpen] = useState(false);
@@ -123,53 +122,78 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
     () => applicablePublicTagGroups(report.tags, report.categories, selectCategory),
     [report.tags, report.categories, selectCategory],
   );
-  const [applied, setApplied] = useState({ start: REPORT_START, end: REPORT_TODAY, uploadStart: "", uploadEnd: "", category: "", tag: "" });
-  const tagGroup = report.tags.find(group => group.subTags.some(tag => tag.id === applied.tag)) || report.tags[0];
-  const selected = selectReportFacts(report.facts, platform === "douyin" ? "巨量千川" : platform === "tencent" ? "腾讯ADQ" : "TikTok", applied)
-    .filter(row => !applied.tag || Object.values(row.tags).includes(applied.tag));
-  const total = tagReportRow(selected, "总计");
-  const TOTAL_SPEND = reportTotals(selected).spend;
-  const groupedTags = grouped(selected, row => row.tags[tagGroup?.id] || "");
-  const INITIAL_TABLE_ROWS = groupedTags.map(([id, rows]) => tagReportRow(rows, tagGroup?.subTags.find(tag => tag.id === id)?.name || "未打标签")).sort((a, b) => {
+  const [applied, setApplied] = useState({ start: REPORT_START, end: REPORT_TODAY, uploadStart: "", uploadEnd: "", category: "", tagGroup: "" });
+  const tagGroup = applied.tagGroup ? report.tags.find(group => group.id === applied.tagGroup) : undefined;
+  const hasResults = Boolean(tagGroup);
+  const selected = hasResults
+    ? selectReportFacts(report.facts, platform === "douyin" ? "巨量千川" : platform === "tencent" ? "腾讯ADQ" : "TikTok", applied)
+    : [];
+  const currency = selected[0]?.currency || (platform === "tiktok" ? "USD" : "CNY");
+  const assignedTagIds = (row: ReportFact, groupId: string) => row.tagAssignments?.[groupId] || (row.tags[groupId] ? [row.tags[groupId]] : []);
+  const tagBreakdowns = tagGroup?.subTags.map(tag => ({
+    tag,
+    rows: selected.filter(row => assignedTagIds(row, tagGroup.id).includes(tag.id)),
+  })) || [];
+  const attributedRows = tagBreakdowns.flatMap(({ tag, rows }) => rows.map(row => ({
+    ...row,
+    materialId: `${tag.id}:${row.materialId}`,
+  })));
+  const total = tagReportRow(attributedRows, "总计", currency);
+  const TOTAL_SPEND = reportTotals(attributedRows).spend;
+  const TAG_ROWS = tagBreakdowns.map(({ tag, rows }) => tagReportRow(rows, tag.name, currency));
+  const TABLE_ROWS = [...TAG_ROWS].sort((a, b) => {
+    if (!sortField) return 0;
     const numeric = (value: unknown) => Number(String(value).replace(/[^0-9.-]/g, "")) || 0;
     return (sortAsc ? 1 : -1) * (numeric(a[sortField]) - numeric(b[sortField]));
   });
   const handleExport = async (request: Parameters<typeof exportAnalyticsRows>[1]) => {
+    if (!tagGroup) { showToast?.("导出失败", "请先选择标签组并查询"); return; }
     const exportSelected = selectReportFacts(report.facts, platform === "douyin" ? "巨量千川" : platform === "tencent" ? "腾讯ADQ" : "TikTok", {
       ...applied,
       start: request.startDate,
       end: request.endDate,
-    }).filter(row => !applied.tag || Object.values(row.tags).includes(applied.tag));
-    const exportGroup = report.tags.find(group => group.subTags.some(tag => tag.id === applied.tag)) || report.tags[0];
-    const exportRows = grouped(exportSelected, row => row.tags[exportGroup?.id] || "").map(([id, rows]) =>
-      tagReportRow(rows, exportGroup?.subTags.find(tag => tag.id === id)?.name || "未打标签"));
-    const exportTotal = tagReportRow(exportSelected, "总计");
+    });
+    const exportCurrency = exportSelected[0]?.currency || currency;
+    const exportBreakdowns = tagGroup.subTags.map(tag => ({
+      tag,
+      rows: exportSelected.filter(row => assignedTagIds(row, tagGroup.id).includes(tag.id)),
+    }));
+    const exportAttributedRows = exportBreakdowns.flatMap(({ tag, rows }) => rows.map(row => ({
+      ...row,
+      materialId: `${tag.id}:${row.materialId}`,
+    })));
+    const exportRows = exportBreakdowns.map(({ tag, rows }) => tagReportRow(rows, tag.name, exportCurrency));
+    const exportTotal = tagReportRow(exportAttributedRows, "总计", exportCurrency);
     const cells = [
-      ["模特姓名 / 标签", ...visibleDetailCols.map(column => column.label)],
+      ["子标签", ...visibleDetailCols.map(column => column.label)],
       [exportTotal.name, ...visibleDetailCols.map(column => detailCellValue(exportTotal, column.key))],
       ...exportRows.map(row => [row.name, ...visibleDetailCols.map(column => detailCellValue(row, column.key))]),
     ];
     const fileName = await exportAnalyticsRows(cells, request, "标签分析");
     showToast?.("导出成功", `已生成【${fileName}】`);
   };
-  const DONUT_SLICES = groupedTags.map(([id, rows], i) => ({ name: tagGroup?.subTags.find(tag => tag.id === id)?.name || "未打标签",
+  const DONUT_SLICES = tagBreakdowns.map(({ tag, rows }, i) => ({ name: tag.name,
     val: reportTotals(rows).spend, ratio: percent(ratio(reportTotals(rows).spend, TOTAL_SPEND) * 100), color: REPORT_COLORS[i % REPORT_COLORS.length] }));
   const handleQuery = () => {
+    if (!selectTagGroup) { showToast?.("查询失败", "请先选择标签组"); return; }
     if (!spendStartDate || !spendEndDate || spendStartDate > spendEndDate || (uploadStartDate && uploadEndDate && uploadStartDate > uploadEndDate)) { showToast?.("查询失败", "请选择有效的日期范围"); return; }
-    setApplied({start: spendStartDate, end: spendEndDate, uploadStart: uploadStartDate, uploadEnd: uploadEndDate, category: selectCategory, tag: selectTag});
+    setApplied({start: spendStartDate, end: spendEndDate, uploadStart: uploadStartDate, uploadEnd: uploadEndDate, category: selectCategory, tagGroup: selectTagGroup});
     if (showToast) {
-      showToast("查询成功", `已更新【${platform === "douyin" ? "抖音" : platform === "tencent" ? "腾讯" : "TikTok"}】包含所选标签与时间的数据分析`);
+      const groupName = report.tags.find(group => group.id === selectTagGroup)?.name || "所选标签组";
+      showToast("查询成功", `已更新【${groupName}】子标签数据分析`);
     }
   };
 
   const handleReset = () => {
     setSelectCategory("");
-    setApplied({ start: REPORT_START, end: REPORT_TODAY, uploadStart: "", uploadEnd: "", category: "", tag: "" });
-    setSelectTag("");
+    setApplied({ start: REPORT_START, end: REPORT_TODAY, uploadStart: "", uploadEnd: "", category: "", tagGroup: "" });
+    setSelectTagGroup("");
     setUploadStartDate("");
     setUploadEndDate("");
     setSpendStartDate(REPORT_START);
     setSpendEndDate(REPORT_TODAY);
+    setSortField("");
+    setSortAsc(false);
     if (showToast) {
       showToast("已重置", "筛选条件已重置为默认值");
     }
@@ -279,20 +303,20 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
           <div className="flex items-center gap-3 flex-wrap">
             {/* Select 1: Category Selector (一级分类 / 二级分类) */}
             <ReportCategoryFilter categories={report.categories} value={selectCategory}
-              onChange={category => { setSelectCategory(category); setSelectTag(""); }} />
+              onChange={category => { setSelectCategory(category); setSelectTagGroup(""); }} />
 
-            {/* Select 2: Tag Selector */}
+            {/* Select 2: Public tag group selector */}
             <div className="relative">
               <select
-                value={selectTag}
-                onChange={(e) => setSelectTag(e.target.value)}
+                value={selectTagGroup}
+                onChange={(e) => setSelectTagGroup(e.target.value)}
                 disabled={!hasSelectedSecondaryCategory}
-                aria-label="选择标签"
+                aria-label="选择标签组"
                 title={!hasSelectedSecondaryCategory ? "请先选择二级分类" : undefined}
                 className="pl-3 pr-8 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:border-purple-500 shadow-2xs cursor-pointer min-w-[170px] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
               >
-                <option value="">选择标签</option>
-                {availableTagGroups.map(group => <optgroup key={group.id} label={group.name}>{group.subTags.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}</optgroup>)}
+                <option value="">选择标签组</option>
+                {availableTagGroups.map(group => <option key={group.id} value={group.id}>{group.name}</option>)}
               </select>
             </div>
 
@@ -365,10 +389,19 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
             <PieChartIcon className="w-5 h-5 text-purple-600" />
             <h3 className="text-sm font-bold text-slate-900">占比分析</h3>
           </div>
-          <span className="text-xs text-slate-400">数据汇总范围: {spendStartDate} ~ {spendEndDate}</span>
+          {hasResults && <span className="text-xs text-slate-400">数据汇总范围: {applied.start} ~ {applied.end}</span>}
         </div>
 
-        {/* Large Prominent Donut Chart Container */}
+        {!hasResults ? (
+          <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              <PieChartIcon className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-bold text-slate-700">暂无分析数据</p>
+            <p className="mt-1 text-xs text-slate-500">请选择标签组后查询</p>
+          </div>
+        ) : (
+        /* Large Prominent Donut Chart Container */
         <div className="flex flex-col lg:flex-row items-center justify-center gap-8 py-6">
           {/* SVG Donut with Callout Lines */}
           <div className="relative w-[360px] h-[360px] shrink-0 flex items-center justify-center">
@@ -391,7 +424,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
 
             {/* Center Big Number (as requested in Screenshot 2: 507441.37) */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-              <span className="text-[11px] font-bold text-slate-400">总消耗金额 (元)</span>
+              <span className="text-[11px] font-bold text-slate-400">标签总消耗金额 (元)</span>
               <span className="text-2xl font-black text-slate-900 tracking-tight mt-1">
                 {TOTAL_SPEND.toFixed(2)}
               </span>
@@ -427,6 +460,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* ================= 3. Detailed Data Table Section (Screenshots 3, 4, 5) ================= */}
@@ -438,7 +472,11 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { if (!hasUserPermission("uc_analysis_tag_analytics_export")) { showToast?.("暂无权限", ""); return; } setExportOpen(true); }}
+              onClick={() => {
+                if (!hasUserPermission("uc_analysis_tag_analytics_export")) { showToast?.("暂无权限", ""); return; }
+                if (!hasResults) { showToast?.("暂无可导出数据", "请先选择标签组并查询"); return; }
+                setExportOpen(true);
+              }}
               aria-haspopup="dialog"
               className="px-3.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
             >
@@ -464,7 +502,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
           >
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 font-bold text-[11px] whitespace-nowrap">
-                <th className="py-3 px-4 font-bold sticky left-0 bg-slate-50 z-10 shadow-xs">模特姓名 / 标签</th>
+                <th className="py-3 px-4 font-bold sticky left-0 bg-slate-50 z-10 shadow-xs">子标签</th>
                 {visibleDetailCols.map(column => (
                   <th
                     key={column.key}
@@ -482,6 +520,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-medium">
+              {hasResults && (<>
               {/* Total Row (第一行为“总计”) */}
               <tr className="bg-purple-50/60 border-b border-purple-100 text-slate-900 font-bold whitespace-nowrap">
                 <td className="py-3.5 px-4 font-black text-slate-900 sticky left-0 bg-purple-50 z-10 shadow-xs">总计</td>
@@ -493,7 +532,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
               </tr>
 
               {/* Data Rows */}
-              {INITIAL_TABLE_ROWS.map(row => (
+              {TABLE_ROWS.map(row => (
                 <tr key={row.name} className="hover:bg-slate-50/80 transition-colors whitespace-nowrap">
                   <td className="py-3.5 px-4 font-bold text-[#7C3AED] sticky left-0 bg-white z-10 shadow-xs">
                     {row.name}
@@ -505,6 +544,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
                   ))}
                 </tr>
               ))}
+              </>)}
             </tbody>
           </table>
         </div>
@@ -515,7 +555,7 @@ export default function TagAnalyticsView({ showToast }: TagAnalyticsViewProps) {
         filters={[
           { label: "平台", value: platform === "douyin" ? "抖音" : platform === "tencent" ? "腾讯" : "TikTok" },
           { label: "分类", value: applied.category },
-          { label: "标签", value: report.tags.flatMap(group => group.subTags).find(tag => tag.id === applied.tag)?.name },
+          { label: "标签组", value: report.tags.find(group => group.id === applied.tagGroup)?.name },
           { label: "上传时间", value: applied.uploadStart || applied.uploadEnd ? `${applied.uploadStart || "未设置"}至${applied.uploadEnd || "未设置"}` : "" },
         ]}
         startDate={applied.start}

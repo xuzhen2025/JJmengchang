@@ -77,7 +77,7 @@ export default function PersonalInformationPanel({
       <div className="space-y-4 rounded-module border border-slate-200/90 bg-white p-5 shadow-xs">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
           <Building2 className="h-4 w-4 text-purple-600" />
-          <h3 className="text-sm font-extrabold text-slate-800">所属部门与分组架构</h3>
+          <h3 className="text-sm font-extrabold text-slate-800">所属团队与分组架构</h3>
         </div>
 
         <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
@@ -86,7 +86,7 @@ export default function PersonalInformationPanel({
             <p className="mt-0.5 text-sm font-bold text-slate-800">{company}</p>
           </div>
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-[10px] font-medium text-slate-400">所属部门</p>
+            <p className="text-[10px] font-medium text-slate-400">所属团队</p>
             <p className="mt-0.5 font-semibold text-slate-700">{department}</p>
           </div>
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">

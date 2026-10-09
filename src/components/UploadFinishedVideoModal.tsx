@@ -1263,7 +1263,7 @@ export default function UploadFinishedVideoModal({
                 <select className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-600 cursor-pointer focus:outline-none">
                   <option value="">选择预设配置</option>
                   <option value="public">全员公开配置</option>
-                  <option value="dept">仅部门协作配置</option>
+                  <option value="dept">仅团队协作配置</option>
                 </select>
                 <button
                   type="button"
@@ -1307,7 +1307,7 @@ export default function UploadFinishedVideoModal({
                         onChange={() => setPermissionType("team")}
                         className="accent-purple-600 w-3.5 h-3.5 cursor-pointer"
                       />
-                      <span>部门成员</span>
+                      <span>团队成员</span>
                     </label>
 
                     <label className="flex items-center gap-1.5 cursor-pointer font-medium text-slate-700">
@@ -1367,7 +1367,7 @@ export default function UploadFinishedVideoModal({
                     <div className="flex items-center gap-4 pt-1 flex-wrap">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-600 font-medium">
-                          指定部门
+                          指定团队
                         </span>
                         <select
                           value={specifiedTeam}

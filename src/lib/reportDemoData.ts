@@ -11,6 +11,7 @@ export const percent = (value: number) => `${value.toFixed(2)}%`;
 export const stableNumber = (text: string) => [...text].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7);
 export interface ReportFact extends Omit<AdFact, "platform"> {
   platform: string; memberId: string; finish3s: number; refund: number; refundOrders: number;
+  tagAssignments: Record<string, string[]>;
 }
 export interface ReportFilter {
   start?: string; end?: string; uploadStart?: string; uploadEnd?: string;
@@ -26,6 +27,16 @@ export function createReportFacts(accounts: AdAccount[], org: ReportOrganization
     return Array.from({ length: 8 }, (_, material) => {
       const first = material * 8;
       const state = ["投放中", "未投放", "已暂停", "已完成", "审核不通过", "已删除"][material % 6];
+      const tagAssignments = Object.fromEntries(tags.map((group, groupIndex) => {
+        const count = group.subTags.length;
+        if (!count) return [group.id, []];
+        const primaryIndex = (seed + material + groupIndex) % count;
+        const assigned = [group.subTags[primaryIndex].id];
+        if (count > 1 && (seed + material + groupIndex) % 3 === 0) {
+          assigned.push(group.subTags[(primaryIndex + 1) % count].id);
+        }
+        return [group.id, assigned];
+      }));
       return Array.from({ length: 90 - first }, (_, day) => {
         const index = first + day, n = (seed % 997 + material * 37 + day * 19) % 997;
         const active = !["未投放", "审核不通过"].includes(state) && (state === "投放中" || day < 14);
@@ -44,8 +55,9 @@ export function createReportFacts(accounts: AdAccount[], org: ReportOrganization
           material: `${products[seed % products.length]}_${["实拍测评", "细节特写", "卖点口播", "使用对比"][material % 4]}_${material + 1}.mp4`,
           uploadedAt: shiftDate(REPORT_START, first), planId: `PL-${account.platform}-${account.id}-${material}`, planCreatedAt: shiftDate(REPORT_START, first), planStatus: state,
           promotion: ["标准推广", "商品全域推广"][material % 2],
-          qualityTags: [["首发素材", "优质素材", "低效素材", "低质素材", "同质化挤压严重", "同质化排队投放"][material % 6]],
-          tags: Object.fromEntries(tags.map(group => [group.id, group.subTags[(seed + material) % Math.max(1, group.subTags.length)]?.id || ""])),
+          qualityTags: [["首发素材", "优质素材", "低效素材", "低质素材"][material % 4]],
+          tags: Object.fromEntries(Object.entries(tagAssignments).map(([groupId, ids]) => [groupId, ids[0] || ""])),
+          tagAssignments,
           spend, paid, coupon: account.platform === "巨量千川" ? conversions * 300 : 0,
           subsidy: account.platform === "巨量千川" ? conversions * 200 : 0, impressions, clicks, conversions,
           views: Math.round(impressions * 0.73), finish3s: Math.round(impressions * (0.21 + material % 4 * 0.02)),
@@ -101,12 +113,12 @@ export function statusTotals(rows: ReportFact[]) {
     ineffective: count("未投放"), auditNew: 0, auditEdit: 0, auditFailed: count("审核不通过"), paused: count("已暂停") };
 }
 
-type QualityKey = "firstRelease" | "highQuality" | "lowEfficiency" | "lowQuality" | "homogeneitySevere" | "homogeneityRisk";
+type QualityKey = "firstRelease" | "highQuality" | "lowEfficiency" | "lowQuality";
 type QualityReport = { totalMaterials: number } & Record<QualityKey, number> & Record<`${QualityKey}Ratio` | `${QualityKey}Spend` | `${QualityKey}SpendRatio`, string>;
 export function qualityReport(rows: ReportFact[]): QualityReport {
   const total = reportTotals(rows);
-  const keys = ["firstRelease", "highQuality", "lowEfficiency", "lowQuality", "homogeneitySevere", "homogeneityRisk"];
-  const tags = ["首发素材", "优质素材", "低效素材", "低质素材", "同质化挤压严重", "同质化排队投放"];
+  const keys = ["firstRelease", "highQuality", "lowEfficiency", "lowQuality"];
+  const tags = ["首发素材", "优质素材", "低效素材", "低质素材"];
   const values: Record<string, any> = { totalMaterials: total.materials };
   tags.forEach((tag, i) => {
     const data = reportTotals(rows.filter(row => row.qualityTags.includes(tag)));
@@ -117,8 +129,8 @@ export function qualityReport(rows: ReportFact[]): QualityReport {
   });
   return values as QualityReport;
 }
-export function tagReportRow(rows: ReportFact[], name: string) {
-  const total = reportTotals(rows), currency = rows[0]?.currency || "CNY";
+export function tagReportRow(rows: ReportFact[], name: string, currencyOverride?: string) {
+  const total = reportTotals(rows), currency = currencyOverride || rows[0]?.currency || "CNY";
   return { name, videoCount: total.materials, spend: money(total.spend, currency), roi: total.roi.toFixed(2), salesAmount: money(total.gmv, currency),
     coupons: money(total.coupon - total.subsidy, currency), subsidy: money(total.subsidy, currency), conversions: total.conversions, cvr: percent(total.cvr), cpa: money(total.cpa, currency),
     impressions: fmt(total.impressions), cpm: money(total.cpm, currency), clicks: fmt(total.clicks), ctr: percent(total.ctr), cpc: money(total.cpc, currency),

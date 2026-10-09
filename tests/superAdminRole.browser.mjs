@@ -20,7 +20,7 @@ const checkLocked = async () => {
   await expect(page.getByTestId("other-roles")).toContainText("普通员工");
   await expect(page.getByTestId("other-roles").getByText("超级管理员", { exact: true })).toHaveCount(0);
   await page.getByTestId("default-roles").getByText("超级管理员", { exact: true }).click();
-  for (const name of ["全选", "清空", "仅本人", "本部门及下级", "全公司", "已启用", "保存"]) {
+  for (const name of ["全选", "清空", "仅本人", "本团队及下级", "全公司", "已启用", "保存"]) {
     await expect(button(name)).toBeDisabled();
   }
   await expect(button("全公司")).toHaveAttribute("aria-pressed", "true");

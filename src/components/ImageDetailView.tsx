@@ -260,7 +260,7 @@ export default function ImageDetailView({
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-xs sm:text-sm">
-                    {item.author || "致上运营"} / 默认部门 / 默认分组
+                    {item.author || "致上运营"} / 默认团队 / 默认分组
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">发布时间：2025-05-26 12:25:11</p>
                 </div>
@@ -334,19 +334,8 @@ export default function ImageDetailView({
               <div className="flex items-start gap-2 flex-wrap">
                 <span className="text-slate-500 font-medium shrink-0 pt-0.5">个人标签:</span>
                 {personalTags.map((tag, i) => (
-                  <span key={i} className="bg-purple-50 text-purple-700 font-medium px-2.5 py-0.5 rounded-lg text-[11px] border border-purple-100 flex items-center gap-1">
+                  <span key={i} className="bg-purple-50 text-purple-700 font-medium px-2.5 py-0.5 rounded-lg text-[11px] border border-purple-100 flex items-center">
                     <span>{tag}</span>
-                    <button
-                      onClick={() => {
-                        const newP = personalTags.filter((_, idx) => idx !== i);
-                        addOperationLog("修改个人标签", personalTags.join(", "), newP.join(", ") || "无");
-                        setPersonalTags(newP);
-                      }}
-                      className="text-purple-400 hover:text-rose-500 ml-0.5 cursor-pointer text-xs"
-                      title="删除标签"
-                    >
-                      ×
-                    </button>
                   </span>
                 ))}
                 <button

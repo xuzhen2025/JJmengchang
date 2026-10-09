@@ -21,7 +21,7 @@ try {
   await expect(page.getByText("到设定日期后，所有人可查看", { exact: true })).toHaveCount(0);
   const visibility = page.getByRole("heading", { name: "发布作品，可见性设置", exact: true }).locator("../..");
   await expect(visibility.getByRole("checkbox")).toHaveCount(5);
-  for (const name of ["公开", "部门范围可见", "分组范围可见", "公用资源", "指定范围"]) await expect(visibility.getByRole("checkbox", { name, exact: true })).toBeChecked();
+  for (const name of ["公开", "团队范围可见", "分组范围可见", "公用资源", "指定范围"]) await expect(visibility.getByRole("checkbox", { name, exact: true })).toBeChecked();
   await visibility.scrollIntoViewIfNeeded();
   await page.screenshot({ path: "tmp/settings-removed-push-section.png" });
   await visibility.getByRole("button", { name: "保存设置", exact: true }).click();

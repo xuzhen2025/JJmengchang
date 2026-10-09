@@ -27,6 +27,7 @@ import OverlayPortal from "./overlays/OverlayPortal";
 import { createCreditExamples, creditMemberOrganization, localCreditTime, netCreditConsumption, roundCredits, type CreditRecord } from "../lib/creditConsumption";
 import { readCreditQuotaSettings, saveCreditQuotaSettings, type CreditQuotaRule } from "../lib/creditQuota";
 import { operationUser } from "../lib/operationHistory";
+import { teamTerminology } from "../lib/organizationTerminology";
 
 interface RechargeTier {
   title: string;
@@ -491,7 +492,7 @@ export default function AdminCreditsManagementView() {
                     <span>特定人员个性化配额规则</span>
                   </div>
                   <div className="text-xs text-slate-400">
-                    可为特定高频剪辑师或部门负责人配置更高的每日/每月额度，优先于全局限制
+                    可为特定高频剪辑师或团队负责人配置更高的每日/每月额度，优先于全局限制
                   </div>
                 </div>
                 <button
@@ -523,7 +524,7 @@ export default function AdminCreditsManagementView() {
                   >
                     <option value="all">全部适用对象</option>
                     {members.map(m => (
-                      <option key={m.id} value={m.name}>{m.name} ({m.roleName})</option>
+                      <option key={m.id} value={m.name}>{m.name} ({teamTerminology(m.roleName)})</option>
                     ))}
                   </select>
                 </div>
@@ -908,7 +909,7 @@ export default function AdminCreditsManagementView() {
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold cursor-pointer focus:outline-none focus:border-purple-500"
                 >
                   {members.map(m => (
-                    <option key={m.id} value={m.name}>{m.name} ({m.roleName})</option>
+                    <option key={m.id} value={m.name}>{m.name} ({teamTerminology(m.roleName)})</option>
                   ))}
                 </select>
               </div>

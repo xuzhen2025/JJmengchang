@@ -22,7 +22,7 @@ export interface PlatformTagRow {
 
 export const PLATFORM_TAG_DIMENSIONS: { id: PlatformTagDimension; label: string }[] = [
   { id: "summary", label: "汇总" },
-  { id: "team", label: "部门" },
+  { id: "team", label: "团队" },
   { id: "group", label: "分组" },
   { id: "user", label: "个人" },
   { id: "account", label: "广告账户" },
@@ -36,17 +36,15 @@ const qualityMetrics: PlatformTagColumn[] = [
   { key: "highQualitySpend", label: "优质素材消耗", width: 140, numeric: true, detailKey: "highQualitySpendRatio" },
   { key: "lowEfficiency", label: "低效素材", width: 110, numeric: true, detailKey: "lowEfficiencyRatio" },
   { key: "lowQuality", label: "低质素材", width: 110, numeric: true, detailKey: "lowQualityRatio" },
-  { key: "homogeneitySevere", label: "同质化挤压严重素材", width: 160, numeric: true, detailKey: "homogeneitySevereRatio" },
-  { key: "homogeneityRisk", label: "同质化素材风险-排队投放素材", width: 180, numeric: true, detailKey: "homogeneityRiskRatio" },
 ];
 const identityColumns: Record<Exclude<PlatformTagDimension, "summary">, PlatformTagColumn[]> = {
-  team: [{ key: "department", label: "部门", width: 200 }],
-  group: [{ key: "department", label: "部门", width: 200 }, { key: "group", label: "分组", width: 200 }],
-  user: [{ key: "department", label: "部门", width: 200 }, { key: "group", label: "分组", width: 200 }, { key: "person", label: "用户", width: 120 }],
+  team: [{ key: "department", label: "团队", width: 200 }],
+  group: [{ key: "department", label: "团队", width: 200 }, { key: "group", label: "分组", width: 200 }],
+  user: [{ key: "department", label: "团队", width: 200 }, { key: "group", label: "分组", width: 200 }, { key: "person", label: "用户", width: 120 }],
   account: [
     { key: "account", label: "广告账户", width: 230, fixed: true },
     { key: "subject", label: "主体", width: 200, fixed: true },
-    { key: "department", label: "部门", width: 150, fixed: true },
+    { key: "department", label: "团队", width: 150, fixed: true },
     { key: "group", label: "分组", width: 160, fixed: true },
     { key: "person", label: "用户", width: 100, fixed: true },
     { key: "category", label: "一级分类", width: 130 },
@@ -78,7 +76,6 @@ export function platformTagTable(facts: ReportFact[], dimension: PlatformTagDime
     const tags = [
       ["firstRelease", "首发素材"], ["highQuality", "优质素材"],
       ["lowEfficiency", "低效素材"], ["lowQuality", "低质素材"],
-      ["homogeneitySevere", "同质化挤压严重素材"], ["homogeneityRisk", "同质化素材风险-排队投放素材"],
     ] as const;
     const rows: PlatformTagRow[] = facts.length ? tags.map(([key, label]) => ({
       id: key, values: { label, count: totals[key], countRatio: totals[`${key}Ratio`], spend: totals[`${key}Spend`], spendRatio: totals[`${key}SpendRatio`] },

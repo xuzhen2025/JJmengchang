@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useReportData } from "../lib/useReportData";
 import ReportCategoryFilter from "./ReportCategoryFilter";
 import { REPORT_START, REPORT_TODAY, fmt, reportTotals, qualityReport } from "../lib/reportDemoData";
@@ -6,6 +6,7 @@ import { PLATFORM_TAG_DIMENSIONS, platformTagGroupKey, platformTagTable, selectP
 import { exportAnalyticsRows } from "../lib/analyticsExport";
 import { hasUserPermission } from "../lib/userPermissions";
 import AnalyticsExportDialog from "./AnalyticsExportDialog";
+import AnchoredPopover from "./overlays/AnchoredPopover";
 import {
   HelpCircle,
   ChevronUp,
@@ -15,8 +16,6 @@ import {
   Award,
   AlertCircle,
   AlertTriangle,
-  Layers,
-  ShieldAlert,
   BarChart3,
   Compass,
   RotateCcw,
@@ -84,32 +83,6 @@ const MATERIAL_TYPE_META = [
     spend: 68100,
     spendRatio: "6.4%",
   },
-  {
-    id: "homogeneity_severe",
-    name: "同质化挤压严重素材",
-    color: "#EC4899", // Pink
-    bgColor: "bg-pink-50",
-    textColor: "text-pink-600",
-    badgeColor: "bg-pink-100 text-pink-700",
-    icon: Layers,
-    count: 480,
-    countRatio: "10.7%",
-    spend: 32400,
-    spendRatio: "3.1%",
-  },
-  {
-    id: "homogeneity_risk",
-    name: "同质化素材风险-排队投放素材",
-    color: "#10B981", // Emerald / Green
-    bgColor: "bg-emerald-50",
-    textColor: "text-emerald-600",
-    badgeColor: "bg-emerald-100 text-emerald-700",
-    icon: ShieldAlert,
-    count: 410,
-    countRatio: "9.2%",
-    spend: 17900,
-    spendRatio: "1.7%",
-  },
 ];
 
 // Mock data rows for Detailed Table
@@ -117,7 +90,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
   // Top level platforms: 巨量千川 | 巨量广告
   const [platform, setPlatform] = useState<"qianchuan" | "oceanengine">("qianchuan");
 
-  // Dimension level: 汇总 | 部门 | 分组 | 个人 | 广告账户
+  // Dimension level: 汇总 | 团队 | 分组 | 个人 | 广告账户
   const [dimension, setDimension] = useState<PlatformTagDimension>("summary");
 
   // Filters
@@ -129,6 +102,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
 
   // Tooltip hover/click
   const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipAnchorRef = useRef<HTMLButtonElement>(null);
 
   // Active hover index on Pie Chart
   const [hoveredSlice, setHoveredSlice] = useState<number | null>(null);
@@ -139,10 +113,10 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
   const platformName = platform === "qianchuan" ? "巨量千川" : "巨量广告";
   const selected = selectPlatformTagFacts(report.facts, platformName, dimension, applied);
   const total = qualityReport(selected);
-  const qualityKeys = ["firstRelease", "highQuality", "lowEfficiency", "lowQuality", "homogeneitySevere", "homogeneityRisk"];
+  const qualityKeys = ["firstRelease", "highQuality", "lowEfficiency", "lowQuality"] as const;
   const MATERIAL_TYPES = MATERIAL_TYPE_META.map((item, i) => ({...item,
     count: total[qualityKeys[i]], countRatio: total[qualityKeys[i] + "Ratio"],
-    spend: reportTotals(selected.filter(row => row.qualityTags.includes(["首发素材", "优质素材", "低效素材", "低质素材", "同质化挤压严重", "同质化排队投放"][i]))).spend,
+    spend: reportTotals(selected.filter(row => row.qualityTags.includes(item.name))).spend,
     spendRatio: total[qualityKeys[i] + "SpendRatio"]
   }));
   const table = platformTagTable(selected, dimension);
@@ -315,9 +289,9 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
                   className={`${selectClassName} cursor-text pr-3`} />
               )}
               {dimension === "team" && (
-                <select aria-label="部门" value={filters.department} className={selectClassName}
+                <select aria-label="团队" value={filters.department} className={selectClassName}
                   onChange={event => setFilters(value => ({ ...value, department: event.target.value }))}>
-                  <option value="">请选择部门</option>
+                  <option value="">请选择团队</option>
                   {report.tree.map(team => <option key={team.teamName} value={team.teamName}>{team.teamName}</option>)}
                 </select>
               )}
@@ -405,7 +379,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
         {/* Card Content Body */}
         {!isCollapsed && (
           <div className="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            {/* Left side: 6 Material Quality Metric Cards (7 cols) */}
+            {/* Left side: 4 Material Quality Metric Cards (7 cols) */}
             <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {MATERIAL_TYPES.map((item) => {
                 const Icon = item.icon;
@@ -419,7 +393,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
                     </div>
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="text-xs font-bold text-slate-800 truncate">{item.name}</div>
-                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-500">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-500">
                         <div>
                           数量: <span className="font-bold text-slate-900">{item.count.toLocaleString()}</span>
                         </div>
@@ -467,7 +441,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
                     <>
                       <span className="text-[10px] text-slate-400 font-bold">总素材数</span>
                       <span className="text-sm font-black text-slate-900 mt-0.5">{totalCount.toLocaleString()}</span>
-                      <span className="text-[10px] text-slate-500 font-medium">六维类型</span>
+                      <span className="text-[10px] text-slate-500 font-medium">四类素材</span>
                     </>
                   )}
                 </div>
@@ -507,6 +481,9 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
           <div className="flex items-center gap-2 relative">
             <h3 className="text-sm font-bold text-slate-900">详细数据</h3>
             <button
+              ref={tooltipAnchorRef}
+              aria-label="指标说明"
+              aria-describedby={showTooltip ? "platform-tag-metric-help" : undefined}
               onClick={() => setShowTooltip(!showTooltip)}
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
@@ -517,13 +494,14 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
 
             {/* Tooltip Popup */}
             {showTooltip && (
-              <div className="absolute top-6 left-16 z-30 w-72 p-3 bg-slate-900 text-white rounded-lg shadow-xl text-[11px] leading-relaxed space-y-1 animate-fade-in pointer-events-none">
+              <AnchoredPopover anchorRef={tooltipAnchorRef} id="platform-tag-metric-help" role="tooltip" width={288}
+                onClose={() => setShowTooltip(false)}
+                className="p-3 bg-slate-900 text-white rounded-lg shadow-xl text-[11px] leading-relaxed space-y-1 pointer-events-none">
                 <div className="font-bold text-purple-300">指标说明：</div>
                 <div>• 首发素材：在该平台首次发布的原创素材。</div>
                 <div>• 优质素材：高曝光与高转化率的标杆素材。</div>
                 <div>• 低效/低质素材：ROI低于预期的受限素材。</div>
-                <div>• 同质化挤压严重：素材重合度高导致排挤。</div>
-              </div>
+              </AnchoredPopover>
             )}
           </div>
 
@@ -583,7 +561,7 @@ export default function PlatformTagsView({ showToast }: PlatformTagsViewProps) {
           { label: "平台", value: platformName },
           { label: "维度", value: PLATFORM_TAG_DIMENSIONS.find(item => item.id === dimension)?.label },
           { label: "主体", value: applied.subject },
-          { label: "部门", value: applied.department },
+          { label: "团队", value: applied.department },
           { label: "分组", value: applied.groupKey },
           { label: "个人", value: report.org.members.find(member => member.id === applied.memberId)?.name },
           { label: "分类", value: applied.category === "all" ? "" : applied.category },

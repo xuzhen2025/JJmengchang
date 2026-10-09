@@ -27,6 +27,26 @@ export interface InteractionPoint {
   ctr: number; lossRate: number;
 }
 
+// Resample the prototype-only fixture to the media duration, not live API data.
+export function createVideoInteractionDemoTrend(base: InteractionPoint[], duration: number): InteractionPoint[] {
+  if (!base.length || !Number.isFinite(duration) || duration <= 0) return [];
+  const lastSecond = base[base.length - 1].second;
+  const seconds = Array.from({ length: Math.floor(duration) + 1 }, (_, second) => second);
+  if (duration % 1) seconds.push(duration);
+  let segment = 0;
+  return seconds.map(second => {
+    const sourceSecond = second / duration * lastSecond;
+    while (segment < base.length - 2 && base[segment + 1].second < sourceSecond) segment++;
+    const from = base[segment];
+    const to = base[Math.min(segment + 1, base.length - 1)];
+    const fraction = to.second === from.second ? 0 : (sourceSecond - from.second) / (to.second - from.second);
+    const value = (key: Exclude<keyof InteractionPoint, "second" | "secondLabel">, precision = 0) =>
+      Number((from[key] + (to[key] - from[key]) * fraction).toFixed(precision));
+    return { second, secondLabel: `${Number(second.toFixed(2))}s`, clicks: value("clicks"), losses: value("losses"),
+      follows: value("follows"), comments: value("comments"), likes: value("likes"), ctr: value("ctr", 1), lossRate: value("lossRate", 1) };
+  });
+}
+
 // Scoped prototype fixtures, not synchronized ad facts. Never attach them to newly uploaded videos.
 export function createVideoInteractionDemoRecords(
   video: InteractionVideo, channelId: InteractionChannelId, store: AdStore, actor: AdActor,

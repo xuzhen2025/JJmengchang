@@ -484,7 +484,7 @@ export default function ScriptDetailPage({
     const errors: Record<string, string> = {};
 
     if (!taskFormState.assigneePath) {
-      errors.assigneePath = "请选择指派人员/部门";
+      errors.assigneePath = "请选择指派人员/团队";
     }
     if (!taskFormState.orderCount || Number(taskFormState.orderCount) <= 0) {
       errors.orderCount = "请输入有效下单数量";
@@ -702,18 +702,8 @@ export default function ScriptDetailPage({
                     <span className="text-slate-400 text-xs italic py-1">无</span>
                   ) : (
                     currentScript.personalTags?.map((tag, idx) => (
-                      <span key={idx} className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium border border-purple-100 flex items-center gap-1">
+                      <span key={idx} className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium border border-purple-100 flex items-center">
                         <span>{tag}</span>
-                        <button
-                          onClick={() => {
-                            const updated = currentScript.personalTags?.filter((_, i) => i !== idx) || [];
-                            updateCurrentScript({ personalTags: updated });
-                          }}
-                          className="text-purple-400 hover:text-rose-500 ml-0.5 cursor-pointer text-xs"
-                          title="删除标签"
-                        >
-                          ×
-                        </button>
                       </span>
                     ))
                   )}
@@ -2026,7 +2016,7 @@ export default function ScriptDetailPage({
                       {taskFormState.visibilityRange === "specified_range" && (
                         <div className="space-y-2 pt-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200/80">
                           <div className="flex items-center gap-2">
-                            <span className="w-16 text-right text-xs text-slate-500 shrink-0">指定部门</span>
+                            <span className="w-16 text-right text-xs text-slate-500 shrink-0">指定团队</span>
                             <select
                               value={taskFormState.specifiedTeam}
                               onChange={(e) => setTaskFormState({ ...taskFormState, specifiedTeam: e.target.value })}

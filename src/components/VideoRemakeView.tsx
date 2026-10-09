@@ -5,6 +5,7 @@ import {
   AtSign,
   AudioLines,
   ArrowLeft,
+  Bell,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -172,6 +173,8 @@ interface SavedRemakeState {
 interface VideoRemakeViewProps {
   onBack: () => void;
   onOpenQueue: () => void;
+  onOpenMessages: () => void;
+  unreadMessageCount: number;
   credits: number;
   assets: Asset[];
   activeSessionId: string | null;
@@ -521,6 +524,8 @@ const getInitialState = (sessionId: string, activeTask?: Task): SavedRemakeState
 export default function VideoRemakeView({
   onBack,
   onOpenQueue,
+  onOpenMessages,
+  unreadMessageCount,
   credits,
   assets,
   activeSessionId,
@@ -1009,6 +1014,8 @@ export default function VideoRemakeView({
     { id: "final", label: "视频成片", enabled: shots.length > 0 },
   ];
   const historyButton = <button type="button" onClick={onOpenQueue} className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"><History className="h-4 w-4" />历史任务</button>;
+  const messageButton = <button type="button" onClick={onOpenMessages} className="relative flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" title="消息中心"><Bell className="h-4 w-4" /><span>消息中心</span>{unreadMessageCount > 0 && <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">{unreadMessageCount > 99 ? "99+" : unreadMessageCount}</span>}</button>;
+  const headerActions = <div className="flex items-center gap-2">{messageButton}{historyButton}</div>;
 
   if (uploadOpen) {
     return (
@@ -1031,7 +1038,7 @@ export default function VideoRemakeView({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-slate-50 text-slate-800">
-      {step === "source" && <header className="flex h-14 shrink-0 items-center justify-end border-b border-slate-200 bg-white px-5">{historyButton}</header>}
+      {step === "source" && <header className="flex h-14 shrink-0 items-center justify-end border-b border-slate-200 bg-white px-5">{headerActions}</header>}
       {step !== "source" && <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5">
         <div className="flex min-w-0 items-center gap-3">
           <button onClick={onBack} title="返回" className="rounded p-2 text-slate-500 hover:bg-slate-100"><ArrowLeft className="h-4 w-4" /></button>
@@ -1052,7 +1059,7 @@ export default function VideoRemakeView({
             {index < steps.length - 1 && <ChevronRight className="h-3 w-3 text-slate-300" />}
           </React.Fragment>)}
         </nav>
-        <div className="flex w-[200px] shrink-0 justify-end">{historyButton}</div>
+        <div className="flex min-w-[270px] shrink-0 justify-end">{headerActions}</div>
       </header>}
 
       {operation && <div className="shrink-0 border-b border-blue-100 bg-blue-50 px-5 py-2.5">

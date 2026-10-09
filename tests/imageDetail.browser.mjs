@@ -21,7 +21,7 @@ try {
   for (const [index, title] of titles.entries()) {
     await page.getByText(title, { exact: true }).first().click();
     await expect(button("返回图片列表")).toBeVisible();
-    for (const removedText of ["仅供内部员工学习，不可用于商业用途", "所有人可见", "可查看时间:", "可下载时间:", "分组成员 / 不限", "部门成员 / 不限"]) {
+    for (const removedText of ["仅供内部员工学习，不可用于商业用途", "所有人可见", "可查看时间:", "可下载时间:", "分组成员 / 不限", "团队成员 / 不限"]) {
       await expect(page.getByText(removedText, { exact: true })).toHaveCount(0);
     }
     await expect(page.getByText(/^下载次数:/)).toBeVisible();

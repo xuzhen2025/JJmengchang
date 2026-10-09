@@ -118,7 +118,7 @@ const COST_RANGE_OPTIONS = [
   "消耗达到100w"
 ];
 
-const AUTHOR_TYPE_OPTIONS = ["部门", "分组", "作者"];
+const AUTHOR_TYPE_OPTIONS = ["团队", "分组", "作者"];
 
 const TIME_TYPE_OPTIONS = [
   "上传时间",
@@ -654,14 +654,14 @@ export default function FinishedVideosView({ uploadedVideos = [], onTriggerTask,
               <div>
                 <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-emerald-600" />
-                  <span>内容部门绩效分析与爆款素材源归因</span>
+                  <span>内容团队绩效分析与爆款素材源归因</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   透视编导/剪辑师/AI模型产出成片数与爆款率，溯源最常被剪成爆款的黄金素材源。
                 </p>
               </div>
               <span className="text-xs bg-emerald-50 text-emerald-700 font-bold px-3 py-1 rounded-full border border-emerald-200">
-                全部门考评周期: 2026年7月
+                全团队考评周期: 2026年7月
               </span>
             </div>
 
@@ -669,7 +669,7 @@ export default function FinishedVideosView({ uploadedVideos = [], onTriggerTask,
             <div className="space-y-2">
               <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <User className="w-4 h-4 text-purple-600" />
-                <span>创作者与部门绩效贡献榜</span>
+                <span>创作者与团队绩效贡献榜</span>
               </h3>
 
               <div className="overflow-x-auto rounded-xl border border-slate-200 text-xs">

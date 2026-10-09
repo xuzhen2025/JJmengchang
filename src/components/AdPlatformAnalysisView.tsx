@@ -26,9 +26,22 @@ interface AdPlatformAnalysisViewProps {
 const PLATFORMS = [
   { id: "qianchuan", name: "巨量千川", color: "#2563eb" },
   { id: "juliang", name: "巨量广告", color: "#7c3aed" },
-];
+] as const;
+type Platform = (typeof PLATFORMS)[number]["id"];
 
-const PROMO_TABS = ["汇总", "标准推广", "商品全域推广"];
+const PROMOTIONS = {
+  summary: "汇总",
+  standard: "标准推广",
+  product_domain: "商品全域推广",
+  live_domain: "直播全域推广",
+  product_multiplier: "商品乘方推广",
+  live_multiplier: "直播乘方推广",
+} as const;
+type Promotion = keyof typeof PROMOTIONS;
+const PLATFORM_PROMOTIONS: Record<Platform, readonly Promotion[]> = {
+  qianchuan: ["summary", "product_domain", "live_domain", "product_multiplier", "live_multiplier"],
+  juliang: ["summary", "standard", "product_domain"],
+};
 
 const DIMENSION_TABS = ["团队", "分组", "个人", "明细", "分日", "分月"] as const;
 type DimensionTab = (typeof DIMENSION_TABS)[number];
@@ -92,8 +105,8 @@ const VIDEO_TOPICS = [
   "超薄纸尿裤", "全价猫粮", "孕妇钙片", "宝宝溶豆",
 ];
 
-function buildRawData(): RawRow[] {
-  const rand = mulberry32(20260918);
+function buildRawData(seed = 20260918): RawRow[] {
+  const rand = mulberry32(seed);
   const rows: RawRow[] = [];
   let vid = 1;
   TEAMS.forEach((team) => {
@@ -113,7 +126,7 @@ function buildRawData(): RawRow[] {
           for (let d = 0; d < days; d++) {
             const dayOffset = Math.floor(rand() * 16);
             const date = new Date(2026, 8, 3 + dayOffset);
-            const dateStr = date.toISOString().slice(0, 10);
+            const dateStr = date.toLocaleDateString("sv-SE");
             const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
             const uploadOffset = Math.floor(rand() * 16);
             const uploadDate = new Date(2026, 8, 3 + uploadOffset);
@@ -134,7 +147,7 @@ function buildRawData(): RawRow[] {
             rows.push({
               team, group, author: `${author}（${group.slice(0, 2)}）`,
               cat1, cat2, video: videoName,
-              uploadDate: uploadDate.toISOString().slice(0, 10),
+              uploadDate: uploadDate.toLocaleDateString("sv-SE"),
               date: dateStr, month,
               cost, orders, gmv, coupon, platformSubsidy,
               impressions, clicks, plays, effectivePlays, plays3s,
@@ -149,6 +162,9 @@ function buildRawData(): RawRow[] {
 }
 
 const RAW = buildRawData();
+const LIVE_RAW = buildRawData(20260930);
+const PRODUCT_MULTIPLIER_RAW = buildRawData(20261008);
+const LIVE_MULTIPLIER_RAW = buildRawData(20261009);
 
 // ============ 聚合 ============
 interface MetricRow {
@@ -235,6 +251,7 @@ const pct = (n: number) => (n * 100).toFixed(2) + "%";
 interface ColDef {
   key: string;
   label: string;
+  detailOnly?: boolean;
   align?: "right" | "center";
   value: (r: MetricRow) => number;
   render: (r: MetricRow) => string;
@@ -264,9 +281,9 @@ function standardMetricCols(): ColDef[] {
     metricColumn("cpc", "平均点击单价", r => r.clicks > 0 ? r.cost / r.clicks : 0, yuan),
     metricColumn("plays", "播放量", r => r.plays),
     metricColumn("finishRate", "完播率", r => r.plays > 0 ? r.effectivePlays / r.plays : 0, pct),
-    metricColumn("effPlays", "有效播放数", r => r.effectivePlays),
-    metricColumn("plays3s", "3s播放数", r => r.plays3s),
-    metricColumn("rate3s", "3s播放率", r => r.plays > 0 ? r.plays3s / r.plays : 0, pct),
+    { ...metricColumn("effPlays", "有效播放数", r => r.effectivePlays), detailOnly: true },
+    { ...metricColumn("plays3s", "3s播放数", r => r.plays3s), detailOnly: true },
+    { ...metricColumn("rate3s", "3s播放率", r => r.plays > 0 ? r.plays3s / r.plays : 0, pct), detailOnly: true },
   ];
 }
 
@@ -275,7 +292,7 @@ const productEstimatedOrders = (row: MetricRow) => Math.round(row.orders * 1.08)
 const productNetGmv = (row: MetricRow) => Math.round(row.gmv * 0.91);
 const productBoostOrders = (row: MetricRow) => Math.round(row.orders * 0.28);
 
-function productDomainMetricCols(): ColDef[] {
+function productDomainMetricCols(platform: Platform): ColDef[] {
   return [
     metricColumn("productOverallSpend", "整体消耗", r => r.cost, yuan),
     metricColumn("productOverallRoi", "整体ROI", r => r.cost > 0 ? (r.gmv + r.coupon + r.platformSubsidy) / r.cost : 0, value => value.toFixed(2)),
@@ -298,17 +315,19 @@ function productDomainMetricCols(): ColDef[] {
     metricColumn("productCpm", "平均千次展现费用", r => r.impressions > 0 ? (r.cost / r.impressions) * 1000 : 0, yuan),
     metricColumn("productClicks", "整体点击次数", r => r.clicks),
     metricColumn("productCtr", "点击率", r => r.impressions > 0 ? r.clicks / r.impressions : 0, pct),
-    metricColumn("productEstimatedGmv", "整体预估订单金额", r => Math.round(r.gmv * 1.08), yuan),
-    metricColumn("productEstimatedOrders", "整体预估订单数", productEstimatedOrders),
-    metricColumn("productUnsettledOrders", "整体未完结预估订单", r => Math.max(0, productEstimatedOrders(r) - r.orders)),
+    ...(platform === "juliang" ? [
+      metricColumn("productEstimatedGmv", "整体预估订单金额", r => Math.round(r.gmv * 1.08), yuan),
+      metricColumn("productEstimatedOrders", "整体预估订单数", productEstimatedOrders),
+      metricColumn("productUnsettledOrders", "整体未完结预估订单", r => Math.max(0, productEstimatedOrders(r) - r.orders)),
+    ] : []),
     metricColumn("productBaseSpend", "基础消耗", r => Math.round(r.cost * 0.72), yuan),
     metricColumn("productBoostSpend", "追投消耗", r => r.cost - Math.round(r.cost * 0.72), yuan),
     metricColumn("productBoostGmv", "追投成交金额", r => Math.round(r.gmv * 0.28), yuan),
     metricColumn("productBoostOrders", "追投成交订单数", productBoostOrders),
     metricColumn("productVideoPlays", "视频播放数", r => r.plays),
-    metricColumn("productVideoCompletions", "视频完播数", r => r.effectivePlays),
-    metricColumn("productThreeSecondPlays", "3秒播放数", r => r.plays3s),
-    metricColumn("productThreeSecondRate", "3秒播放率", r => r.plays > 0 ? r.plays3s / r.plays : 0, pct),
+    { ...metricColumn("productVideoCompletions", "视频完播数", r => r.effectivePlays), detailOnly: true },
+    { ...metricColumn("productThreeSecondPlays", "3秒播放数", r => r.plays3s), detailOnly: true },
+    { ...metricColumn("productThreeSecondRate", "3秒播放率", r => r.plays > 0 ? r.plays3s / r.plays : 0, pct), detailOnly: true },
     metricColumn("productCompletionRate", "完播率", r => r.plays > 0 ? r.effectivePlays / r.plays : 0, pct),
     metricColumn("productLikes", "视频点赞数", r => Math.round(r.clicks * 0.14)),
     metricColumn("productComments", "视频评论数", r => Math.round(r.clicks * 0.017)),
@@ -328,8 +347,8 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
   const allowed = canUseDerivations(getAdActor());
   const highlightedRef = useRef<HTMLTableRowElement>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
-  const [activePlatform, setActivePlatform] = useState("qianchuan");
-  const [activePromo, setActivePromo] = useState(0);
+  const [activePlatform, setActivePlatform] = useState<Platform>("qianchuan");
+  const [activePromo, setActivePromo] = useState<Promotion>("summary");
   const [activeDim, setActiveDim] = useState<DimensionTab>(initialDerivativeId ? "明细" : "团队");
   const [sortKey, setSortKey] = useState<string>("cost");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
@@ -339,9 +358,23 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
   const [colOrder, setColOrder] = useState(() => standardMetricCols().map(column => column.key));
   const [categoryFilter, setCategoryFilter] = useState({ primary: "", secondary: "" });
   const [exportOpen, setExportOpen] = useState(false);
-  const cols = useMemo(() => activePromo === 2 ? productDomainMetricCols() : standardMetricCols(), [activePromo]);
+  const allCols = useMemo(() => activePromo === "summary" || activePromo === "standard" ? standardMetricCols() : productDomainMetricCols(activePlatform), [activePromo, activePlatform]);
+  const cols = useMemo(() => allCols.filter(column => activeDim === "明细" || !column.detailOnly), [allCols, activeDim]);
+  useEffect(() => {
+    if (cols.some(column => column.key === sortKey)) return;
+    setSortKey(cols[0].key);
+    setSortDir("desc");
+  }, [cols, sortKey]);
   const derivativeRows = useMemo(() => allowed && activePlatform === "qianchuan" ? derivativeAnalyticsRows(derivatives, adStore.records, organization) : [], [derivatives, adStore, organization, allowed, activePlatform]);
-  const raw = useMemo(() => [...RAW, ...derivativeRows], [derivativeRows]);
+  const raw = useMemo(() => {
+    if (activePlatform === "qianchuan") {
+      if (activePromo === "live_domain") return LIVE_RAW;
+      if (activePromo === "product_multiplier") return PRODUCT_MULTIPLIER_RAW;
+      if (activePromo === "live_multiplier") return LIVE_MULTIPLIER_RAW;
+    }
+    // Keep the existing summary data unchanged until its scope is revised.
+    return [...RAW, ...(activePlatform === "qianchuan" && activePromo === "summary" ? LIVE_RAW : []), ...derivativeRows];
+  }, [activePlatform, activePromo, derivativeRows]);
   const categoryMap = useMemo(() => {
     const categories: Record<string, string[]> = Object.fromEntries(Object.values(CAT1).map(([primary, secondary]) => [primary, [...secondary]]));
     for (const row of raw) {
@@ -358,7 +391,7 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
   const focusedRow = derivativeRows.find(row => row.videoId === initialDerivativeId);
   const preview = allowed ? derivatives.find(record => record.id === previewId && record.status === "成功") : undefined;
 
-  useEffect(() => { if (initialDerivativeId) { setActivePlatform("qianchuan"); setActivePromo(0); setActiveDim("明细"); } }, [initialDerivativeId]);
+  useEffect(() => { if (initialDerivativeId) { setActivePlatform("qianchuan"); setActivePromo("summary"); setActiveDim("明细"); } }, [initialDerivativeId]);
 
   const data = useMemo(() => {
     let rows = aggregate(filteredRaw, activeDim);
@@ -386,12 +419,13 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
   }, [initialDerivativeId, targetIndex, page]);
 
   const orderedCols = useMemo(() => {
-    const byKey = new Map(cols.map(column => [column.key, column]));
+    const byKey = new Map(allCols.map(column => [column.key, column]));
     const ordered = colOrder.flatMap(key => byKey.has(key) ? [byKey.get(key)!] : []);
     const known = new Set(ordered.map(column => column.key));
-    return [...ordered, ...cols.filter(column => !known.has(column.key))];
-  }, [cols, colOrder]);
-  const visibleCols = orderedCols.filter((c) => !hiddenCols.has(c.key));
+    return [...ordered, ...allCols.filter(column => !known.has(column.key))];
+  }, [allCols, colOrder]);
+  const dimensionCols = orderedCols.filter(column => activeDim === "明细" || !column.detailOnly);
+  const visibleCols = dimensionCols.filter((c) => !hiddenCols.has(c.key));
 
   const toggleCol = (key: string) => {
     setHiddenCols((prev) => {
@@ -415,7 +449,7 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
   };
 
   const resetCols = () => {
-    setColOrder(cols.map(column => column.key));
+    setColOrder(allCols.map(column => column.key));
     setHiddenCols(new Set());
   };
 
@@ -423,6 +457,16 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
     if (sortKey === key) setSortDir(sortDir === "desc" ? "asc" : "desc");
     else { setSortKey(key); setSortDir("desc"); }
     setPage(1);
+  };
+
+  const selectPromo = (promotion: Promotion, platform: Platform = activePlatform) => {
+    const nextCols = promotion === "summary" || promotion === "standard" ? standardMetricCols() : productDomainMetricCols(platform);
+    setActivePromo(promotion);
+    setSortKey(nextCols[0].key);
+    setSortDir("desc");
+    setPage(1);
+    setColOrder(nextCols.map(column => column.key));
+    setHiddenCols(new Set());
   };
 
   const sortIcon = (key: string) => {
@@ -446,7 +490,7 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
   const exportEndDate = focusedRow && focusedRow.date > "2026-09-18" ? focusedRow.date : "2026-09-18";
   const exportFilters = [
     { label: "平台", value: PLATFORMS.find(item => item.id === activePlatform)?.name },
-    { label: "推广", value: activePromo === 0 ? (activePlatform === "qianchuan" ? "千川汇总" : "巨量广告汇总") : PROMO_TABS[activePromo] },
+    { label: "推广", value: activePromo === "summary" ? (activePlatform === "qianchuan" ? "千川汇总" : "巨量广告汇总") : PROMOTIONS[activePromo] },
     { label: "维度", value: activeDim },
     { label: "一级分类", value: categoryFilter.primary },
     { label: "二级分类", value: categoryFilter.secondary },
@@ -480,7 +524,11 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
             return (
               <button
                 key={p.id}
-                onClick={() => { setActivePlatform(p.id); setPage(1); }}
+                onClick={() => {
+                  if (activePlatform === p.id) return;
+                  setActivePlatform(p.id);
+                  selectPromo(PLATFORM_PROMOTIONS[p.id].includes(activePromo) ? activePromo : "summary", p.id);
+                }}
                 className={`flex items-center gap-2 font-bold text-sm transition-all cursor-pointer relative py-1 whitespace-nowrap ${
                   active ? "text-[#7C3AED]" : "text-slate-500 hover:text-slate-800"
                 }`}
@@ -498,21 +546,15 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
         </div>
         {/* 二级推广类型 Tab */}
         <div className="flex items-center gap-1 px-5 py-3 overflow-x-auto">
-          {PROMO_TABS.map((t, i) => {
-            const active = activePromo === i;
-            const label = i === 0 ? (activePlatform === "qianchuan" ? "千川汇总" : t + "汇总") : t;
+          {PLATFORM_PROMOTIONS[activePlatform].map(promotion => {
+            const active = activePromo === promotion;
+            const label = promotion === "summary" ? (activePlatform === "qianchuan" ? "千川汇总" : "巨量广告汇总") : PROMOTIONS[promotion];
             return (
               <button
-                key={t}
-                onClick={() => {
-                  setActivePromo(i);
-                  setSortKey(i === 2 ? "productOverallSpend" : "cost");
-                  setSortDir("desc");
-                  setPage(1);
-                  setColOrder((i === 2 ? productDomainMetricCols() : standardMetricCols()).map(column => column.key));
-                  setHiddenCols(new Set());
-                }}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                key={promotion}
+                onClick={() => selectPromo(promotion)}
+                aria-pressed={active}
+                className={`shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   active
                     ? "bg-[#7C3AED] text-white shadow-2xs"
                     : "bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
@@ -603,7 +645,7 @@ export default function AdPlatformAnalysisView({ showToast, initialDerivativeId 
               导出 <ChevronDown className="w-3.5 h-3.5" />
             </button>
             <ColumnSettingsControl
-              columns={orderedCols}
+              columns={dimensionCols}
               hiddenKeys={hiddenCols}
               onToggle={toggleCol}
               onMove={moveCol}

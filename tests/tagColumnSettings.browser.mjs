@@ -17,7 +17,7 @@ const defaultFields = [
 
 try {
   await mkdir("tmp/tag-column-settings", { recursive: true });
-  await page.addInitScript(() => localStorage.setItem("mengchang_prototype_session", JSON.stringify({ username: "putongyonghu", mode: "user" })));
+  await page.addInitScript(() => localStorage.setItem("mengchang_prototype_session", JSON.stringify({ username: "chaojiguanliyuan", mode: "user" })));
   await page.goto(process.env.BASE_URL || "http://localhost:3003", { waitUntil: "domcontentloaded" });
   await page.locator("#sidebar-item-ad_delivery").click();
   await page.getByRole("button", { name: "标签分析", exact: true }).click();
@@ -26,7 +26,7 @@ try {
   const columnButton = page.getByTitle("列设置");
   const headers = async () => table.getByRole("columnheader").allTextContents();
   await expect(columnButton.locator("svg.lucide-settings-2")).toBeVisible();
-  assert.deepEqual(await headers(), ["模特姓名 / 标签", ...defaultFields]);
+  assert.deepEqual(await headers(), ["子标签", ...defaultFields]);
 
   await columnButton.click();
   await expect(columnButton).toHaveAttribute("aria-expanded", "true");
@@ -35,7 +35,7 @@ try {
   await settings.getByText("净成交订单成本", { exact: true }).locator("..").getByRole("checkbox").uncheck();
   await page.keyboard.press("Escape");
   await expect(table.getByRole("columnheader", { name: "净成交订单成本", exact: true })).toHaveCount(0);
-  await expect(table.locator("tbody tr").first().locator("td")).toHaveCount(defaultFields.length);
+  await expect(table.locator("tbody tr")).toHaveCount(0);
 
   await columnButton.click();
   settings = page.getByText("自定义字段(可拖动排序)").locator("../..");
@@ -47,13 +47,13 @@ try {
   await source.dragTo(target);
   await expect(settings.locator('[draggable="true"]').first()).toContainText("消耗");
   await page.keyboard.press("Escape");
-  assert.deepEqual(await headers(), ["模特姓名 / 标签", "消耗", "视频数量", ...defaultFields.slice(2)]);
+  assert.deepEqual(await headers(), ["子标签", "消耗", "视频数量", ...defaultFields.slice(2)]);
 
   await columnButton.click();
   settings = page.getByText("自定义字段(可拖动排序)").locator("../..");
   await settings.getByRole("button", { name: "重置", exact: true }).click();
   await page.keyboard.press("Escape");
-  assert.deepEqual(await headers(), ["模特姓名 / 标签", ...defaultFields]);
+  assert.deepEqual(await headers(), ["子标签", ...defaultFields]);
   await page.screenshot({ path: "tmp/tag-column-settings/result.png", fullPage: true, animations: "disabled" });
   assert.deepEqual(errors, []);
   console.log("PASS: tag detail columns share the settings icon, visibility, drag ordering, reset and popover behavior.");

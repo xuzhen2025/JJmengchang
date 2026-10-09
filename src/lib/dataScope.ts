@@ -6,7 +6,7 @@ import { PERMISSION_CHANGE_EVENT } from "./userPermissions";
 import { INITIAL_ROLES } from "../components/AdminSystemManagementView";
 
 // ---------------------------------------------------------------------------
-// 数据范围（AUTH-03）：角色与成员配置的"仅本人 / 本部门及下级 / 全部"
+// 数据范围（AUTH-03）：角色与成员配置的"仅本人 / 本团队及下级 / 全部"
 // 多角色合并规则：取最大范围（all > dept_tree > self）
 // ---------------------------------------------------------------------------
 
@@ -112,14 +112,14 @@ export const filterByDataScope = <T extends { creatorId?: string; creatorDeptId?
   if (scope === "self") {
     return items.filter(i => (i.creatorId || member.id) === member.id);
   }
-  // dept_tree：创建人在我部门及下级部门（无归属默认归我部门）
+  // dept_tree：创建人在我团队及下级团队（无归属默认归我团队）
   return items.filter(i => {
     const dept = i.creatorDeptId || member.deptId || "";
     return isDeptSelfOrDescendant(member.deptId || "", dept);
   });
 };
 
-// 响应式数据范围（角色/成员/部门/权限变更后立即刷新）
+// 响应式数据范围（角色/成员/团队/权限变更后立即刷新）
 const SCOPE_EVENTS = [ORGANIZATION_CHANGE, AD_CHANGE_EVENT, PERMISSION_CHANGE_EVENT, "storage"];
 function subscribeScope(cb: () => void) {
   const handler = () => cb();

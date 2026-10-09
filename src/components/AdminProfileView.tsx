@@ -33,7 +33,7 @@ export default function AdminProfileView({ onLogout }: AdminProfileViewProps) {
               <User className="h-5 w-5 text-purple-600" />
               个人中心
             </h1>
-            <p className="mt-1 text-xs text-slate-400">查看个人基础资料与所属部门架构</p>
+            <p className="mt-1 text-xs text-slate-400">查看个人基础资料与所属团队架构</p>
           </div>
 
           <div className="flex w-full flex-wrap rounded-lg border border-slate-200 bg-slate-100 p-1 lg:w-auto lg:shrink-0">

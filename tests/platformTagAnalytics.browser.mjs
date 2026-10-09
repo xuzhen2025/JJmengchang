@@ -7,13 +7,13 @@ const errors = [];
 page.on("pageerror", error => errors.push(error.message));
 await page.addInitScript(() => localStorage.setItem("mengchang_prototype_session", JSON.stringify({ username: "chaojiguanliyuan", mode: "user" })));
 fs.mkdirSync("tmp/platform-tag-check", { recursive: true });
-const metrics = ["总素材数", "首发素材", "首发素材消耗", "优质素材", "优质素材消耗", "低效素材", "低质素材", "同质化挤压严重素材", "同质化素材风险-排队投放素材"];
+const metrics = ["总素材数", "首发素材", "首发素材消耗", "优质素材", "优质素材消耗", "低效素材", "低质素材"];
 const dimensions = [
   ["汇总", ["广告标签", "素材数量", "数量占比", "消耗", "消耗占比"], ["分类"]],
-  ["部门", ["部门", ...metrics], ["部门", "分类"]],
-  ["分组", ["部门", "分组", ...metrics], ["分组", "分类"]],
-  ["个人", ["部门", "分组", "用户", ...metrics], ["个人账号", "分类"]],
-  ["广告账户", ["广告账户", "主体", "部门", "分组", "用户", "一级分类", "二级分类", ...metrics], ["分组", "分类"]],
+  ["团队", ["团队", ...metrics], ["团队", "分类"]],
+  ["分组", ["团队", "分组", ...metrics], ["分组", "分类"]],
+  ["个人", ["团队", "分组", "用户", ...metrics], ["个人账号", "分类"]],
+  ["广告账户", ["广告账户", "主体", "团队", "分组", "用户", "一级分类", "二级分类", ...metrics], ["分组", "分类"]],
 ];
 try {
   await page.goto(process.env.BASE_URL || "http://localhost:3003/");
@@ -33,6 +33,8 @@ try {
       await expect(table.locator("tbody tr").nth(1)).toBeVisible();
       await expect(view).not.toContainText("NaN");
       await expect(view).not.toContainText("Infinity");
+      await expect(view).not.toContainText("同质化");
+      await expect(view.getByText("四类素材", { exact: true })).toBeVisible();
       await page.screenshot({ path: `tmp/platform-tag-check/${platform}-${dimension}.png`, fullPage: true, animations: "disabled" });
     }
   }
@@ -44,7 +46,7 @@ try {
   await expect(table.locator("tbody")).toHaveText(beforeQuery);
   await view.getByRole("button", { name: "查询", exact: true }).click();
   await expect(table.locator("tbody")).toHaveText("暂无数据");
-  await expect(view.getByText("数量: 0", { exact: true })).toHaveCount(6);
+  await expect(view.getByText("数量: 0", { exact: true })).toHaveCount(4);
   await view.getByRole("button", { name: "重置", exact: true }).click();
   await expect(view.getByPlaceholder("请输入主体名称")).toHaveValue("");
   await expect(table.locator("tbody tr")).toHaveCount(accountRowCount);
@@ -52,18 +54,18 @@ try {
   const department = (await table.locator("tbody tr").nth(1).locator("td").nth(2).innerText()).trim();
   const group = (await table.locator("tbody tr").nth(1).locator("td").nth(3).innerText()).trim();
   const person = (await table.locator("tbody tr").nth(1).locator("td").nth(4).innerText()).trim();
-  for (const dimension of ["部门", "分组", "个人"]) {
+  for (const dimension of ["团队", "分组", "个人"]) {
     await dimensionBar.getByRole("button", { name: dimension, exact: true }).click();
     const select = view.getByRole("combobox", { name: dimension === "个人" ? "个人账号" : dimension, exact: true });
-    if (dimension === "部门") await select.selectOption({ label: department });
+    if (dimension === "团队") await select.selectOption({ label: department });
     if (dimension === "分组") await select.selectOption(JSON.stringify([department, group]));
     if (dimension === "个人") await select.selectOption({ label: person });
     await view.getByRole("button", { name: "查询", exact: true }).click();
     await expect(table.locator("tbody tr")).toHaveCount(2);
-    await expect(table.locator("tbody tr").nth(1)).toContainText(dimension === "部门" ? department : dimension === "分组" ? group : person);
+    await expect(table.locator("tbody tr").nth(1)).toContainText(dimension === "团队" ? department : dimension === "分组" ? group : person);
   }
   await dimensionBar.getByRole("button", { name: "汇总", exact: true }).click();
-  await expect(table.locator("tbody tr")).toHaveCount(7);
+  await expect(table.locator("tbody tr")).toHaveCount(5);
   const allCount = await table.locator("tbody tr").first().locator("td").nth(1).innerText();
   await view.getByLabel("分类", { exact: true }).click();
   const categoryPopup = page.locator('[data-overlay-layer="popover"]').filter({ hasText: "一级分类" });
@@ -99,6 +101,8 @@ try {
   const csv = fs.readFileSync(await download.path(), "utf8");
   expect(csv).toContain('"广告标签","素材数量","数量占比","消耗","消耗占比"');
   expect(csv).toContain('"首发素材"');
+  expect(csv).not.toContain("同质化");
+  await expect(page.getByText("导出成功", { exact: true })).toHaveCount(0);
 
   await dimensionBar.getByRole("button", { name: "广告账户", exact: true }).click();
   const scroll = view.getByTestId("platform-tag-table-scroll");
@@ -108,8 +112,11 @@ try {
   expect(await firstFive.evaluateAll(cells => cells.slice(0, 5).map(cell => cell.getBoundingClientRect().x))).toEqual(positions);
   await page.screenshot({ path: "tmp/platform-tag-check/account-scrolled.png", fullPage: true, animations: "disabled" });
   for (const width of [1440, 1024, 390]) {
-    if (width === 390) await page.locator("aside").getByRole("button").last().click();
     await page.setViewportSize({ width, height: 1000 });
+    if (width === 390) {
+      await page.locator("aside").getByRole("button").last().click();
+      await expect(page.locator("aside")).toHaveCSS("width", "64px");
+    }
     await scroll.evaluate(element => { element.scrollLeft = 0; });
     await expect(view.getByLabel("分类", { exact: true })).toBeVisible();
     const box = await view.getByTestId("platform-tag-filters").boundingBox();
@@ -119,6 +126,17 @@ try {
     expect(controls.every(control => control.x >= box.x - 1 && control.right <= box.x + box.width + 1)).toBe(true);
     if (width < 1280) expect(await firstFive.first().evaluate(cell => getComputedStyle(cell).position)).not.toBe("sticky");
     await page.screenshot({ path: `tmp/platform-tag-check/account-${width}.png`, fullPage: true, animations: "disabled" });
+    await view.getByRole("button", { name: "指标说明", exact: true }).hover();
+    const tooltip = page.locator("#platform-tag-metric-help");
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).not.toContainText("同质化");
+    await expect(tooltip).toContainText("首发素材");
+    const tooltipBox = await tooltip.boundingBox();
+    expect(tooltipBox.x).toBeGreaterThanOrEqual(0);
+    expect(tooltipBox.x + tooltipBox.width).toBeLessThanOrEqual(width);
+    expect(tooltipBox.y + tooltipBox.height).toBeLessThanOrEqual(1000);
+    await page.keyboard.press("Escape");
+    await expect(tooltip).toHaveCount(0);
   }
   expect(errors).toEqual([]);
   console.log("Both platforms: five dimensions, filters, totals, empty state, reset, export, sticky columns and responsive controls passed");

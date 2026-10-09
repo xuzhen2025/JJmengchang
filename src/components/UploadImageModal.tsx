@@ -140,7 +140,7 @@ export default function UploadImageModal({
 
   // Permission Settings States
   const [permission, setPermission] = useState<
-    "公开" | "部门成员" | "分组成员" | "公用资源" | "指定范围"
+    "公开" | "团队成员" | "分组成员" | "公用资源" | "指定范围"
   >("公开");
   const [scheduledDate, setScheduledDate] = useState("");
   const [receiver, setReceiver] = useState("");
@@ -1075,7 +1075,7 @@ export default function UploadImageModal({
                   {(
                     [
                       "公开",
-                      "部门成员",
+                      "团队成员",
                       "分组成员",
                       "公用资源",
                       "指定范围",

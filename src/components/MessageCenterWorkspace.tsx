@@ -8,12 +8,9 @@ import {
   ChevronRight,
   Clock3,
   ExternalLink,
-  FileCheck2,
   FileText,
   Inbox,
-  ListTodo,
   MessageSquare,
-  Radio,
   Search,
   ShieldAlert,
   UploadCloud,
@@ -22,24 +19,18 @@ import {
 } from "lucide-react";
 import { ActiveScreen, AppMessage, MessageResourceLink } from "../types";
 import { INITIAL_MESSAGES, MESSAGE_CATEGORY_CONFIGS } from "../data";
-import ApprovalActionBox from "./ApprovalActionBox";
 
 interface MessageCenterWorkspaceProps {
   onBack: () => void;
   setActiveScreen: (screen: ActiveScreen) => void;
   messages?: AppMessage[];
-  onApproveCredits?: (msgId: string) => void;
-  onRejectCredits?: (msgId: string, rejectReason: string) => void;
   onMarkMessageRead?: (id: string) => void;
   onMarkAllMessagesRead?: () => void;
   onOpenResource?: (resource: MessageResourceLink) => void;
 }
 
 const CATEGORY_META: Record<string, { icon: React.ElementType; tone: string; active: string; description: string }> = {
-  "审批待办": { icon: FileCheck2, tone: "bg-amber-50 text-amber-700", active: "bg-amber-50 text-amber-800 border-amber-200", description: "需要你处理的积分申请" },
-  "任务协作": { icon: ListTodo, tone: "bg-blue-50 text-blue-700", active: "bg-blue-50 text-blue-800 border-blue-200", description: "发布人与执行人的协作动态" },
   "内容资源": { icon: UploadCloud, tone: "bg-emerald-50 text-emerald-700", active: "bg-emerald-50 text-emerald-800 border-emerald-200", description: "上传、生成、状态与批注" },
-  "直播": { icon: Radio, tone: "bg-rose-50 text-rose-700", active: "bg-rose-50 text-rose-800 border-rose-200", description: "直播间场次与排班提醒" },
   "安全与系统": { icon: ShieldAlert, tone: "bg-slate-100 text-slate-700", active: "bg-slate-100 text-slate-900 border-slate-300", description: "账号安全、系统与导出审计" },
 };
 
@@ -54,8 +45,6 @@ export default function MessageCenterWorkspace({
   onBack,
   setActiveScreen,
   messages: propMessages,
-  onApproveCredits,
-  onRejectCredits,
   onMarkMessageRead,
   onMarkAllMessagesRead,
   onOpenResource,
@@ -131,10 +120,10 @@ export default function MessageCenterWorkspace({
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-module bg-slate-50 text-slate-800">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} title="返回首页" className="flex h-8 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"><ArrowLeft className="h-4 w-4" /></button>
+          <button onClick={onBack} title="返回爆款复刻" className="flex h-8 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"><ArrowLeft className="h-4 w-4" /></button>
           <div>
             <div className="flex items-center gap-2"><h1 className="text-lg font-black text-slate-900">消息中心</h1>{unreadCount > 0 && <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white">{unreadCount} 条未读</span>}</div>
-            <p className="mt-0.5 text-xs text-slate-400">业务通知、协作消息与管理审计统一入口</p>
+            <p className="mt-0.5 text-xs text-slate-400">内容资源与安全系统消息统一入口</p>
           </div>
         </div>
         <button onClick={markAllRead} disabled={unreadCount === 0} className="inline-flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-40"><Check className="h-4 w-4" />全部标为已读</button>
@@ -219,7 +208,7 @@ export default function MessageCenterWorkspace({
               {(drawerMessage.sourceType || drawerMessage.sourceId || drawerMessage.businessStatus) && <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200"><div className="bg-white p-3"><p className="text-[10px] text-slate-400">业务对象</p><p className="mt-1 truncate text-xs font-bold text-slate-800">{drawerMessage.sourceType ?? "-"}</p></div><div className="bg-white p-3"><p className="text-[10px] text-slate-400">业务编号</p><p className="mt-1 truncate font-mono text-xs font-bold text-slate-800">{drawerMessage.sourceId ?? "-"}</p></div><div className="bg-white p-3"><p className="text-[10px] text-slate-400">当前状态</p><p className="mt-1 truncate text-xs font-bold text-purple-700">{drawerMessage.businessStatus ?? "-"}</p></div></div>}
 
               <div className="mt-6">
-                <div className="mb-3 flex items-center gap-2"><FileText className="h-4 w-4 text-slate-400" /><h4 className="text-xs font-black text-slate-800">{drawerMessage.template === "security" ? "审计与安全信息" : drawerMessage.template === "live" ? "场次信息" : drawerMessage.template === "task" ? "任务变更信息" : drawerMessage.template === "resource" ? "资源处理信息" : "申请信息"}</h4></div>
+                <div className="mb-3 flex items-center gap-2"><FileText className="h-4 w-4 text-slate-400" /><h4 className="text-xs font-black text-slate-800">{drawerMessage.template === "security" ? "审计与安全信息" : "资源处理信息"}</h4></div>
                 <dl className="overflow-hidden rounded-lg border border-slate-200">{drawerMessage.details.map((item, index) => <div key={`${item.label}-${index}`} className="grid grid-cols-[120px_minmax(0,1fr)] border-b border-slate-100 last:border-b-0"><dt className="bg-slate-50 px-3 py-3 text-xs font-bold text-slate-500">{item.label}</dt><dd className="px-3 py-3 text-xs leading-5 text-slate-800">{item.isLink ? <a href={item.value} target="_blank" rel="noreferrer" className="text-purple-600 hover:underline">{item.value}</a> : item.value}</dd></div>)}</dl>
               </div>
 
@@ -246,11 +235,10 @@ export default function MessageCenterWorkspace({
                 </div>
               )}
 
-              {drawerMessage.approvalType === "credits" && <ApprovalActionBox message={drawerMessage} onApprove={(id) => onApproveCredits?.(id)} onReject={(id, reason) => onRejectCredits?.(id, reason)} />}
               {drawerMessage.template === "security" && drawerMessage.severity === "danger" && <div className="mt-5 flex gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" /><div><p className="text-xs font-black text-rose-800">需要关注</p><p className="mt-1 text-xs leading-5 text-rose-700">请核对操作人、发生时间、设备环境与业务范围，并根据审计结果及时处理。</p></div></div>}
               {actionFeedback && <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-700"><CheckCircle2 className="h-4 w-4" />{actionFeedback}</div>}
             </div>
-            <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-4"><span className="hidden items-center gap-1 text-[11px] text-slate-400 sm:inline-flex"><MessageSquare className="h-3 w-3" />事件编号：{drawerMessage.eventCode ?? "MESSAGE_EVENT"}</span><div className="ml-auto flex gap-2"><button onClick={() => setDrawerMessageId(null)} className="h-8 rounded-lg border border-slate-200 px-4 text-xs font-bold text-slate-600 hover:bg-slate-50">关闭</button>{drawerMessage.actionLabel && drawerMessage.approvalStatus !== "pending" && <button onClick={() => handleMessageAction(drawerMessage)} className="inline-flex h-8 items-center gap-2 rounded-lg bg-purple-600 px-4 text-xs font-bold text-white hover:bg-purple-700">{drawerMessage.actionLabel}<ChevronRight className="h-3.5 w-3.5" /></button>}</div></footer>
+            <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-4"><span className="hidden items-center gap-1 text-[11px] text-slate-400 sm:inline-flex"><MessageSquare className="h-3 w-3" />事件编号：{drawerMessage.eventCode ?? "MESSAGE_EVENT"}</span><div className="ml-auto flex gap-2"><button onClick={() => setDrawerMessageId(null)} className="h-8 rounded-lg border border-slate-200 px-4 text-xs font-bold text-slate-600 hover:bg-slate-50">关闭</button>{drawerMessage.actionLabel && <button onClick={() => handleMessageAction(drawerMessage)} className="inline-flex h-8 items-center gap-2 rounded-lg bg-purple-600 px-4 text-xs font-bold text-white hover:bg-purple-700">{drawerMessage.actionLabel}<ChevronRight className="h-3.5 w-3.5" /></button>}</div></footer>
           </section>
         </div>
       )}

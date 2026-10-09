@@ -83,7 +83,7 @@ export default function CreditsDashboard({
               个人中心
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              查看个人基础资料、所属部门架构、可用算力积分与明细账单
+              查看个人基础资料、所属团队架构、可用算力积分与明细账单
             </p>
           </div>
           

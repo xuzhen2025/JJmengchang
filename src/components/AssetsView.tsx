@@ -146,7 +146,7 @@ export default function AssetsView() {
         daysLeft: diffDays,
         isExpired: false,
         isWarning: true,
-        riskText: "⚠️ 临期告警：肖像或资质将在30天内到期，请商务部门及时与模特/MCN沟通续约。"
+        riskText: "⚠️ 临期告警：肖像或资质将在30天内到期，请商务团队及时与模特/MCN沟通续约。"
       };
     }
 

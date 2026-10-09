@@ -57,7 +57,7 @@ export default function UploadScriptPage({
 
   // Section 3: 更多设置
   const [presetPermissionConfig, setPresetPermissionConfig] = useState("");
-  const [viewPermission, setViewPermission] = useState<"公开" | "部门成员" | "分组成员" | "公用资源" | "指定范围">("公开");
+  const [viewPermission, setViewPermission] = useState<"公开" | "团队成员" | "分组成员" | "公用资源" | "指定范围">("公开");
   const [effectiveDate, setEffectiveDate] = useState("");
   const [reminderUser, setReminderUser] = useState("");
   const [reminderMessage, setReminderMessage] = useState("");
@@ -537,7 +537,7 @@ export default function UploadScriptPage({
                 >
                   <option value="">选择预设配置</option>
                   <option value="p1">公开访问配置</option>
-                  <option value="p2">仅部门访问配置</option>
+                  <option value="p2">仅团队访问配置</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -558,7 +558,7 @@ export default function UploadScriptPage({
               <span className="text-rose-500 mr-0.5">*</span>谁可以看
             </label>
             <div className="flex items-center gap-5 text-xs font-bold text-slate-700">
-              {(["公开", "部门成员", "分组成员", "公用资源", "指定范围"] as const).map((opt) => (
+              {(["公开", "团队成员", "分组成员", "公用资源", "指定范围"] as const).map((opt) => (
                 <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
                   <input
                     type="radio"

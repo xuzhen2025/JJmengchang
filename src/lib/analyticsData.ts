@@ -113,7 +113,7 @@ export function personOrg(name: string, path?: string) {
       ? INITIAL_DEPTS.find((item) => item.id === node.parentId)
       : node;
   return {
-    department: parent?.name || "未归属部门",
+    department: parent?.name || "未归属团队",
     group: node?.levelType === "group" ? node.name : "未归属分组",
     person: name,
   };

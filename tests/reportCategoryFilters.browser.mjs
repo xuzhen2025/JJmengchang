@@ -24,7 +24,7 @@ const choose = async () => {
 
 try {
   await mkdir("tmp/report-category-filters", { recursive: true });
-  await page.addInitScript(() => localStorage.setItem("mengchang_prototype_session", JSON.stringify({ username: "putongyonghu", mode: "user" })));
+  await page.addInitScript(() => localStorage.setItem("mengchang_prototype_session", JSON.stringify({ username: "chaojiguanliyuan", mode: "user" })));
   await page.goto(process.env.BASE_URL || "http://localhost:3003", { waitUntil: "domcontentloaded" });
   const expected = await page.evaluate(async () => {
     const { resourceConfigStore } = await import("/src/lib/resourceConfig.ts");
@@ -40,7 +40,8 @@ try {
       ...group,
       categories: index === 0 ? ["成片", "测试分类A", "同名二级"] : index === 1 ? ["成片", "测试分类B", "同名二级"] : ["音频"],
     })));
-    const [testCategoryATagGroup, testCategoryBTagGroup] = resourceTagStore.getPublicGroups();
+    const publicTagGroups = resourceTagStore.getPublicGroups();
+    const [testCategoryATagGroup, testCategoryBTagGroup] = publicTagGroups;
     const categories = resourceConfigStore.categories("finished");
     const seedAccount = readAdStore().accounts[0];
     const accounts = [];
@@ -56,12 +57,20 @@ try {
     }
     updateAdStore(store => ({ ...store, accounts: [...store.accounts, ...accounts] }));
     const facts = createReportFacts(readAdStore().accounts, readReportOrganization(), [], categories);
+    const tagFacts = createReportFacts(readAdStore().accounts, readReportOrganization(), publicTagGroups, categories);
     const path = "测试分类A / 同名二级";
     const qc = selectReportFacts(facts, "巨量千川", { category: path });
+    const tagSelected = selectReportFacts(tagFacts, "巨量千川", { category: path });
+    const tagBreakdowns = testCategoryATagGroup.subTags.map(tag => ({
+      tag,
+      rows: tagSelected.filter(row => row.tagAssignments[testCategoryATagGroup.id]?.includes(tag.id)),
+    }));
+    const tagAttributed = tagBreakdowns.flatMap(({ tag, rows }) => rows.map(row => ({ ...row, materialId: `${tag.id}:${row.materialId}` })));
     return {
       categories,
       accountCount: reportTotals(qc).accounts,
-      tag: tagReportRow(qc, "总计"),
+      tag: tagReportRow(tagAttributed, "总计"),
+      tagRowCount: testCategoryATagGroup.subTags.length + 1,
       accountSpend: reportTotals(selectReportFacts(facts, "巨量千川", { category: path, promotion: "标准推广" })).spend.toFixed(2),
       testCategoryATagGroup: testCategoryATagGroup.name,
       testCategoryBTagGroup: testCategoryBTagGroup.name,
@@ -97,18 +106,15 @@ try {
     await page.keyboard.press("Escape");
     await expect(category).toHaveValue("");
     if (key === "tag-analysis") {
-      const tag = page.getByRole("combobox", { name: "选择标签", exact: true });
-      await expect(tag).toBeDisabled();
+      const tagGroup = page.getByRole("combobox", { name: "选择标签组", exact: true });
+      await expect(tagGroup).toBeDisabled();
       await choose();
-      await expect(tag).toBeEnabled();
-      await expect(tag.locator("option").first()).toHaveText("选择标签");
-      await expect(tag.locator("optgroup")).toHaveCount(1);
-      await expect(tag.locator("optgroup")).toHaveAttribute("label", expected.testCategoryATagGroup);
-      assert.ok(await tag.locator('option:not([value=""])').count() > 0);
-      await tag.selectOption({ index: 1 });
-      assert.notEqual(await tag.inputValue(), "");
-      await tag.selectOption("");
-      await expect(tag).toHaveValue("");
+      await expect(tagGroup).toBeEnabled();
+      await expect(tagGroup.locator("option").first()).toHaveText("选择标签组");
+      await expect(tagGroup.locator("optgroup")).toHaveCount(0);
+      await expect(tagGroup.locator('option:not([value=""])')).toHaveText([expected.testCategoryATagGroup]);
+      await tagGroup.selectOption({ label: expected.testCategoryATagGroup });
+      assert.notEqual(await tagGroup.inputValue(), "");
     } else await choose();
     await expect(popup).toHaveCount(0);
     if (requiresQuery) {
@@ -119,8 +125,15 @@ try {
     if (key === "tags") {
       await expect(table.locator("tbody tr")).toHaveCount(expected.accountCount + 1);
     } else if (key === "tag-analysis") {
+      await expect(table.locator("tbody tr")).toHaveCount(expected.tagRowCount);
       await expect(total.nth(1)).toHaveText(String(expected.tag.videoCount));
       await expect(total.nth(2)).toHaveText(expected.tag.spend);
+      await expect(table.locator("tbody")).not.toContainText("未打标签");
+      const spendValues = await table.locator("tbody tr").evaluateAll(rows => rows.map(row => {
+        const text = row.querySelectorAll("td")[2]?.textContent || "0";
+        return Number(text.replace(/[^0-9.-]/g, "")) || 0;
+      }));
+      assert.ok(Math.abs(spendValues[0] - spendValues.slice(1).reduce((sum, value) => sum + value, 0)) < 0.01);
     } else if (key === "accounts") await expect(total.nth(6)).toHaveText(expected.accountSpend);
     if (["tags", "accounts"].includes(key)) {
       const firstCategoryIndex = key === "tags" ? 5 : 4;
@@ -138,10 +151,20 @@ try {
     await expect(table.locator("tbody")).toHaveText(filtered);
     await button("清除分类").click();
     await expect(category).toHaveValue("");
-    if (requiresQuery) await button("查询").click();
-    await expect(table.locator("tbody")).toHaveText(before);
+    if (key === "tag-analysis") {
+      await expect(page.getByRole("combobox", { name: "选择标签组", exact: true })).toHaveValue("");
+      await button("查询").click();
+      await expect(page.getByText("请先选择标签组", { exact: true })).toBeVisible();
+      await expect(table.locator("tbody")).toHaveText(filtered);
+      await button("重置").click();
+      await expect(table.locator("tbody")).toHaveText(before);
+    } else {
+      if (requiresQuery) await button("查询").click();
+      await expect(table.locator("tbody")).toHaveText(before);
+    }
     if (hasReset) {
       await choose();
+      if (key === "tag-analysis") await page.getByRole("combobox", { name: "选择标签组", exact: true }).selectOption({ label: expected.testCategoryATagGroup });
       if (requiresQuery) await button("查询").click();
       await button("重置").click();
       await expect(category).toHaveValue("");

@@ -290,6 +290,7 @@ export interface GalleryItem {
 
 export type ActiveScreen =
   | "operation_records"
+  | "tools"
   | "home"
   | "quick_creation"
   | "face_swap"
@@ -352,7 +353,7 @@ export interface AppMessage {
 
   // Prototype event metadata used to demonstrate source, recipient and destination.
   eventCode?: string;
-  template?: "approval" | "task" | "resource" | "live" | "security";
+  template?: "resource" | "security";
   severity?: "info" | "success" | "warning" | "danger";
   actorName?: string;
   recipientNames?: string[];
@@ -362,13 +363,4 @@ export interface AppMessage {
   actionLabel?: string;
   actionScreen?: ActiveScreen;
   relatedResources?: MessageResourceLink[];
-
-  // Approval specific fields
-  approvalType?: "credits";
-  approvalStatus?: "pending" | "approved" | "rejected";
-  applicantName?: string;
-  managerName?: string;
-  creditsAmount?: number;
-  reason?: string;
-  rejectReason?: string;
 }

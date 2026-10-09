@@ -22,7 +22,7 @@ export interface ReferencedVideoExample {
 }
 
 export function referenceEntityOptions(org: ReportOrganization, dimension: ReferenceDimension) {
-  if (dimension === "author") return org.members.map(member => ({ id: member.id, label: member.name, detail: org.depts.find(node => node.id === member.deptId)?.name || "未归属部门" }));
+  if (dimension === "author") return org.members.map(member => ({ id: member.id, label: member.name, detail: org.depts.find(node => node.id === member.deptId)?.name || "未归属团队" }));
   return org.depts.filter(node => dimension === "group" ? node.levelType === "group" : node.levelType === "department").map(node => ({
     id: node.id, label: node.name, detail: dimension === "group" ? org.depts.find(parent => parent.id === node.parentId)?.name || "" : "",
   }));

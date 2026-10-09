@@ -10,6 +10,7 @@ import {
   Settings,
   BarChart3,
   History,
+  Wrench,
   ChevronDown,
   LayoutDashboard
 } from "lucide-react";
@@ -61,6 +62,7 @@ export default function Sidebar({
     { id: "resources", label: "资源库", icon: FolderHeart },
     { id: "ad_delivery", label: "数据分析", icon: BarChart3 },
     { id: "operation_records", label: "操作记录", icon: History },
+    { id: "tools", label: "工具", icon: Wrench },
   ];
 
   const adminMenuItems: { id: string; label: string; icon: any; badge?: string }[] = [

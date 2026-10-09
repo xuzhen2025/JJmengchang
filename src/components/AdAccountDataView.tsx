@@ -291,7 +291,7 @@ function aggregateFacts(
 }
 
 function relationText(value: string, kind: "team" | "group" | "user" | "category") {
-  if (kind === "team" && (!value || value === "未归属部门")) return "未绑定团队";
+  if (kind === "team" && (!value || value === "未归属团队")) return "未绑定团队";
   if (kind === "group" && (!value || value === "未归属分组")) return "未绑定分组";
   if (kind === "user" && (!value || value === "未关联员工")) return "未绑定用户";
   if (kind === "category" && (!value || value === "未设置分类")) return "未绑定分类";
@@ -763,7 +763,7 @@ export default function AdAccountDataView({ showToast }: AdAccountDataViewProps)
           { label: "平台", value: platformName },
           { label: "推广", value: platform === "qianchuan" ? PROMOTIONS.find(item => item.id === promotion)?.label : "" },
           { label: "维度", value: dimensionLabel },
-          { label: "部门", value: appliedFilters.team },
+          { label: "团队", value: appliedFilters.team },
           { label: "分组", value: appliedFilters.group },
           { label: "用户", value: appliedFilters.person },
           { label: "账户", value: appliedFilters.account },

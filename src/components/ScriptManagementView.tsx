@@ -494,7 +494,7 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
 
     const errors: Record<string, string> = {};
     if (!taskFormState.assigneePath) {
-      errors.assigneePath = "请选择指派人员/部门";
+      errors.assigneePath = "请选择指派人员/团队";
     }
     if (!taskFormState.orderCount || Number(taskFormState.orderCount) <= 0) {
       errors.orderCount = "请输入有效下单数量";
@@ -925,7 +925,7 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
                       <tr className="bg-slate-50/90 border-b border-slate-200/80 text-slate-700 font-bold">
                         <th className="py-3 px-4 font-bold">任务名称</th>
                         <th className="py-3 px-4 font-bold">负责人</th>
-                        <th className="py-3 px-4 font-bold">部门</th>
+                        <th className="py-3 px-4 font-bold">团队</th>
                         <th className="py-3 px-4 font-bold">截止时间</th>
                         <th className="py-3 px-4 font-bold">进度状态</th>
                         <th className="py-3 px-4 font-bold text-center">操作</th>
@@ -1276,7 +1276,7 @@ export default function ScriptManagementView({ onTriggerTask, onNavigateToTaskDe
                       {taskFormState.visibilityRange === "specified_range" && (
                         <div className="space-y-2 pt-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200/80">
                           <div className="flex items-center gap-2">
-                            <span className="w-16 text-right text-xs text-slate-500 shrink-0">指定部门</span>
+                            <span className="w-16 text-right text-xs text-slate-500 shrink-0">指定团队</span>
                             <select
                               value={taskFormState.specifiedTeam}
                               onChange={(e) => setTaskFormState({ ...taskFormState, specifiedTeam: e.target.value })}

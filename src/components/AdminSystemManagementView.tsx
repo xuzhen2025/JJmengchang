@@ -49,7 +49,8 @@ import {
   SlidersHorizontal,
   HardDrive,
   FolderPlus,
-  Star
+  Star,
+  Bell,
 } from "lucide-react";
 import { DeptNode, AccountMember, INITIAL_DEPTS, INITIAL_MEMBERS } from "../data/adminAccounts";
 import { ORGANIZATION_CHANGE, readReportOrganization } from "../lib/analyticsOrganization";
@@ -62,9 +63,11 @@ import { AD_CHANGE_EVENT, adAccountState, adDate, adId, getAdActor, revokeAdAcco
 import { AdDialog } from "./AdAccountPush";
 import AdAuthorizationDialog from "./AdAuthorizationDialog";
 import { normalizeAdPermissionKeys } from "../lib/adPermissions";
+import { teamTerminology } from "../lib/organizationTerminology";
 import { syncAdAccounts, type AdSyncResult, type AdSyncScenario } from "../lib/adAccountAuthorization";
 import { EMPTY_ACCOUNT_FILTERS, filterAdvertiserAccounts, type AccountFilters } from "../lib/adAccountManagement";
 import { AdAccountBindingDialog, AdvertiserAccountFilters, AdvertiserAccountTable } from "./AdvertiserAccountControls";
+import NotificationSettingsView from "./NotificationSettingsView";
 
 type SystemTabType =
   | "depts"
@@ -76,6 +79,7 @@ type SystemTabType =
   | "auto_tags"
   | "ad_groups"
   | "login_logs"
+  | "notifications"
   | "users";
 
 // ---------------------------------------------------------------------------
@@ -104,6 +108,7 @@ export interface RolePermission {
 
 export const USER_CLIENT_PERMISSION_TREE: PermissionNode[] = [
   { id: "uc_remake_run", label: "爆款复刻" },
+  { id: "uc_message_center", label: "消息中心" },
   {
     id: "uc_resource_library",
     label: "资源库",
@@ -250,7 +255,7 @@ export const ADMIN_BACKEND_PERMISSION_TREE: PermissionNode[] = [
     id: "ab_system_management",
     label: "系统管理",
     children: [
-      { id: "ab_dept_view", label: "组织部门架构" },
+      { id: "ab_dept_view", label: "组织团队架构" },
       { id: "ab_member_view", label: "人员账号管理" },
       { id: "ab_role_view", label: "角色菜单权限配置" },
       { id: "ab_audit_view", label: "操作记录" },
@@ -259,6 +264,7 @@ export const ADMIN_BACKEND_PERMISSION_TREE: PermissionNode[] = [
       { id: "ab_auto_tag_manage", label: "系统自动化标签" },
       { id: "ab_ad_group_manage", label: "广告主管理" },
       { id: "ab_login_log_view", label: "登录记录" },
+      { id: "ab_notification_manage", label: "消息通知" },
     ]
   },
   { id: "ab_credit_manage", label: "积分管理" },
@@ -338,7 +344,7 @@ const DATA_ANALYSIS_KEYS = [
   "uc_analysis_status_report"
 ];
 
-const BASIC_USER_KEYS = [...RESOURCE_VIEW_KEYS, "uc_remake_run", ...OPERATION_RECORDS_KEYS];
+const BASIC_USER_KEYS = [...RESOURCE_VIEW_KEYS, "uc_remake_run", "uc_message_center", ...OPERATION_RECORDS_KEYS];
 
 const mergePermissionKeys = (...groups: string[][]): string[] => Array.from(new Set(groups.flat()));
 
@@ -600,11 +606,11 @@ export const INITIAL_ROLES: RolePermission[] = [
   },
   {
     id: "role_dept_head",
-    name: "部门负责人/主管",
+    name: "团队负责人/主管",
     code: "DEPT_HEAD",
     type: "preset",
     category: "other",
-    description: "管理本部门及下级分组的内容、数据与积分配置",
+    description: "管理本团队及下级分组的内容、数据与积分配置",
     memberCount: 5,
     dataScope: "dept_tree",
     enabled: true,
@@ -662,10 +668,10 @@ export function normalizeSystemRoles(roles: RolePermission[]): RolePermission[] 
     ? { ...role, name: superAdmin.name, code: superAdmin.code, type: "preset",
       category: "default", description: superAdmin.description,
       enabled: true, dataScope: "all", checkedKeys: [...ALL_PERMISSION_KEYS], permissions: normalizeKeys(role.permissions) }
-    : { ...role, category: role.category === "default" ? "other" : role.category, checkedKeys: normalizeKeys(role.checkedKeys),
+    : { ...role, name: teamTerminology(role.name), category: role.category === "default" ? "other" : role.category, checkedKeys: normalizeKeys(role.checkedKeys),
       ...(role.permissions ? { permissions: normalizeKeys(role.permissions) } : {}),
-      description: Object.hasOwn(legacyRoleDescriptions, role.id) && legacyRoleDescriptions[role.id] === role.description
-        ? INITIAL_ROLES.find(item => item.id === role.id)!.description : role.description });
+      description: Object.hasOwn(legacyRoleDescriptions, role.id) && teamTerminology(legacyRoleDescriptions[role.id]) === teamTerminology(role.description)
+        ? INITIAL_ROLES.find(item => item.id === role.id)!.description : teamTerminology(role.description) });
   // Preserve role IDs and ordering because existing member defaults use array positions.
   if (!next.some(role => role.id === "role_staff")) next.unshift({ ...INITIAL_ROLES[0], checkedKeys: normalizeKeys(INITIAL_ROLES[0].checkedKeys) });
   if (!next.some(role => role.id === SUPER_ADMIN_ROLE_ID)) next.push({ ...superAdmin, checkedKeys: [...ALL_PERMISSION_KEYS] });
@@ -694,7 +700,7 @@ export default function AdminSystemManagementView() {
   };
 
   const tabs: { id: SystemTabType; label: string; icon: any; desc: string }[] = [
-    { id: "depts", label: "组织部门架构", icon: Building2, desc: "树状多层级公司、部门与业务分组架构配置" },
+    { id: "depts", label: "组织团队架构", icon: Building2, desc: "树状多层级公司、团队与业务分组架构配置" },
     { id: "members", label: "人员账号管理", icon: Users, desc: "企业全员账号列表、组织归属与状态管控" },
     { id: "roles", label: "角色与权限矩阵", icon: ShieldCheck, desc: "自定义角色菜单与按钮级精细化权限矩阵" },
     { id: "audit", label: "操作记录", icon: FileText, desc: "全员系统操作审计日志与追溯" },
@@ -703,10 +709,11 @@ export default function AdminSystemManagementView() {
     { id: "auto_tags", label: "系统自动化标签", icon: Tag, desc: "AI智能触发打标规则与指标自动分流" },
     { id: "ad_groups", label: "广告主管理", icon: Megaphone, desc: "跨平台广告账户授权、绑定与同步" },
     { id: "login_logs", label: "登录记录", icon: Key, desc: "账号登录历史、IP终端及安全预警" },
+    { id: "notifications", label: "消息通知", icon: Bell, desc: "内容资源与安全系统站内消息配置" },
   ];
 
   // ---------------------------------------------------------------------------
-  // 0. 组织部门架构 & 人员账号管理 STATE & HANDLERS
+  // 0. 组织团队架构 & 人员账号管理 STATE & HANDLERS
   // ---------------------------------------------------------------------------
   const DEFAULT_PLATFORM_PASSWORD = "Dc@20258888";
 
@@ -812,13 +819,13 @@ export default function AdminSystemManagementView() {
         memberCount: 0,
         quota: deptForm.quota || 10,
         type: deptForm.type,
-        description: deptForm.description || (deptForm.levelType === "group" ? "全新设立分组" : "全新设立部门"),
+        description: deptForm.description || (deptForm.levelType === "group" ? "全新设立分组" : "全新设立团队"),
         createdAt: new Date().toISOString().slice(0, 10),
         status: "active"
       };
       setDepts([...depts, newDept]);
-      appendAuditLog("部门更替", newDept.name, `新建${deptForm.levelType === "group" ? "分组" : "部门"}【${newDept.name}】`);
-      showToast(`✅ 成功创建${deptForm.levelType === "group" ? "分组" : "部门"}【${newDept.name}】！`);
+      appendAuditLog("团队更替", newDept.name, `新建${deptForm.levelType === "group" ? "分组" : "团队"}【${newDept.name}】`);
+      showToast(`✅ 成功创建${deptForm.levelType === "group" ? "分组" : "团队"}【${newDept.name}】！`);
     } else if (deptModal?.data) {
       const updated: DeptNode[] = depts.map(d => {
         if (d.id === deptModal.data!.id) {
@@ -838,8 +845,8 @@ export default function AdminSystemManagementView() {
         return d;
       });
       setDepts(updated);
-      appendAuditLog("部门更替", deptForm.name, `更新${deptForm.levelType === "group" ? "分组" : "部门"}【${deptForm.name}】`);
-      showToast(`✅ ${deptForm.levelType === "group" ? "分组" : "部门"}【${deptForm.name}】配置更新成功！`);
+      appendAuditLog("团队更替", deptForm.name, `更新${deptForm.levelType === "group" ? "分组" : "团队"}【${deptForm.name}】`);
+      showToast(`✅ ${deptForm.levelType === "group" ? "分组" : "团队"}【${deptForm.name}】配置更新成功！`);
     }
     setDeptModal(null);
   };
@@ -851,17 +858,17 @@ export default function AdminSystemManagementView() {
 
     const memberInDept = members.filter(m => m.deptId === id);
     if (memberInDept.length > 0) {
-      if (!confirm(`部门【${dept.name}】下目前尚有 ${memberInDept.length} 名成员，解散后人员将被移至根组织。是否确定继续解散？`)) {
+      if (!confirm(`团队【${dept.name}】下目前尚有 ${memberInDept.length} 名成员，解散后人员将被移至根组织。是否确定继续解散？`)) {
         return;
       }
       setMembers(prev => prev.map(m => m.deptId === id ? { ...m, deptId: "dept_root" } : m));
     } else {
-      if (!confirm(`确定要解散并注销部门【${dept.name}】吗？此操作无法撤销。`)) return;
+      if (!confirm(`确定要解散并注销团队【${dept.name}】吗？此操作无法撤销。`)) return;
     }
 
     setDepts(prev => prev.filter(d => d.id !== id));
-    appendAuditLog("部门更替", dept.name, `解散部门【${dept.name}】`);
-    showToast(`🗑️ 部门【${dept.name}】已成功解散！`);
+    appendAuditLog("团队更替", dept.name, `解散团队【${dept.name}】`);
+    showToast(`🗑️ 团队【${dept.name}】已成功解散！`);
   };
 
   // Member Filter & Modal state
@@ -1211,7 +1218,7 @@ export default function AdminSystemManagementView() {
 
   const handleExportMembersCsv = () => {
     if (!currentAdminHas("ab_member_view")) { showToast("暂无权限"); return; }
-    const header = "工号,姓名,手机号,邮箱,部门,角色,数据权限,状态,创建日期\n";
+    const header = "工号,姓名,手机号,邮箱,团队,角色,数据权限,状态,创建日期\n";
     const body = filteredMembers.map(m => {
       const deptName = depts.find(d => d.id === m.deptId)?.name || "主公司";
       return `"${m.employeeNo}","${m.name}","${m.phone}","${m.email}","${deptName}","${m.roleName}","${m.dataScope}","${m.status}","${m.createdAt}"`;
@@ -1274,6 +1281,7 @@ export default function AdminSystemManagementView() {
     depts: "ab_dept_view", members: "ab_member_view", roles: "ab_role_view",
     audit: "ab_audit_view", watermark: "ab_watermark_manage", system_settings: "ab_system_setting_manage",
     auto_tags: "ab_auto_tag_manage", ad_groups: "ab_ad_group_manage", login_logs: "ab_login_log_view",
+    notifications: "ab_notification_manage",
   };
   const visibleTabs = tabs.filter(t => hasAdminTab(adminTabKeyMap[t.id]));
   // 当前页签无权限时自动回退到第一个有权限页签
@@ -2182,7 +2190,7 @@ export default function AdminSystemManagementView() {
     return (
       <div className="flex items-center gap-4 pl-18 pt-1">
         <div className="flex items-center gap-2">
-          <span className="text-slate-500 font-normal">部门:</span>
+          <span className="text-slate-500 font-normal">团队:</span>
           <select
             value={scope.team}
             onChange={(e) => updateScope("team", e.target.value)}
@@ -2224,7 +2232,7 @@ export default function AdminSystemManagementView() {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto bg-slate-50 text-slate-800 font-sans relative">
+    <div className="h-full flex flex-col overflow-x-hidden overflow-y-auto bg-slate-50 text-slate-800 font-sans relative">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-8 z-[200] bg-slate-900/90 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-2">
@@ -2234,10 +2242,10 @@ export default function AdminSystemManagementView() {
       )}
 
       {/* 顶部一排导航栏 (与内容管理/资源库页面风格完全一致，顶部留出 pt-4 边距) */}
-      <div className="pt-4 px-5 pb-1 bg-slate-50 shrink-0 z-30 relative overflow-visible">
-        <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs relative overflow-visible">
-          <div className="flex items-center justify-between p-1.5 bg-slate-50/70 rounded-[inherit] overflow-visible">
-            <div className="flex items-center gap-1.5 min-w-max overflow-visible">
+      <div className="pt-4 px-5 pb-1 bg-slate-50 shrink-0 z-30 relative overflow-hidden">
+        <div className="bg-white rounded-module border border-slate-200/80 shadow-2xs relative overflow-hidden">
+          <div className="flex items-center justify-start overflow-x-auto p-1.5 bg-slate-50/70 rounded-[inherit]">
+            <div className="flex items-center gap-1.5 min-w-max">
               {visibleTabs.map((t) => {
                 const Icon = t.icon;
                 const isActive = activeTab === t.id;
@@ -2268,7 +2276,7 @@ export default function AdminSystemManagementView() {
       {/* Tab Content Container */}
       <div className="px-5 pt-3 pb-12 space-y-6 flex-1">
         {/* --------------------------------------------------------------------------- */}
-        {/* TAB 0-A: 组织部门架构                                                      */}
+        {/* TAB 0-A: 组织团队架构                                                      */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "depts" && (() => {
           const orderedDeptList: (DeptNode & { depth: number; parentName: string })[] = [];
@@ -2321,7 +2329,7 @@ export default function AdminSystemManagementView() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-slate-500 font-medium mb-0.5">组织架构标准</p>
-                    <p className="text-sm font-bold text-slate-900 truncate">公司 &gt; 部门 &gt; 分组 &gt; 人员</p>
+                    <p className="text-sm font-bold text-slate-900 truncate">公司 &gt; 团队 &gt; 分组 &gt; 人员</p>
                   </div>
                 </div>
 
@@ -2330,9 +2338,9 @@ export default function AdminSystemManagementView() {
                     <FolderPlus className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs text-slate-500 font-medium mb-0.5">部门 / 分组数量</p>
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">团队 / 分组数量</p>
                     <p className="text-sm font-bold text-slate-900 truncate">
-                      {depts.filter(d => d.parentId === "dept_root" && d.id !== "dept_root").length} 部门 / {depts.filter(d => d.parentId && d.parentId !== "dept_root").length} 分组
+                      {depts.filter(d => d.parentId === "dept_root" && d.id !== "dept_root").length} 团队 / {depts.filter(d => d.parentId && d.parentId !== "dept_root").length} 分组
                     </p>
                   </div>
                 </div>
@@ -2352,7 +2360,7 @@ export default function AdminSystemManagementView() {
                 <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-purple-600" />
-                    <h3 className="text-xs font-black text-slate-800">组织部门架构表 (公司 &gt; 部门 &gt; 分组 &gt; 人员)</h3>
+                    <h3 className="text-xs font-black text-slate-800">组织团队架构表 (公司 &gt; 团队 &gt; 分组 &gt; 人员)</h3>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -2361,7 +2369,7 @@ export default function AdminSystemManagementView() {
                       className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>新增部门/分组</span>
+                      <span>新增团队/分组</span>
                     </button>
                   </div>
                 </div>
@@ -2423,7 +2431,7 @@ export default function AdminSystemManagementView() {
 
                                     {isDept && (
                                       <span className="bg-purple-100 text-purple-800 text-[9px] font-bold px-2 py-0.5 rounded-md border border-purple-200">
-                                        部门
+                                        团队
                                       </span>
                                     )}
 
@@ -2460,7 +2468,7 @@ export default function AdminSystemManagementView() {
 
                             <td className="p-4">
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
-                                {d.type}
+                                {teamTerminology(d.type)}
                               </span>
                             </td>
 
@@ -2498,10 +2506,10 @@ export default function AdminSystemManagementView() {
                                   <button
                                     onClick={() => handleOpenAddDept("dept_root", "department")}
                                     className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] rounded-lg transition-colors cursor-pointer flex items-center gap-1 border border-purple-200"
-                                    title="在公司下新增部门/分组"
+                                    title="在公司下新增团队/分组"
                                   >
                                     <Plus className="w-3 h-3" />
-                                    <span>新增部门/分组</span>
+                                    <span>新增团队/分组</span>
                                   </button>
                                 )}
 
@@ -2509,7 +2517,7 @@ export default function AdminSystemManagementView() {
                                   <button
                                     onClick={() => handleOpenAddDept(d.id, "group")}
                                     className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] rounded-lg transition-colors cursor-pointer flex items-center gap-1 border border-purple-200"
-                                    title="在部门下新增分组"
+                                    title="在团队下新增分组"
                                   >
                                     <Plus className="w-3 h-3" />
                                     <span>新增分组</span>
@@ -2533,7 +2541,7 @@ export default function AdminSystemManagementView() {
                                 <button
                                   onClick={() => handleOpenEditDept(d)}
                                   className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                                  title={isRoot ? "修改公司信息" : isDept ? "修改部门配置" : "修改分组配置"}
+                                  title={isRoot ? "修改公司信息" : isDept ? "修改团队配置" : "修改分组配置"}
                                 >
                                   <Edit3 className="w-4 h-4" />
                                 </button>
@@ -2542,7 +2550,7 @@ export default function AdminSystemManagementView() {
                                   <button
                                     onClick={() => handleDeleteDept(d.id)}
                                     className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                                    title={isDept ? "解散此部门" : "解散此分组"}
+                                    title={isDept ? "解散此团队" : "解散此分组"}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -2620,7 +2628,7 @@ export default function AdminSystemManagementView() {
                     onChange={(e) => setMemberFilterDept(e.target.value)}
                     className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-purple-500 font-bold text-slate-700 cursor-pointer"
                   >
-                    <option value="all">全部组织部门</option>
+                    <option value="all">全部组织团队</option>
                     {depts.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
@@ -2708,7 +2716,7 @@ export default function AdminSystemManagementView() {
                         </button>
                       </th>
                       <th className="p-4">成员基础信息</th>
-                      <th className="p-4">所属部门</th>
+                      <th className="p-4">所属团队</th>
                       <th className="p-4">绑定岗位角色</th>
                       <th className="p-4">账号状态</th>
                       <th className="p-4">注册/活跃时间</th>
@@ -2772,7 +2780,7 @@ export default function AdminSystemManagementView() {
                                 {dept.name}
                               </span>
                             ) : (
-                              <span className="text-slate-400 italic text-xs">未分配部门</span>
+                              <span className="text-slate-400 italic text-xs">未分配团队</span>
                             )}
                           </td>
 
@@ -2817,7 +2825,7 @@ export default function AdminSystemManagementView() {
                               <button
                                 onClick={() => handleOpenEditMember(m)}
                                 className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                                title="编辑角色与部门"
+                                title="编辑角色与团队"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
@@ -3045,7 +3053,7 @@ export default function AdminSystemManagementView() {
                       <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
                         {([
                           { value: "self", label: "仅本人" },
-                          { value: "dept_tree", label: "本部门及下级" },
+                          { value: "dept_tree", label: "本团队及下级" },
                           { value: "all", label: "全公司" }
                         ] as const).map(option => (
                           <button
@@ -3708,7 +3716,7 @@ export default function AdminSystemManagementView() {
                       </div>
 
                       <div className="flex items-center gap-2 flex-1">
-                        <span className="text-slate-400 font-normal shrink-0">部门成员</span>
+                        <span className="text-slate-400 font-normal shrink-0">团队成员</span>
                         <input
                           type="number"
                           value={val.team}
@@ -3790,7 +3798,7 @@ export default function AdminSystemManagementView() {
                       </div>
 
                       <div className="flex items-center gap-2 flex-1">
-                        <span className="text-slate-400 font-normal shrink-0">部门成员</span>
+                        <span className="text-slate-400 font-normal shrink-0">团队成员</span>
                         <input
                           type="number"
                           value={val.team}
@@ -3853,7 +3861,7 @@ export default function AdminSystemManagementView() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-1">
-                  <span className="text-slate-400 font-normal shrink-0">部门成员</span>
+                  <span className="text-slate-400 font-normal shrink-0">团队成员</span>
                   <input
                     type="number"
                     value={pushDaysRules.team}
@@ -3932,7 +3940,7 @@ export default function AdminSystemManagementView() {
                   {extLoginMode === "scope" && (
                     <div className="flex items-center gap-4 pl-18 pt-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-500 font-normal">部门:</span>
+                        <span className="text-slate-500 font-normal">团队:</span>
                         <select
                           value={extLoginTeam}
                           onChange={(e) => setExtLoginTeam(e.target.value)}
@@ -4052,7 +4060,7 @@ export default function AdminSystemManagementView() {
                 <span className="text-rose-500 mr-1">* 允许项</span>
                 {[
                   { key: "public", label: "公开" },
-                  { key: "team", label: "部门范围可见" },
+                  { key: "team", label: "团队范围可见" },
                   { key: "group", label: "分组范围可见" },
                   { key: "publicResource", label: "公用资源", hasHelp: true },
                   { key: "specifiedScope", label: "指定范围" },
@@ -4545,7 +4553,7 @@ export default function AdminSystemManagementView() {
                               <td className="py-3.5 px-5">
                                 <div className="text-xs space-y-1 text-slate-600">
                                   <div>
-                                    <span className="text-slate-400">部门：</span>
+                                    <span className="text-slate-400">团队：</span>
                                     {group.viewTeam || "未指定"}
                                   </div>
                                   <div>
@@ -4748,10 +4756,10 @@ export default function AdminSystemManagementView() {
                       谁能查看
                     </label>
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="text-xs text-slate-500 w-12 text-right">部门：</span>
+                      <span className="text-xs text-slate-500 w-12 text-right">团队：</span>
                       <select
                         value={groupFormTeam}
-                        aria-label="可见部门"
+                        aria-label="可见团队"
                         onChange={(e) => setGroupFormTeam(e.target.value)}
                         className="min-w-0 flex-1 sm:w-64 px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:border-[#7C3AED] outline-none"
                       >
@@ -5099,6 +5107,13 @@ export default function AdminSystemManagementView() {
         )}
 
         {/* --------------------------------------------------------------------------- */}
+        {/* TAB 8: 消息通知                                                              */}
+        {/* --------------------------------------------------------------------------- */}
+        {activeTab === "notifications" && (
+          <NotificationSettingsView onSaved={showToast} />
+        )}
+
+        {/* --------------------------------------------------------------------------- */}
         {/* TAB 10: 用户                                                                 */}
         {/* --------------------------------------------------------------------------- */}
         {activeTab === "users" && (
@@ -5130,7 +5145,7 @@ export default function AdminSystemManagementView() {
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
                     <th className="py-2.5 px-3">用户</th>
                     <th className="py-2.5 px-3">手机号</th>
-                    <th className="py-2.5 px-3">所属部门</th>
+                    <th className="py-2.5 px-3">所属团队</th>
                     <th className="py-2.5 px-3">分配角色</th>
                     <th className="py-2.5 px-3">注册日期</th>
                     <th className="py-2.5 px-3">账号状态</th>
@@ -5171,12 +5186,12 @@ export default function AdminSystemManagementView() {
         )}
       </div>
 
-      {/* MODAL: 部门 / 分组 */}
+      {/* MODAL: 团队 / 分组 */}
       {deptModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between bg-slate-900 px-5 py-4 text-white">
-              <h3 className="flex items-center gap-2 text-sm font-black"><FolderPlus className="h-4 w-4 text-purple-400" />{deptModal.mode === "add" ? `新增${deptForm.levelType === "group" ? "分组" : "部门"}` : `编辑${deptForm.levelType === "group" ? "分组" : "部门"}配置`}</h3>
+              <h3 className="flex items-center gap-2 text-sm font-black"><FolderPlus className="h-4 w-4 text-purple-400" />{deptModal.mode === "add" ? `新增${deptForm.levelType === "group" ? "分组" : "团队"}` : `编辑${deptForm.levelType === "group" ? "分组" : "团队"}配置`}</h3>
               <button type="button" onClick={() => setDeptModal(null)} title="关闭" className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleSaveDept} className="space-y-4 p-6 text-xs">
@@ -5184,13 +5199,13 @@ export default function AdminSystemManagementView() {
                 <div>
                   <label className="mb-1 block font-bold text-slate-500">架构节点类型</label>
                   <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 font-bold">
-                    <button type="button" onClick={() => setDeptForm({ ...deptForm, levelType: "department", parentId: "dept_root" })} className={`rounded-lg py-2 ${deptForm.levelType === "department" ? "bg-purple-600 text-white" : "text-slate-600 hover:bg-white"}`}>部门</button>
+                    <button type="button" onClick={() => setDeptForm({ ...deptForm, levelType: "department", parentId: "dept_root" })} className={`rounded-lg py-2 ${deptForm.levelType === "department" ? "bg-purple-600 text-white" : "text-slate-600 hover:bg-white"}`}>团队</button>
                     <button type="button" onClick={() => setDeptForm({ ...deptForm, levelType: "group", parentId: depts.find(d => d.parentId === "dept_root" && d.id !== "dept_root")?.id || "dept_root" })} className={`rounded-lg py-2 ${deptForm.levelType === "group" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-white"}`}>分组</button>
                   </div>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <label className="space-y-1"><span className="block font-bold text-slate-500">{deptForm.levelType === "group" ? "分组名称" : "部门名称"} *</span><input required value={deptForm.name} onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500" /></label>
+                <label className="space-y-1"><span className="block font-bold text-slate-500">{deptForm.levelType === "group" ? "分组名称" : "团队名称"} *</span><input required value={deptForm.name} onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500" /></label>
                 <label className="space-y-1"><span className="block font-bold text-slate-500">编号</span><input value={deptForm.code} onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono outline-none focus:border-purple-500" /></label>
               </div>
               <label className="block space-y-1"><span className="block font-bold text-slate-500">上级归属节点</span>{deptForm.levelType === "department" ? <span className="block rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 font-bold">梦畅AIGC（最高公司）</span> : <select value={deptForm.parentId} onChange={(e) => setDeptForm({ ...deptForm, parentId: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500">{depts.filter(d => d.parentId === "dept_root" && d.id !== "dept_root" && d.id !== deptModal.data?.id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select>}</label>
@@ -5199,7 +5214,7 @@ export default function AdminSystemManagementView() {
                 <label className="space-y-1"><span className="block font-bold text-slate-500">联系电话</span><input value={deptForm.phone} onChange={(e) => setDeptForm({ ...deptForm, phone: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono outline-none focus:border-purple-500" /></label>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <label className="space-y-1"><span className="block font-bold text-slate-500">职责类型</span><select value={deptForm.type} onChange={(e) => setDeptForm({ ...deptForm, type: e.target.value as DeptNode["type"] })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500"><option value="综合部门">综合部门</option><option value="内容部门">内容部门</option><option value="投放部门">投放部门</option><option value="投放组">投放组</option><option value="剪辑组">剪辑组</option><option value="编导组">编导组</option><option value="直播组">直播组</option></select></label>
+                <label className="space-y-1"><span className="block font-bold text-slate-500">职责类型</span><select value={deptForm.type} onChange={(e) => setDeptForm({ ...deptForm, type: e.target.value as DeptNode["type"] })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500"><option value="综合部门">综合团队</option><option value="内容部门">内容团队</option><option value="投放部门">投放团队</option><option value="投放组">投放组</option><option value="剪辑组">剪辑组</option><option value="编导组">编导组</option><option value="直播组">直播组</option></select></label>
                 <label className="space-y-1"><span className="block font-bold text-slate-500">编制数上限</span><input type="number" min={1} value={deptForm.quota} onChange={(e) => setDeptForm({ ...deptForm, quota: Number(e.target.value) || 1 })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono outline-none focus:border-purple-500" /></label>
               </div>
               <label className="block space-y-1"><span className="block font-bold text-slate-500">职责简述</span><textarea rows={3} value={deptForm.description} onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })} className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-purple-500" /></label>
@@ -5217,7 +5232,7 @@ export default function AdminSystemManagementView() {
             <form onSubmit={handleSaveMember} className="space-y-4 p-6 text-xs">
               <div className="grid grid-cols-2 gap-3"><label className="space-y-1"><span className="block font-bold text-slate-500">真实姓名 *</span><input required value={memberForm.name} onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500" /></label><label className="space-y-1"><span className="block font-bold text-slate-500">工号</span><input value={memberForm.employeeNo} onChange={(e) => setMemberForm({ ...memberForm, employeeNo: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono outline-none focus:border-purple-500" /></label></div>
               <div className="grid grid-cols-2 gap-3"><label className="space-y-1"><span className="block font-bold text-slate-500">手机号码 *</span><input required value={memberForm.phone} onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono outline-none focus:border-purple-500" /></label><label className="space-y-1"><span className="block font-bold text-slate-500">工作邮箱</span><input type="email" value={memberForm.email} onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono outline-none focus:border-purple-500" /></label></div>
-              <div className="grid grid-cols-2 gap-3"><label className="space-y-1"><span className="block font-bold text-slate-500">所属部门 *</span><select value={memberForm.selectedDeptId} onChange={(e) => handleMemberDeptChange(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500">{depts.filter(d => d.id === "dept_root" || d.parentId === "dept_root" || d.levelType === "department" || d.levelType === "company").map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="space-y-1"><span className="block font-bold text-slate-500">所属分组</span><select value={memberForm.selectedGroupId} onChange={(e) => handleMemberGroupChange(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500"><option value="">不指定分组</option>{depts.filter(d => d.parentId === memberForm.selectedDeptId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label></div>
+              <div className="grid grid-cols-2 gap-3"><label className="space-y-1"><span className="block font-bold text-slate-500">所属团队 *</span><select value={memberForm.selectedDeptId} onChange={(e) => handleMemberDeptChange(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500">{depts.filter(d => d.id === "dept_root" || d.parentId === "dept_root" || d.levelType === "department" || d.levelType === "company").map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="space-y-1"><span className="block font-bold text-slate-500">所属分组</span><select value={memberForm.selectedGroupId} onChange={(e) => handleMemberGroupChange(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500"><option value="">不指定分组</option>{depts.filter(d => d.parentId === memberForm.selectedDeptId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label></div>
               <div className="grid grid-cols-2 gap-3"><label className="space-y-1"><span className="block font-bold text-slate-500">绑定岗位角色</span><select value={memberForm.roleId} onChange={(e) => setMemberForm({ ...memberForm, roleId: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500">{roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label><label className="space-y-1"><span className="block font-bold text-slate-500">账号状态</span><select value={memberForm.status} onChange={(e) => setMemberForm({ ...memberForm, status: e.target.value as AccountMember["status"] })} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold outline-none focus:border-purple-500"><option value="normal">正常启用</option><option value="bound">账号绑定</option><option value="pending">待激活</option><option value="disabled">已停用</option></select></label></div>
               {memberForm.status === "bound" && <label className="block space-y-1 rounded-xl border border-purple-200 bg-purple-50 p-3"><span className="block font-bold text-purple-800">绑定广告/媒体账号</span><select value={memberForm.boundAccount} onChange={(e) => setMemberForm({ ...memberForm, boundAccount: e.target.value })} className="w-full rounded-xl border border-purple-200 bg-white px-3 py-2 font-bold"><option value="巨量千川-千川主账号01 (1776342461268999)">巨量千川 - 千川主账号01</option><option value="巨量千川-服装旗舰店账号 (1776342461268888)">巨量千川 - 服装旗舰店账号</option><option value="抖音官方蓝V-美妆爆款运营账户">抖音官方蓝V - 美妆爆款运营账户</option></select></label>}
               <label className="block space-y-1"><span className="block font-bold text-slate-500">备注</span><textarea rows={2} value={memberForm.remark} onChange={(e) => setMemberForm({ ...memberForm, remark: e.target.value })} className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none focus:border-purple-500" /></label>
@@ -5248,7 +5263,7 @@ export default function AdminSystemManagementView() {
       {/* MODAL: 快捷邀请 */}
       {inviteModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl"><div className="flex items-center justify-between bg-slate-900 px-5 py-4 text-white"><h3 className="flex items-center gap-2 text-sm font-black"><UserPlus className="h-4 w-4 text-purple-400" />生成专属邀请链接</h3><button type="button" onClick={() => setInviteModalOpen(false)} title="关闭" className="rounded-lg p-1 text-slate-400 hover:bg-slate-800"><X className="h-5 w-5" /></button></div><div className="space-y-4 p-6 text-xs"><label className="block space-y-1"><span className="block font-bold text-slate-500">预指派部门</span><select value={inviteDeptId} onChange={(e) => setInviteDeptId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold">{depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="block space-y-1"><span className="block font-bold text-slate-500">预赋予角色</span><select value={inviteRoleId} onChange={(e) => setInviteRoleId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold">{roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label><label className="block space-y-1 rounded-xl border border-purple-200 bg-purple-50 p-3"><span className="block font-bold text-purple-900">邀请链接（有效期 7 天）</span><input readOnly value={inviteLink} className="w-full rounded-lg border border-purple-200 bg-white px-3 py-2 font-mono text-[11px] text-purple-800" /></label><div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setInviteModalOpen(false)} className="px-4 py-2 font-bold text-slate-500">关闭</button><button type="button" onClick={handleCopyInviteLink} className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-5 py-2 font-bold text-white hover:bg-purple-700"><Copy className="h-3.5 w-3.5" />复制邀请链接</button></div></div></div>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl"><div className="flex items-center justify-between bg-slate-900 px-5 py-4 text-white"><h3 className="flex items-center gap-2 text-sm font-black"><UserPlus className="h-4 w-4 text-purple-400" />生成专属邀请链接</h3><button type="button" onClick={() => setInviteModalOpen(false)} title="关闭" className="rounded-lg p-1 text-slate-400 hover:bg-slate-800"><X className="h-5 w-5" /></button></div><div className="space-y-4 p-6 text-xs"><label className="block space-y-1"><span className="block font-bold text-slate-500">预指派团队</span><select value={inviteDeptId} onChange={(e) => setInviteDeptId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold">{depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="block space-y-1"><span className="block font-bold text-slate-500">预赋予角色</span><select value={inviteRoleId} onChange={(e) => setInviteRoleId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-bold">{roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label><label className="block space-y-1 rounded-xl border border-purple-200 bg-purple-50 p-3"><span className="block font-bold text-purple-900">邀请链接（有效期 7 天）</span><input readOnly value={inviteLink} className="w-full rounded-lg border border-purple-200 bg-white px-3 py-2 font-mono text-[11px] text-purple-800" /></label><div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setInviteModalOpen(false)} className="px-4 py-2 font-bold text-slate-500">关闭</button><button type="button" onClick={handleCopyInviteLink} className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-5 py-2 font-bold text-white hover:bg-purple-700"><Copy className="h-3.5 w-3.5" />复制邀请链接</button></div></div></div>
         </div>
       )}
 
@@ -5358,7 +5373,7 @@ export default function AdminSystemManagementView() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">所属部门</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">所属团队</label>
                   <select
                     value={userFormDept}
                     onChange={(e) => setUserFormDept(e.target.value)}

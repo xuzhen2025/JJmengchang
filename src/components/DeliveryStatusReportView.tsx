@@ -16,7 +16,7 @@ interface DeliveryStatusReportViewProps {
 type Platform = "巨量广告" | "巨量千川";
 type MetricFilter = "搭建计划总数" | "投放中" | "未投放";
 const DIMENSION_TABS: { id: DeliveryDimension; label: string }[] = [
-  { id: "team", label: "部门数据" },
+  { id: "team", label: "团队数据" },
   { id: "group", label: "分组数据" },
   { id: "personal", label: "个人数据" },
   { id: "advertiser_detail", label: "广告主明细数据" },
@@ -80,8 +80,8 @@ export default function DeliveryStatusReportView({ showToast }: DeliveryStatusRe
   const pageRows = allRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const hasData = allRows.length > 0;
   const advertiser = activeDimension === "advertiser_detail";
-  const dimensionLabel = activeDimension === "team" ? "部门" : activeDimension === "group" ? "分组" : "个人";
-  const levels = activeDimension === "team" ? ["部门"] : activeDimension === "group" ? ["部门", "分组"] : ["部门", "分组", "个人"];
+  const dimensionLabel = activeDimension === "team" ? "团队" : activeDimension === "group" ? "分组" : "个人";
+  const levels = activeDimension === "team" ? ["团队"] : activeDimension === "group" ? ["团队", "分组"] : ["团队", "分组", "个人"];
   const orderedColumns = columnOrder.map(key => STATUS_COLUMNS.find(column => column.key === key)!);
   const visibleColumns = orderedColumns.filter(column => !hiddenColumns.has(column.key));
 
@@ -204,7 +204,7 @@ export default function DeliveryStatusReportView({ showToast }: DeliveryStatusRe
       <div className="max-h-[480px] overflow-auto border-b border-slate-100">
         <table data-testid="delivery-status-table" className={`w-full border-collapse text-center text-xs ${advertiser ? "min-w-[1450px]" : "min-w-[800px]"}`}>
           <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500"><tr>
-            {(advertiser ? ["广告账户", "部门", "分组", "用户", "一级分类", "二级分类", "绑定直播间"] : [dimensionLabel]).map(label => <th key={label} className="px-4 py-4 font-semibold">{label}</th>)}
+            {(advertiser ? ["广告账户", "团队", "分组", "用户", "一级分类", "二级分类", "绑定直播间"] : [dimensionLabel]).map(label => <th key={label} className="px-4 py-4 font-semibold">{label}</th>)}
             {visibleColumns.map(column => <th key={column.key} aria-sort={sort?.key === column.key ? sort.direction === "asc" ? "ascending" : "descending" : "none"} className="px-4 py-4 font-semibold">
               <span className="inline-flex items-center justify-center gap-1">
                 <button type="button" aria-label={`按${column.label}排序`} onClick={() => { setSort({ key: column.key, direction: sort?.key === column.key && sort.direction === "desc" ? "asc" : "desc" }); setPage(1); }} className="inline-flex items-center justify-center gap-1 hover:text-purple-600">

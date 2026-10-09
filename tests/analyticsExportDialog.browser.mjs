@@ -24,6 +24,15 @@ const openPage = async ({ category, page: pageName }) => {
   await main.getByRole("button", { name: category, exact: true }).click();
   await main.getByRole("button", { name: pageName, exact: true }).first().click();
 };
+const prepareTagAnalysis = async () => {
+  const category = main.getByRole("combobox", { name: "分类", exact: true });
+  await category.click();
+  const popup = page.locator('[data-overlay-layer="popover"]').filter({ hasText: "一级分类" });
+  await popup.locator(":scope > div").first().getByRole("button").first().click();
+  await popup.locator(":scope > div").nth(1).getByRole("button").first().click();
+  await main.getByRole("combobox", { name: "选择标签组", exact: true }).selectOption({ index: 1 });
+  await main.getByRole("button", { name: "查询", exact: true }).click();
+};
 
 try {
   await page.goto(process.env.BASE_URL || "http://localhost:3005/", { waitUntil: "domcontentloaded" });
@@ -31,6 +40,7 @@ try {
 
   for (const [index, item] of pages.entries()) {
     await openPage(item);
+    if (item.page === "标签分析") await prepareTagAnalysis();
     await main.getByRole("button", { name: item.button, exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "导出", exact: true });
     await expect(dialog).toBeVisible();

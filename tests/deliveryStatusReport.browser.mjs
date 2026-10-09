@@ -22,20 +22,20 @@ try {
   const end = page.getByLabel("计划搭建结束时间", { exact: true });
   const defaultDates = [await start.inputValue(), await end.inputValue()];
 
-  await button("部门筛选").click();
-  for (const name of ["电商投放一部", "AIGC爆款内容拆解部"]) await group("部门").getByRole("checkbox", { name, exact: true }).check();
+  await button("团队筛选").click();
+  for (const name of ["电商投放一部", "AIGC爆款内容拆解部"]) await group("团队").getByRole("checkbox", { name, exact: true }).check();
   await expect(table).toContainText("暂无数据");
   await query();
   await expect(table.locator("tbody tr")).toHaveCount(3);
   await expect(legend.locator(":scope > div")).toHaveCount(2);
-  await button("清空部门").click();
+  await button("清空团队").click();
   await expect(table.locator("tbody tr")).toHaveCount(3);
   await query();
   await expect(table).toContainText("暂无数据");
 
   await button("分组数据").click();
   await button("分组筛选").click();
-  await group("部门").getByRole("button", { name: "电商投放一部", exact: true }).click();
+  await group("团队").getByRole("button", { name: "电商投放一部", exact: true }).click();
   for (const name of ["女装千川放量组", "美妆珠宝爆款组"]) await group("分组").getByRole("checkbox", { name, exact: true }).check();
   await query();
   await expect(table.locator("tbody tr")).toHaveCount(3);
@@ -43,11 +43,11 @@ try {
 
   await button("个人数据").click();
   await button("个人筛选").click();
-  await group("部门").getByRole("button", { name: "电商投放一部", exact: true }).click();
+  await group("团队").getByRole("button", { name: "电商投放一部", exact: true }).click();
   await group("分组").getByRole("button", { name: "女装千川放量组", exact: true }).click();
-  await group("部门").getByRole("checkbox", { name: "电商投放一部", exact: true }).check();
+  await group("团队").getByRole("checkbox", { name: "电商投放一部", exact: true }).check();
   await group("个人").getByRole("checkbox", { name: "刘小青", exact: true }).uncheck();
-  await expect(group("部门").getByRole("checkbox", { name: "电商投放一部", exact: true })).toHaveAttribute("aria-checked", "mixed");
+  await expect(group("团队").getByRole("checkbox", { name: "电商投放一部", exact: true })).toHaveAttribute("aria-checked", "mixed");
   await expect(group("分组").getByRole("checkbox", { name: "女装千川放量组", exact: true })).toHaveAttribute("aria-checked", "mixed");
   await page.getByRole("searchbox", { name: "搜索个人", exact: true }).fill("徐振");
   await group("个人").getByRole("checkbox", { name: "徐振", exact: true }).check();

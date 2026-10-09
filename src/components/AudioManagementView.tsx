@@ -718,7 +718,7 @@ export default function AudioManagementView({ onTriggerTask, onDetailStateChange
                   <button
                     onClick={() => {
                       setShowMoreActionsMenu(false);
-                      showToast("已向部门成员群发消息提醒");
+                      showToast("已向团队成员群发消息提醒");
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-purple-50 text-slate-700 font-medium flex items-center gap-2"
                   >

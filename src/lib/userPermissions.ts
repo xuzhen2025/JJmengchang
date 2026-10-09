@@ -91,7 +91,7 @@ export function readAdminPermissionKeys(): string[] {
     };
     roles = (Array.isArray(savedRoles) && savedRoles.length > 0) ? savedRoles.filter((r): r is RoleLike => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys))).map(upgradeRoleKeys) : (INITIAL_ROLES as unknown as RoleLike[]);
   } catch { /* fail closed */ }
-  // 管理端演示账号映射：超管→超级管理员（全权限）；管理员→部门负责人/主管（部分菜单，演示只读与菜单过滤）
+  // 管理端演示账号映射：超管→超级管理员（全权限）；管理员→团队负责人/主管（部分菜单，演示只读与菜单过滤）
   const roleId = session.username === "chaojiguanliyuan" ? "role_super_admin"
     : session.username === "guanliyuan" ? "role_dept_head" : "";
   if (!roleId) return [];

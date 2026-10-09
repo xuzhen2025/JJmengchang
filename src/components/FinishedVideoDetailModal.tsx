@@ -7,7 +7,9 @@ import { hasUserPermission } from "../lib/userPermissions";
 import { useAdStore } from "../lib/useAdStore";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import VideoInteractionSelectors from "./VideoInteractionSelectors";
-import { INTERACTION_CHANNELS, createVideoInteractionDemoRecords, selectVideoInteractionTrend, type InteractionChannelId } from "../lib/videoInteraction";
+import VideoInteractionChart from "./VideoInteractionChart";
+import { parseDurationSeconds } from "../lib/videoEnhance";
+import { INTERACTION_CHANNELS, createVideoInteractionDemoRecords, createVideoInteractionDemoTrend, selectVideoInteractionTrend, type InteractionChannelId } from "../lib/videoInteraction";
 import LinkScriptModal from "./LinkScriptModal";
 import ResourceTagModal from "./ResourceTagModal";
 import { useResourceTagState } from "../lib/useResourceTags";
@@ -96,14 +98,12 @@ import {
   Repeat
 } from "lucide-react";
 import {
-  AreaChart,
   Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
   Line,
   ComposedChart
 } from "recharts";
@@ -417,7 +417,7 @@ export interface ProjectFileItem {
   uploadTime: string;
   size: string;
   thumbnail: string;
-  visibility: "公开" | "仅本部门" | "私密";
+  visibility: "公开" | "仅本团队" | "私密";
   editorName: string;
   tracksCount: number;
   software: string;
@@ -441,7 +441,7 @@ export const INITIAL_PROJECT_FILES: ProjectFileItem[] = [
     uploadTime: "2023-10-19",
     size: "62.5 MB",
     thumbnail: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300&h=300&fit=crop",
-    visibility: "仅本部门",
+    visibility: "仅本团队",
     editorName: "王力 (资深剪辑师)",
     tracksCount: 12,
     software: "剪映 Draft / PR XML 兼容包"
@@ -646,7 +646,11 @@ export default function FinishedVideoDetailModal({
   // Playback States
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(15);
+  const [duration, setDuration] = useState(() => Math.max(1, parseDurationSeconds(video.duration)));
+  useEffect(() => {
+    setDuration(Math.max(1, parseDurationSeconds(video.duration)));
+    setCurrentTime(0);
+  }, [video.id, video.videoUrl, video.duration]);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
 
@@ -1056,7 +1060,9 @@ export default function FinishedVideoDetailModal({
   const interactionRecords = useMemo(() => createVideoInteractionDemoRecords(
     { id: video.id, title: titleText, syncStatus: video.syncStatus, cost: video.cost }, analyticsChannel, adStore, getAdActor(),
   ), [video.id, titleText, video.syncStatus, video.cost, analyticsChannel, adStore]);
-  const interactionTrend = useMemo(() => selectVideoInteractionTrend(INTERACTION_TREND_DATA, interactionRecords, analyticsScope), [interactionRecords, analyticsScope]);
+  const interactionTrend = useMemo(() => createVideoInteractionDemoTrend(
+    selectVideoInteractionTrend(INTERACTION_TREND_DATA, interactionRecords, analyticsScope), duration,
+  ), [interactionRecords, analyticsScope, duration]);
   useEffect(() => { setAnalyticsChannel("qc-live"); setAnalyticsScope("all"); }, [video.id]);
   useEffect(() => {
     if (analyticsScope !== "all" && !interactionRecords.some(record => record.id === analyticsScope)) setAnalyticsScope("all");
@@ -1110,7 +1116,7 @@ export default function FinishedVideoDetailModal({
   
   // Upload Project File Form State
   const [uploadProjectName, setUploadProjectName] = useState("");
-  const [uploadProjectVisibility, setUploadProjectVisibility] = useState<"公开" | "仅本部门" | "私密">("公开");
+  const [uploadProjectVisibility, setUploadProjectVisibility] = useState<"公开" | "仅本团队" | "私密">("公开");
   const [uploadProjectEditor, setUploadProjectEditor] = useState("刘怡晴");
   const [uploadProjectTracks, setUploadProjectTracks] = useState(8);
   const [uploadSelectedFolder, setUploadSelectedFolder] = useState<string | null>(null);
@@ -1177,7 +1183,7 @@ export default function FinishedVideoDetailModal({
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
-      if (videoRef.current.duration && !isNaN(videoRef.current.duration)) {
+      if (Number.isFinite(videoRef.current.duration) && videoRef.current.duration > 0) {
         setDuration(videoRef.current.duration);
       }
     }
@@ -1204,9 +1210,10 @@ export default function FinishedVideoDetailModal({
 
   const seekToSecond = (sec: number) => {
     if (videoRef.current) {
-      videoRef.current.currentTime = sec;
-      setCurrentTime(sec);
-      setNewCommentSec(Math.floor(sec));
+      const second = Math.min(duration, Math.max(0, sec));
+      videoRef.current.currentTime = second;
+      setCurrentTime(second);
+      setNewCommentSec(Math.floor(second));
     }
   };
 
@@ -1276,7 +1283,6 @@ export default function FinishedVideoDetailModal({
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const currentSecondFloor = Math.min(15, Math.max(1, Math.floor(currentTime) || 1));
 
   return (
     <div className="w-full h-full overflow-y-auto bg-slate-50 text-slate-800 p-4 sm:p-6 space-y-6 animate-fade-in font-sans pb-24">
@@ -1427,6 +1433,8 @@ export default function FinishedVideoDetailModal({
                         ref={videoRef}
                         src={video.videoUrl}
                         poster={video.coverUrl}
+                        onLoadedMetadata={handleTimeUpdate}
+                        onDurationChange={handleTimeUpdate}
                         onTimeUpdate={handleTimeUpdate}
                         onEnded={() => setIsPlaying(false)}
                         className={`absolute inset-0 w-full h-full object-cover ${
@@ -2024,6 +2032,8 @@ export default function FinishedVideoDetailModal({
                       ref={videoRef}
                       src={video.videoUrl}
                       poster={video.coverUrl}
+                      onLoadedMetadata={handleTimeUpdate}
+                      onDurationChange={handleTimeUpdate}
                       onTimeUpdate={handleTimeUpdate}
                       onEnded={() => setIsPlaying(false)}
                       className="absolute inset-0 w-full h-full object-cover cursor-pointer"
@@ -2393,7 +2403,7 @@ export default function FinishedVideoDetailModal({
                         <MengchangWingedLogo className="w-10 h-7" />
                       </div>
                       <span className="font-bold text-slate-800 text-sm tracking-wide">
-                        梦畅AIGC <span className="text-slate-300 mx-1">/</span> 默认部门 <span className="text-slate-300 mx-1">/</span> 默认分组
+                        梦畅AIGC <span className="text-slate-300 mx-1">/</span> 默认团队 <span className="text-slate-300 mx-1">/</span> 默认分组
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-400 font-mono flex flex-wrap items-center gap-4 pl-12">
@@ -2528,18 +2538,8 @@ export default function FinishedVideoDetailModal({
                       <span className="w-20 text-slate-500 font-medium shrink-0 pt-1">个人标签</span>
                       <div className="flex flex-wrap items-center gap-2">
                         {personalTags.map((tag, idx) => (
-                          <span key={idx} className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium border border-purple-100 flex items-center gap-1">
+                          <span key={idx} className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium border border-purple-100 flex items-center">
                             <span>{tag}</span>
-                            <button
-                              onClick={() => {
-                                const next = personalTags.filter((_, i) => i !== idx);
-                                if (updateMetadata({ personalTags: next })) setPersonalTags(next);
-                              }}
-                              className="text-purple-400 hover:text-rose-500 ml-0.5 cursor-pointer text-xs"
-                              title="删除标签"
-                            >
-                              ×
-                            </button>
                           </span>
                         ))}
 
@@ -3155,7 +3155,7 @@ export default function FinishedVideoDetailModal({
                               };
                               setAuditAnnotations(prev => [newAnn, ...prev]);
                               setAnnotationInputText("");
-                              showToast("🚀 审核批注已发布，已同步保存画面标注信息与通知部门成员");
+                              showToast("🚀 审核批注已发布，已同步保存画面标注信息与通知团队成员");
                             }}
                             className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
                           >
@@ -3213,132 +3213,11 @@ export default function FinishedVideoDetailModal({
                       </div>
 
                       {/* Dynamic Dual Y-Axis Trend Chart */}
-                      {interactionTrend.length ? <div className="h-64 w-full pt-1 relative">
-                        {/* Legend Indicator */}
-                        <div className="flex items-center justify-center sm:justify-end gap-5 text-[11px] font-bold text-slate-600 mb-1 pr-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: ANALYTICS_METRICS.find(m => m.id === metricLeft)?.color }} />
-                            <span>{ANALYTICS_METRICS.find(m => m.id === metricLeft)?.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: ANALYTICS_METRICS.find(m => m.id === metricRight)?.color }} />
-                            <span>{ANALYTICS_METRICS.find(m => m.id === metricRight)?.name}</span>
-                          </div>
-                        </div>
-
-                        <ResponsiveContainer width="100%" height="88%">
-                          <AreaChart
-                            data={interactionTrend}
-                            margin={{ top: 10, right: 15, left: -5, bottom: 0 }}
-                            onClick={(e: any) => {
-                              if (e && e.activePayload && e.activePayload.length > 0) {
-                                const sec = e.activePayload[0].payload.second;
-                                seekToSecond(sec);
-                                showToast(`⏱️ 已跳转至视频 ${sec}s 帧`);
-                              }
-                            }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color-slate-200)" />
-                            <XAxis
-                              dataKey="secondLabel"
-                              tick={{ fontSize: 10, fill: '#64748b' }}
-                              axisLine={{ stroke: '#cbd5e1' }}
-                            />
-                            
-                            {/* Left Y Axis */}
-                            <YAxis
-                              yAxisId="left"
-                              tick={{ fontSize: 10, fill: '#64748b' }}
-                              axisLine={false}
-                              tickLine={false}
-                              tickFormatter={(val) => val >= 10000 ? `${(val/10000).toFixed(0)}w` : val}
-                            />
-
-                            {/* Right Y Axis */}
-                            <YAxis
-                              yAxisId="right"
-                              orientation="right"
-                              tick={{ fontSize: 10, fill: '#64748b' }}
-                              axisLine={false}
-                              tickLine={false}
-                              tickFormatter={(val) => val >= 10000 ? `${(val/10000).toFixed(0)}w` : val}
-                            />
-
-                            {/* Custom Tooltip matching user screenshot */}
-                            <Tooltip
-                              content={({ active, payload }) => {
-                                if (active && payload && payload.length) {
-                                  const data = payload[0].payload;
-                                  const leftObj = ANALYTICS_METRICS.find(m => m.id === metricLeft)!;
-                                  const rightObj = ANALYTICS_METRICS.find(m => m.id === metricRight)!;
-                                  const valLeft = data[metricLeft];
-                                  const valRight = data[metricRight];
-                                  return (
-                                    <div className="bg-white text-slate-800 p-3 rounded-2xl shadow-xl border border-slate-200 text-xs space-y-2 min-w-48">
-                                      <div className="font-extrabold text-slate-900 border-b border-slate-100 pb-1 flex items-center justify-between">
-                                        <span>{data.secondLabel}</span>
-                                        <span className="text-[10px] text-purple-600 font-bold bg-purple-50 px-1.5 py-0.5 rounded">点击跳转播放</span>
-                                      </div>
-                                      <div className="space-y-1 text-[11px]">
-                                        <div className="flex items-center justify-between gap-4">
-                                          <span className="flex items-center gap-1.5 font-bold" style={{ color: leftObj.color }}>
-                                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: leftObj.color }} />
-                                            <span>{leftObj.name}</span>
-                                          </span>
-                                          <span className="font-mono font-bold text-slate-900">
-                                            {leftObj.isRate ? `${valLeft}%` : valLeft?.toLocaleString()} {leftObj.unit}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center justify-between gap-4">
-                                          <span className="flex items-center gap-1.5 font-bold" style={{ color: rightObj.color }}>
-                                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: rightObj.color }} />
-                                            <span>{rightObj.name}</span>
-                                          </span>
-                                          <span className="font-mono font-bold text-slate-900">
-                                            {rightObj.isRate ? `${valRight}%` : valRight?.toLocaleString()} {rightObj.unit}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              }}
-                            />
-
-                            {/* Playback Position Indicator */}
-                            <ReferenceLine
-                              yAxisId="left"
-                              x={`${currentSecondFloor.toString().padStart(1, "0")}s`}
-                              stroke="#e11d48"
-                              strokeWidth={2}
-                              strokeDasharray="3 3"
-                            />
-
-                            <Area
-                              yAxisId="left"
-                              type="monotone"
-                              dataKey={metricLeft}
-                              stroke={ANALYTICS_METRICS.find(m => m.id === metricLeft)?.color || "#9333ea"}
-                              fillOpacity={0.15}
-                              fill={ANALYTICS_METRICS.find(m => m.id === metricLeft)?.color || "#9333ea"}
-                              strokeWidth={2.5}
-                              activeDot={{ r: 5 }}
-                            />
-
-                            <Area
-                              yAxisId="right"
-                              type="monotone"
-                              dataKey={metricRight}
-                              stroke={ANALYTICS_METRICS.find(m => m.id === metricRight)?.color || "#22c55e"}
-                              fillOpacity={0.12}
-                              fill={ANALYTICS_METRICS.find(m => m.id === metricRight)?.color || "#22c55e"}
-                              strokeWidth={2.5}
-                              activeDot={{ r: 5 }}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div> : (
+                      {interactionTrend.length ? <VideoInteractionChart key={video.id}
+                        data={interactionTrend} duration={duration} currentTime={currentTime}
+                        left={ANALYTICS_METRICS.find(metric => metric.id === metricLeft)!}
+                        right={ANALYTICS_METRICS.find(metric => metric.id === metricRight)!}
+                        onSeek={seekToSecond} /> : (
                         <div data-testid="video-interaction-empty" role="status" className="h-64 flex flex-col items-center justify-center gap-3 text-sm text-neutral-400">
                           <img src="./assets/prototype/interaction-empty.png" alt="" aria-hidden="true" width={176} height={178} className="w-44 h-[178px] object-contain" />
                           <span>暂无数据</span>
@@ -3507,14 +3386,14 @@ export default function FinishedVideoDetailModal({
                               <select
                                 value={pf.visibility}
                                 onChange={(e) => {
-                                  const val = e.target.value as "公开" | "仅本部门" | "私密";
+                                  const val = e.target.value as "公开" | "仅本团队" | "私密";
                                   setProjectFiles(prev => prev.map(p => p.id === pf.id ? { ...p, visibility: val } : p));
                                   showToast(`🔒 已更新【${pf.name}】访问权限为：${val}`);
                                 }}
                                 className="bg-white border border-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-md focus:outline-none cursor-pointer shadow-2xs"
                               >
                                 <option value="公开">公开</option>
-                                <option value="仅本部门">仅本部门</option>
+                                <option value="仅本团队">仅本团队</option>
                                 <option value="私密">私密</option>
                               </select>
                             </div>
@@ -4645,7 +4524,7 @@ export default function FinishedVideoDetailModal({
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none cursor-pointer"
                   >
                     <option value="公开">公开 (全公司员工可下载)</option>
-                    <option value="仅本部门">仅本部门 (指定分组共享)</option>
+                    <option value="仅本团队">仅本团队 (指定分组共享)</option>
                     <option value="私密">私密 (仅作者与管理员)</option>
                   </select>
                 </div>

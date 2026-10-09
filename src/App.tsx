@@ -22,6 +22,7 @@ import MaterialsView from "./components/MaterialsView";
 import FinishedVideosView from "./components/FinishedVideosView";
 import AdDeliveryView from "./components/AdDeliveryView";
 import OperationRecordsView from "./components/OperationRecordsView";
+import ToolsView from "./components/ToolsView";
 import { recordLogin } from "./lib/operationHistory";
 import { notifyPermissionChange } from "./lib/userPermissions";
 import SameStyleVideoView from "./components/SameStyleVideoView";
@@ -400,183 +401,6 @@ export default function App() {
       );
     }
     return true;
-  };
-
-  // Credit Application Workflow (Closed-Loop)
-  const handleRequestCredits = (amount: number, reason: string) => {
-    const now = new Date();
-    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
-
-    const newMsg: AppMessage = {
-      id: `msg_credits_app_${Date.now()}`,
-      category: "审批待办",
-      subcategory: "积分申请",
-      type: "积分申请",
-      title: `额外积分申请: ${amount} 积分`,
-      detail: `申请人: 算法推荐部 - 汤小真 申请积分: ${amount} 积分 申请说明: ${reason} 审批状态: 待审核`,
-      summary: `申请人: 算法推荐部 - 汤小真 申请积分: ${amount} 积分 申请说明: ${reason}`,
-      status: "unread",
-      time: timeStr,
-      isRedDot: true,
-      eventCode: "CREDIT_APPLICATION_SUBMITTED",
-      template: "approval",
-      severity: "warning",
-      actorName: "汤小真（申请人）",
-      recipientNames: ["李部长（审批人）"],
-      sourceType: "积分申请单",
-      sourceId: `CA-${Date.now()}`,
-      businessStatus: "待审批",
-      approvalType: "credits",
-      approvalStatus: "pending",
-      creditsAmount: amount,
-      applicantName: "算法推荐部 - 汤小真",
-      managerName: "技术研发部 - 李部长",
-      details: [
-        { label: "申请人", value: "算法推荐部 - 汤小真" },
-        { label: "申请部门", value: "算法推荐部" },
-        { label: "申请积分", value: `${amount} 积分` },
-        { label: "申请说明", value: reason },
-        { label: "审核部长", value: "技术研发部 - 李部长" },
-        { label: "审批状态", value: "待审核" },
-      ],
-    };
-
-    setMessages((prev) => [newMsg, ...prev]);
-  };
-
-  const handleApproveCredits = (msgId: string) => {
-    const targetMsg = messages.find((m) => m.id === msgId);
-    if (!targetMsg) return;
-
-    const amount = targetMsg.creditsAmount || 0;
-    const now = new Date();
-    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
-
-    // 1. Update target audit message status
-    setMessages((prev) =>
-      prev.map((m) => {
-        if (m.id === msgId) {
-          return {
-            ...m,
-            approvalStatus: "approved",
-            details: (m.details || []).map((d) =>
-              d.label === "审批状态"
-                ? { label: "审批状态", value: "已审核通过" }
-                : d,
-            ),
-          };
-        }
-        return m;
-      }),
-    );
-
-    // 2. Add credits to user
-    setExtraRequestedCredits((prev) => prev + amount);
-
-    // 3. Record transaction
-    const newTx: CreditTransaction = {
-      id: `tx_app_${Date.now()}`,
-      type: "recharge",
-      amount: amount,
-      date: timeStr.slice(0, 10),
-      time: timeStr.slice(11, 19),
-      note: `额外积分申请审核通过 (+${amount} 积分)`,
-      balance: credits + amount,
-    };
-    setTransactions((prev) => [newTx, ...prev]);
-
-    // 4. Create result notification for applicant
-    const resultMsg: AppMessage = {
-      id: `msg_credits_res_${Date.now()}`,
-      category: "审批待办",
-      subcategory: "积分申请",
-      type: "积分申请",
-      title: `积分申请审核结果: 通过`,
-      detail: `您申请的 ${amount} 额外积分已由李部长审核通过！积分已自动存入您的账户。`,
-      summary: `审核通过！+${amount} 积分已自动到账。`,
-      status: "unread",
-      time: timeStr,
-      isRedDot: true,
-      eventCode: "CREDIT_APPLICATION_APPROVED",
-      template: "approval",
-      severity: "success",
-      actorName: "李部长（审批人）",
-      recipientNames: ["汤小真（申请人）"],
-      sourceType: "积分申请单",
-      sourceId: targetMsg.sourceId,
-      businessStatus: "已通过",
-      approvalStatus: "approved",
-      creditsAmount: amount,
-      details: [
-        { label: "申请结果", value: "审核通过" },
-        { label: "发放积分", value: `+${amount} 积分` },
-        { label: "审核部长", value: "技术研发部 - 李部长" },
-        { label: "备注说明", value: "审核通过，已自动充值到当月剩余积分" },
-      ],
-    };
-
-    setMessages((prev) => [resultMsg, ...prev]);
-  };
-
-  const handleRejectCredits = (msgId: string, rejectReason: string) => {
-    const targetMsg = messages.find((m) => m.id === msgId);
-    if (!targetMsg) return;
-
-    const amount = targetMsg.creditsAmount || 0;
-    const now = new Date();
-    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
-
-    // 1. Update target audit message status
-    setMessages((prev) =>
-      prev.map((m) => {
-        if (m.id === msgId) {
-          return {
-            ...m,
-            approvalStatus: "rejected",
-            rejectReason,
-            details: (m.details || []).map((d) =>
-              d.label === "审批状态"
-                ? { label: "审批状态", value: `已驳回 (原因: ${rejectReason})` }
-                : d,
-            ),
-          };
-        }
-        return m;
-      }),
-    );
-
-    // 2. Create result notification for applicant
-    const resultMsg: AppMessage = {
-      id: `msg_credits_res_${Date.now()}`,
-      category: "审批待办",
-      subcategory: "积分申请",
-      type: "积分申请",
-      title: `积分申请审核结果: 拒绝`,
-      detail: `您申请的 ${amount} 额外积分未通过审核。拒绝原因：${rejectReason}`,
-      summary: `审核驳回！原因: ${rejectReason}`,
-      status: "unread",
-      time: timeStr,
-      isRedDot: true,
-      eventCode: "CREDIT_APPLICATION_REJECTED",
-      template: "approval",
-      severity: "warning",
-      actorName: "李部长（审批人）",
-      recipientNames: ["汤小真（申请人）"],
-      sourceType: "积分申请单",
-      sourceId: targetMsg.sourceId,
-      businessStatus: "已拒绝",
-      approvalStatus: "rejected",
-      rejectReason,
-      creditsAmount: amount,
-      details: [
-        { label: "申请结果", value: "审核拒绝" },
-        { label: "申请积分", value: `${amount} 积分` },
-        { label: "审核部长", value: "技术研发部 - 李部长" },
-        { label: "拒绝原因", value: rejectReason },
-      ],
-    };
-
-    setMessages((prev) => [resultMsg, ...prev]);
   };
 
   const handleMarkMessageRead = (id: string) => {
@@ -1641,13 +1465,12 @@ export default function App() {
         );
 
       case "message_center":
+        if (!has("uc_message_center")) return <div className="flex h-full items-center justify-center text-sm text-slate-400">暂无权限</div>;
         return (
           <MessageCenterWorkspace
             onBack={handleBack}
             setActiveScreen={handleNavigate}
             messages={messages}
-            onApproveCredits={handleApproveCredits}
-            onRejectCredits={handleRejectCredits}
             onMarkMessageRead={handleMarkMessageRead}
             onMarkAllMessagesRead={handleMarkAllMessagesRead}
             onOpenResource={(resource) => {
@@ -1706,6 +1529,9 @@ export default function App() {
           handleNavigate("resources");
         }} />;
 
+      case "tools":
+        return <ToolsView />;
+
       case "same_style_video":
         return (
           <SameStyleVideoView
@@ -1728,6 +1554,8 @@ export default function App() {
             key={activeRemakeSessionId || "latest-remake"}
             onBack={() => setActiveRemakeSessionId(null)}
             onOpenQueue={() => setIsQueueOpen(true)}
+            onOpenMessages={() => handleNavigate("message_center")}
+            unreadMessageCount={messages.filter((message) => message.status === "unread").length}
             credits={availableCredits}
             assets={assets}
             activeSessionId={activeRemakeSessionId}
