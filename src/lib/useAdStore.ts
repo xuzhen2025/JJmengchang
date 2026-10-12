@@ -9,7 +9,7 @@ export function useAdStore() {
   useEffect(() => {
     syncPushDerivations(readAdStore().records);
     const refresh = () => setStore(readAdStore());
-    const storage = (e: StorageEvent) => { if (!e.key || [AD_STORE_KEY, "cloud_video_roles_v2", "mengchang_prototype_session", "cloud_video_members", "cloud_video_depts"].includes(e.key)) refresh(); };
+    const storage = (e: StorageEvent) => { if (!e.key || [AD_STORE_KEY, "cloud_video_roles_v2", "mengchang_auth_session", "cloud_video_members", "cloud_video_depts"].includes(e.key)) refresh(); };
     window.addEventListener(AD_CHANGE_EVENT, refresh);
     window.addEventListener(ORGANIZATION_CHANGE, refresh);
     window.addEventListener("storage", storage);

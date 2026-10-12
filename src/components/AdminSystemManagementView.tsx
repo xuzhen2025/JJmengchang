@@ -683,7 +683,7 @@ export default function AdminSystemManagementView() {
   // 管理端当前账号的 ab_* 权限（本地 roles 派生；与用户端 readAdminPermissionKeys 同源口径，避免模块循环依赖）
   const getCurrentAdminKeys = () => {
     let session: { username?: string } = {};
-    try { session = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}"); } catch { /* fail closed */ }
+    try { session = JSON.parse(localStorage.getItem("mengchang_auth_session") || "{}"); } catch { /* fail closed */ }
     const roleId = session.username === "chaojiguanliyuan" ? "role_super_admin"
       : session.username === "guanliyuan" ? "role_dept_head" : "";
     if (!roleId) return [] as string[];

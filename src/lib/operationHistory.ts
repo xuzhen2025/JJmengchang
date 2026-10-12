@@ -14,7 +14,7 @@ const subscribe = (listener: () => void) => { listeners.add(listener); return ()
 export const getOperationRecords = () => records;
 export const useOperationRecords = () => useSyncExternalStore(subscribe, getOperationRecords);
 export function operationUser(): string {
-  try { return JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}").username || ""; }
+  try { return JSON.parse(localStorage.getItem("mengchang_auth_session") || "{}").username || ""; }
   catch { return ""; }
 }
 export function recordOperation(input: Omit<OperationRecord, "id" | "createdAt" | "ownerId"> & { ownerId?: string; createdAt?: number }) {

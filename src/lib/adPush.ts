@@ -111,7 +111,7 @@ export function getAdActor(): AdActor {
   let session: { username?: string } = {};
   let roles: { id: string; enabled?: boolean; checkedKeys?: string[] }[] = [];
   try {
-    const savedSession = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
+    const savedSession = JSON.parse(localStorage.getItem("mengchang_auth_session") || "{}");
     const savedRoles = JSON.parse(localStorage.getItem("cloud_video_roles_v2") || "[]");
     if (savedSession && typeof savedSession.username === "string") session = savedSession;
     if (Array.isArray(savedRoles)) roles = savedRoles.filter(r => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys)));

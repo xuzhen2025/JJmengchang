@@ -28,6 +28,8 @@ interface SidebarProps {
   openAdminProfile?: () => void;
   appMode?: "user" | "admin";
   setAppMode?: (mode: "user" | "admin") => void;
+  /** SaaS：当前登录账号所属公司名称 */
+  companyName?: string;
   allowedModes?: ("user" | "admin")[];
   adminActiveScreen?: string;
   setAdminActiveScreen?: (screen: string) => void;
@@ -45,6 +47,7 @@ export default function Sidebar({
   openAdminProfile = () => {},
   appMode = "user",
   setAppMode = () => {},
+  companyName = "梦畅AIGC",
   allowedModes = ["user", "admin"],
   adminActiveScreen = "content_management",
   setAdminActiveScreen = () => {},
@@ -100,8 +103,8 @@ export default function Sidebar({
               <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse" />
             </div>
             {!collapsed && (
-              <span className="font-extrabold text-base tracking-tight text-slate-900 shrink-0">
-                梦畅AIGC
+              <span className="font-extrabold text-base tracking-tight text-slate-900 shrink-0" data-testid="sidebar-company-name" title={companyName}>
+                {companyName}
               </span>
             )}
           </div>

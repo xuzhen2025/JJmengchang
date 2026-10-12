@@ -3,6 +3,7 @@ import { INITIAL_ROLES } from "../components/AdminSystemManagementView";
 import { PROTOTYPE_OPERATOR } from "../data/adminAccounts";
 import { ORGANIZATION_CHANGE, readReportOrganization } from "./analyticsOrganization";
 import { AD_CHANGE_EVENT } from "./adPush";
+import { isActiveCompanySuperAdmin } from "../data/companies";
 
 export const PERMISSION_CHANGE_EVENT = "mengchang_permission_change";
 
@@ -46,7 +47,7 @@ export function readUserPermissionKeys(): string[] {
   let session: SessionLike = {};
   let roles: RoleLike[] = [];
   try {
-    const savedSession = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
+    const savedSession = JSON.parse(localStorage.getItem("mengchang_auth_session") || "{}");
     const savedRoles = JSON.parse(localStorage.getItem("cloud_video_roles_v2") || "[]");
     if (savedSession && typeof savedSession.username === "string") session = savedSession;
     // 角色目录为空（管理端尚未初始化/未进入过系统管理）时回退到内置默认角色，保证普通用户登录即可获得默认权限
@@ -54,7 +55,7 @@ export function readUserPermissionKeys(): string[] {
     const upgradeRoleKeys = (r: RoleLike): RoleLike => { if (r.id === "role_super_admin") { const def = INITIAL_ROLES.find(d => d.id === r.id); return { ...r, checkedKeys: [...(def?.checkedKeys || r.checkedKeys || [])] }; } const defaults = INITIAL_ROLES.find(d => d.id === r.id); if (!defaults) return r; return { ...r, checkedKeys: Array.from(new Set([...(defaults.checkedKeys || []), ...(r.checkedKeys || [])])) }; };
     roles = (Array.isArray(savedRoles) && savedRoles.length > 0) ? savedRoles.filter((r): r is RoleLike => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys))).map(upgradeRoleKeys) : (INITIAL_ROLES as unknown as RoleLike[]);
   } catch { /* fail closed */ }
-  const admin = session.username === "chaojiguanliyuan" || session.username === "guanliyuan";
+  const admin = session.username === "chaojiguanliyuan" || session.username === "guanliyuan" || isActiveCompanySuperAdmin(session.username || "");
   if (admin) {
     const role = roles.find(r => r.id === "role_super_admin");
     const keys = role?.checkedKeys || INITIAL_ROLES.find(d => d.id === "role_super_admin")?.checkedKeys || [];
@@ -80,7 +81,7 @@ export function readAdminPermissionKeys(): string[] {
   let session: SessionLike = {};
   let roles: RoleLike[] = [];
   try {
-    const savedSession = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
+    const savedSession = JSON.parse(localStorage.getItem("mengchang_auth_session") || "{}");
     const savedRoles = JSON.parse(localStorage.getItem("cloud_video_roles_v2") || "[]");
     if (savedSession && typeof savedSession.username === "string") session = savedSession;
     const upgradeRoleKeys = (r: RoleLike): RoleLike => {
@@ -92,7 +93,7 @@ export function readAdminPermissionKeys(): string[] {
     roles = (Array.isArray(savedRoles) && savedRoles.length > 0) ? savedRoles.filter((r): r is RoleLike => r && typeof r.id === "string" && (!r.checkedKeys || Array.isArray(r.checkedKeys))).map(upgradeRoleKeys) : (INITIAL_ROLES as unknown as RoleLike[]);
   } catch { /* fail closed */ }
   // 管理端演示账号映射：超管→超级管理员（全权限）；管理员→团队负责人/主管（部分菜单，演示只读与菜单过滤）
-  const roleId = session.username === "chaojiguanliyuan" ? "role_super_admin"
+  const roleId = session.username === "chaojiguanliyuan" || isActiveCompanySuperAdmin(session.username || "") ? "role_super_admin"
     : session.username === "guanliyuan" ? "role_dept_head" : "";
   if (!roleId) return [];
   const role = roles.find(r => r.id === roleId);
@@ -125,8 +126,8 @@ export function hasAdminPermission(key: string): boolean {
 // 是否超级管理员账号（资源库删除类等'不包含删除类'权限的专属能力判定）
 export function isSuperAdminAccount(): boolean {
   try {
-    const session = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
-    return !!session && session.username === "chaojiguanliyuan";
+    const session = JSON.parse(localStorage.getItem("mengchang_auth_session") || "{}");
+    return !!session && (session.username === "chaojiguanliyuan" || isActiveCompanySuperAdmin(session.username || ""));
   } catch { return false; }
 }
 

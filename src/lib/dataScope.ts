@@ -68,7 +68,7 @@ export const isDeptSelfOrDescendant = (memberDeptId: string, targetDeptId: strin
 export const getCurrentScopeMember = (): ScopeMemberLike => {
   let session: { username?: string } = {};
   try {
-    session = JSON.parse(localStorage.getItem("mengchang_prototype_session") || "{}");
+    session = JSON.parse(localStorage.getItem("mengchang_auth_session") || "{}");
   } catch { /* fail closed */ }
   const username = session.username || "";
   if (username === "chaojiguanliyuan" || username === "guanliyuan") {

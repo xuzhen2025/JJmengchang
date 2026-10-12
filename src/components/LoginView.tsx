@@ -11,7 +11,9 @@ import {
   UserRound,
 } from "lucide-react";
 
-export type AppMode = "user" | "admin";
+export type AppMode = "user" | "admin" | "platform";
+
+export type LoginTarget = "company" | "platform";
 
 export interface PrototypeAccount {
   username: string;
@@ -22,16 +24,29 @@ export interface PrototypeAccount {
   defaultMode: AppMode;
   /** AUTH-04：成员账号被禁用时标记，登录拒绝 */
   disabled?: boolean;
+  /** SaaS：登录目标（platform=平台管理端；company=公司工作台） */
+  target?: LoginTarget;
+  companyId?: string;
+  companyName?: string;
 }
 
 interface LoginViewProps {
   accounts: PrototypeAccount[];
-  onLogin: (account: PrototypeAccount) => void;
+  onLogin: (account: PrototypeAccount, target: LoginTarget) => void;
 }
 
 export default function LoginView({ accounts, onLogin }: LoginViewProps) {
-  // 默认预填超级管理员账号（不依赖账号表顺序）
-  const defaultAccount = accounts.find((a) => a.username === "chaojiguanliyuan") || accounts[0];
+  const [loginTarget, setLoginTarget] = useState<LoginTarget>("company");
+  const companyAccounts = useMemo(() => accounts.filter((a) => a.target !== "platform"), [accounts]);
+  const platformAccounts = useMemo(() => accounts.filter((a) => a.target === "platform"), [accounts]);
+  const visibleAccounts = loginTarget === "platform" ? platformAccounts : companyAccounts;
+
+  const resolveDefault = (target: LoginTarget) =>
+    target === "platform"
+      ? platformAccounts.find((a) => a.username === "platform_admin") || platformAccounts[0]
+      : companyAccounts.find((a) => a.username === "chaojiguanliyuan") || companyAccounts[0];
+
+  const defaultAccount = resolveDefault(loginTarget);
   const [username, setUsername] = useState(defaultAccount?.username ?? "");
   const [password, setPassword] = useState(defaultAccount?.password ?? "");
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -39,8 +54,8 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
   const [error, setError] = useState("");
 
   const selectedAccount = useMemo(
-    () => accounts.find((account) => account.username === username) || null,
-    [accounts, username],
+    () => visibleAccounts.find((account) => account.username === username) || null,
+    [visibleAccounts, username],
   );
 
   const selectAccount = (account: PrototypeAccount) => {
@@ -50,11 +65,20 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
     setError("");
   };
 
+  const switchTarget = (target: LoginTarget) => {
+    setLoginTarget(target);
+    const acc = resolveDefault(target);
+    setUsername(acc?.username ?? "");
+    setPassword(acc?.password ?? "");
+    setAccountMenuOpen(false);
+    setError("");
+  };
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const account = accounts.find((item) => item.username === username.trim());
+    const account = visibleAccounts.find((item) => item.username === username.trim());
     if (!account) {
-      setError("账号不存在");
+      setError(loginTarget === "platform" ? "平台账号不存在" : "账号不存在");
       return;
     }
     if (account.disabled) {
@@ -67,7 +91,7 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
       setError("账号或密码不正确");
       return;
     }
-    onLogin(account);
+    onLogin(account, loginTarget);
   };
 
   return (
@@ -84,18 +108,20 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
           <div className="max-w-md">
             <h1 className="text-3xl font-black leading-tight sm:text-4xl">回到你的视觉创作台</h1>
             <ul className="mt-20 space-y-3 text-sm font-medium text-slate-600">
-              <li className="flex items-center gap-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-                爆款复刻与成片再创作
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-                资源库素材、成片、脚本统一管理
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-                数据分析与操作记录持续追踪
-              </li>
+              <>
+                <li className="flex items-center gap-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+                  爆款复刻与成片再创作
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+                  资源库素材、成片、脚本统一管理
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+                  数据分析与操作记录持续追踪
+                </li>
+              </>
             </ul>
           </div>
 
@@ -109,10 +135,31 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
             <p className="text-sm font-bold text-violet-400">欢迎回来</p>
             <h2 className="mt-4 text-4xl font-black tracking-normal">登录 梦畅AIGC</h2>
             <p className="mt-5 text-sm leading-6 text-slate-500">
-              继续你的电商内容复刻、资源管理与数据分析。
+              账号全局唯一，登录后自动进入所属公司的工作台。
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-14 space-y-7">
+            <div className="mt-8 inline-flex rounded-lg bg-slate-100 p-1 text-sm font-bold" role="tablist" aria-label="登录目标">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={loginTarget === "company"}
+                onClick={() => switchTarget("company")}
+                className={`rounded-md px-4 py-1.5 transition ${loginTarget === "company" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                公司工作台
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={loginTarget === "platform"}
+                onClick={() => switchTarget("platform")}
+                className={`rounded-md px-4 py-1.5 transition ${loginTarget === "platform" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                平台管理
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-7">
               <div>
                 <label htmlFor="login-username" className="mb-2 block text-sm font-black text-slate-700">
                   用户名或邮箱
@@ -146,8 +193,8 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
                         className="fixed inset-0 z-20 cursor-default"
                         onClick={() => setAccountMenuOpen(false)}
                       />
-                      <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-xl">
-                        {accounts.map((account) => (
+                      <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-xl">
+                        {visibleAccounts.map((account) => (
                           <button
                             key={account.username}
                             type="button"
@@ -159,7 +206,9 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
                             </span>
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-bold text-slate-800">{account.username}</span>
-                              <span className="mt-0.5 block text-[11px] text-slate-400">{account.description}</span>
+                              <span className="mt-0.5 block truncate text-[11px] text-slate-400">
+                                {account.companyName ? `${account.companyName} · ` : ""}{account.description}
+                              </span>
                             </span>
                             {selectedAccount?.username === account.username && <Check className="h-4 w-4 text-slate-800" />}
                           </button>
@@ -208,13 +257,6 @@ export default function LoginView({ accounts, onLogin }: LoginViewProps) {
                 <ArrowRight className="h-5 w-5" />
               </button>
             </form>
-
-            <div className="mt-5 flex justify-center gap-3 text-sm">
-              <span className="text-slate-400">还没有账号？</span>
-              <button type="button" className="font-black text-slate-800 hover:text-slate-950">立即注册</button>
-              <span className="text-slate-300">/</span>
-              <button type="button" className="font-black text-slate-800 hover:text-slate-950">忘记密码</button>
-            </div>
           </div>
         </div>
       </section>

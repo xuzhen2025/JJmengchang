@@ -151,15 +151,15 @@ export default function CreditsDashboard({
         {/* TAB 1: 个人信息 (PROFILE TAB) */}
         {activeSubTab === "profile" && (
           <PersonalInformationPanel
-            name="徐振"
-            role="剪辑师"
-            employeeId="ZS-008"
-            phone="138****8888"
-            email="xuzhen@dreamchang.com"
+            name={readCurrentProfile().name}
+            role={readCurrentProfile().role}
+            employeeId={readCurrentProfile().employeeId}
+            phone={readCurrentProfile().phone}
+            email={readCurrentProfile().email}
             recentLogin="最近登录: 2026-08-05 23:20 (IP: 110.88.24.18 - 本地局域网)"
-            company="梦畅AIGC"
-            department="视频智能剪辑中心"
-            group="无"
+            company={readCurrentProfile().company}
+            department={readCurrentProfile().department}
+            group={readCurrentProfile().group}
             actions={(
               <>
                   <button

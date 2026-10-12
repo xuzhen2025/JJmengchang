@@ -30,7 +30,9 @@ import VideoRemakeView, { type SourceVideo } from "./components/VideoRemakeView"
 import type { TaskItem } from "./components/TaskCollaborationView";
 import MessageCenterWorkspace from "./components/MessageCenterWorkspace";
 import AdminView from "./components/AdminView";
-import LoginView, { AppMode, PrototypeAccount } from "./components/LoginView";
+import LoginView, { AppMode, LoginTarget, PrototypeAccount } from "./components/LoginView";
+import { readCompanies, readPlatformAccounts, readPlatformUsers, readCompanyById, DEFAULT_COMPANY_ID } from "./data/companies";
+import PlatformAdminView, { COMPANY_CHANGE_EVENT } from "./components/PlatformAdminView";
 import LogoutConfirmDialog from "./components/LogoutConfirmDialog";
 
 import {
@@ -72,7 +74,7 @@ import { resourceTagStore } from "./lib/resourceTags";
 import { useUploadedResources, resourceScope } from "./lib/resourceUploads";
 import { creditLimitsForUser, creditUsage, readCreditQuotaSettings, remainingQuota, subscribeCreditQuotaSettings } from "./lib/creditQuota";
 
-const AUTH_STORAGE_KEY = "mengchang_prototype_session";
+const AUTH_STORAGE_KEY = "mengchang_auth_session";
 
 const PROTOTYPE_ACCOUNTS: PrototypeAccount[] = [
   {
@@ -82,6 +84,9 @@ const PROTOTYPE_ACCOUNTS: PrototypeAccount[] = [
     description: "用户端与管理端",
     allowedModes: ["user", "admin"],
     defaultMode: "user",
+    target: "company",
+    companyId: DEFAULT_COMPANY_ID,
+    companyName: "梦畅AIGC",
   },
   {
     username: "putongyonghu",
@@ -90,6 +95,9 @@ const PROTOTYPE_ACCOUNTS: PrototypeAccount[] = [
     description: "仅用户端",
     allowedModes: ["user"],
     defaultMode: "user",
+    target: "company",
+    companyId: DEFAULT_COMPANY_ID,
+    companyName: "梦畅AIGC",
   },
   {
     username: "guanliyuan",
@@ -98,6 +106,9 @@ const PROTOTYPE_ACCOUNTS: PrototypeAccount[] = [
     description: "仅管理端",
     allowedModes: ["admin"],
     defaultMode: "admin",
+    target: "company",
+    companyId: DEFAULT_COMPANY_ID,
+    companyName: "梦畅AIGC",
   },
 ];
 
@@ -125,6 +136,9 @@ function buildMemberAccounts(): PrototypeAccount[] {
       password: MEMBER_DEFAULT_PASSWORD,
       label: m.name || m.employeeNo || m.id || "",
       description: m.status === "normal" ? "成员账号（用户端）" : "成员账号（已禁用）",
+      target: "company" as LoginTarget,
+      companyId: DEFAULT_COMPANY_ID,
+      companyName: "梦畅AIGC",
       allowedModes: (m.roleIds || []).includes("role_super_admin")
         ? (["user", "admin"] as AppMode[])
         : (["user"] as AppMode[]),
@@ -134,12 +148,48 @@ function buildMemberAccounts(): PrototypeAccount[] {
     .filter((a) => a.username.length > 0);
 }
 function buildLoginAccounts(): PrototypeAccount[] {
-  return [...PROTOTYPE_ACCOUNTS, ...buildMemberAccounts()];
+  const fixedNames = new Set(PROTOTYPE_ACCOUNTS.map((a) => a.username));
+  const platformAccounts: PrototypeAccount[] = readPlatformAccounts().map((p) => ({
+    username: p.username,
+    password: p.password,
+    label: p.label,
+    description: "平台管理端（创建与管理公司）",
+    allowedModes: ["platform"] as AppMode[],
+    defaultMode: "platform" as AppMode,
+    target: "platform" as LoginTarget,
+  }));
+  const companySuperAdmins: PrototypeAccount[] = readPlatformUsers()
+    .filter((u) => u.status === "active" && !fixedNames.has(u.username))
+    .map((u) => {
+      const company = readCompanyById(u.companyId);
+      if (!company || company.status !== "active") return null;
+      return {
+        username: u.username,
+        password: u.password || MEMBER_DEFAULT_PASSWORD,
+        label: u.name || "超级管理员",
+        description: `${company.platformName || company.name}超级管理员`,
+        allowedModes: ["user", "admin"] as AppMode[],
+        defaultMode: "user" as AppMode,
+        target: "company" as LoginTarget,
+        companyId: company.id,
+        companyName: company.platformName || company.name,
+      };
+    })
+    .filter((a): a is PrototypeAccount => !!a);
+  const merged = [...PROTOTYPE_ACCOUNTS, ...platformAccounts, ...companySuperAdmins, ...buildMemberAccounts()];
+  const seen = new Set<string>();
+  return merged.filter((a) => {
+    if (seen.has(a.username)) return false;
+    seen.add(a.username);
+    return true;
+  });
 }
 
 interface PersistedSession {
   username: string;
   mode: AppMode;
+  companyId?: string;
+  target?: LoginTarget;
 }
 
 const readPersistedSession = (): PersistedSession | null => {
@@ -156,6 +206,8 @@ const readPersistedSession = (): PersistedSession | null => {
       mode: account.allowedModes.includes(parsed.mode)
         ? parsed.mode
         : account.defaultMode,
+      companyId: account.companyId,
+      target: account.target,
     };
   } catch {
     return null;
@@ -168,6 +220,12 @@ export default function App() {
   useAdStore();
   // AUTH-04：成员增删改（新增可登录/禁用删除即时生效）后重算登录账号，并使被禁用/删除账号的会话失效
   const [loginAccountsVersion, setLoginAccountsVersion] = useState(0);
+  // SaaS：平台端新建/停用公司后，登录账号列表即时刷新
+  useEffect(() => {
+    const refreshAccounts = () => setLoginAccountsVersion((v) => v + 1);
+    window.addEventListener(COMPANY_CHANGE_EVENT, refreshAccounts);
+    return () => window.removeEventListener(COMPANY_CHANGE_EVENT, refreshAccounts);
+  }, []);
   useEffect(() => {
     const refresh = () => {
       setLoginAccountsVersion((v) => v + 1);
@@ -329,11 +387,13 @@ export default function App() {
       ) ?? null)
     : null;
 
-  const handleLogin = (account: PrototypeAccount) => {
+  const handleLogin = (account: PrototypeAccount, target: LoginTarget = "company") => {
     recordLogin(account.username, true);
     const nextSession = {
       username: account.username,
-      mode: account.defaultMode,
+      mode: target === "platform" ? "platform" : account.defaultMode,
+      companyId: account.companyId,
+      target,
     };
     window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession));
     setSession(nextSession);
@@ -346,7 +406,7 @@ export default function App() {
   const handleModeChange = (mode: AppMode) => {
     if (!currentAccount?.allowedModes.includes(mode)) return;
     setQueueUploadRequest(null);
-    const nextSession = { username: currentAccount.username, mode };
+    const nextSession = { username: currentAccount.username, mode, companyId: currentAccount.companyId, target: currentAccount.target };
     window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextSession));
     setSession(nextSession);
     setAppMode(mode);
@@ -1584,6 +1644,10 @@ export default function App() {
     return <LoginView accounts={loginAccounts} onLogin={handleLogin} />;
   }
 
+  if (appMode === "platform") {
+    return <PlatformAdminView onLogout={handleConfirmLogout} />;
+  }
+
   return (
     <div className="w-screen h-screen flex bg-slate-50 text-slate-800 overflow-hidden font-sans">
       {/* 1. Left Navigation Sidebar */}
@@ -1602,6 +1666,7 @@ export default function App() {
         accountLabel={currentAccount.label}
         adminActiveScreen={adminActiveScreen}
         setAdminActiveScreen={setAdminActiveScreen}
+        companyName={currentAccount.companyName || "梦畅AIGC"}
       />
 
       {/* 2. Main Workspace screen router */}

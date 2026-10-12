@@ -20,7 +20,7 @@ interface ResourceFilterPresetsProps<T extends FilterValues> {
 export default function ResourceFilterPresets<T extends FilterValues>(props: ResourceFilterPresetsProps<T>) {
   let storageKey = "";
   try {
-    const session = JSON.parse(window.localStorage.getItem("mengchang_prototype_session") || "null");
+    const session = JSON.parse(window.localStorage.getItem("mengchang_auth_session") || "null");
     if (typeof session?.username === "string" && session.username) storageKey = filterPresetStorageKey(session.username, props.scope);
   } catch { /* The control reports storage errors without sharing another member's presets. */ }
   return <PresetControl key={storageKey} {...props} storageKey={storageKey} />;

@@ -3,6 +3,7 @@ import { Key, Sparkles, User } from "lucide-react";
 import ChangePasswordModal from "./ChangePasswordModal";
 import PersonalInformationPanel from "./PersonalInformationPanel";
 import AccountLogoutButton from "./AccountLogoutButton";
+import { readCurrentProfile } from "../lib/currentProfile";
 
 interface AdminProfileViewProps {
   onLogout: () => void;
@@ -11,6 +12,7 @@ interface AdminProfileViewProps {
 export default function AdminProfileView({ onLogout }: AdminProfileViewProps) {
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const profile = readCurrentProfile();
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -45,15 +47,15 @@ export default function AdminProfileView({ onLogout }: AdminProfileViewProps) {
         </div>
 
         <PersonalInformationPanel
-          name="徐振"
-          role="超级管理员"
-          employeeId="ZS-001"
-          phone="138****0000"
-          email="xuzhen@dreamchang.com"
+          name={profile.name}
+          role={profile.role}
+          employeeId={profile.employeeId}
+          phone={profile.phone}
+          email={profile.email}
           recentLogin="最近登录: 2026-08-21 09:08 (IP: 110.88.24.18 - 本地局域网)"
-          company="梦畅AIGC"
-          department="梦畅AIGC（总部）"
-          group="无"
+          company={profile.company}
+          department={profile.department}
+          group={profile.group}
           actions={(
             <>
               <button
